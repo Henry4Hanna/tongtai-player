@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tổng Tài TV – Tìm mã kênh</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background: #0B0D12; color: #F4F1EC; margin: 0; padding: 28px; }
+  h1 { color: #E8B04B; margin: 0 0 6px; } p { color: #B8BDC9; line-height: 1.5; max-width: 900px; }
+  label { display: block; margin: 18px 0 6px; font-weight: 700; }
+  input, textarea { width: 100%; max-width: 900px; box-sizing: border-box; background: #151922; color: #fff; border: 1px solid #2A3042; border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+  textarea { height: 260px; font-family: ui-monospace, monospace; }
+  button { margin: 16px 10px 0 0; padding: 12px 22px; border: 0; border-radius: 999px; font-weight: 700; font-size: 15px; cursor: pointer; background: #E8B04B; color: #1a1206; }
+  button.alt { background: #262C3B; color: #fff; }
+  table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 1100px; }
+  td, th { border-bottom: 1px solid #222838; padding: 8px; text-align: left; font-size: 14px; }
+  td img { width: 36px; height: 36px; border-radius: 50%; vertical-align: middle; }
+  .ok { color: #7FD3AE; } .bad { color: #FF8A80; } #msg { margin-top: 14px; font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>Tìm mã kênh cho Tổng Tài TV</h1>
+<p>Làm 1 lần trên máy tính. Trang này tìm mã của từng kênh rồi tạo file <b>channels.json</b>.
+Tải file đó lên cùng chỗ với trang phát (repository <b>tongtai-player</b>). Từ đó TV không phải tự tìm kênh nữa (tiết kiệm 100 đơn vị/kênh), kể cả sau khi cài lại app.
+API key chỉ dùng trên máy bạn, không lưu và không gửi đi đâu ngoài YouTube.</p>
+<label>YouTube API key</label>
+<input id="key" placeholder="AIza...">
+<label>Danh sách kênh (mỗi dòng một kênh; có thể dùng @tên-kênh hoặc mã UC…)</label>
+<textarea id="names">Ghiền Phim Tổng Tài
+Ngon Tình Drama
+Kho Phim Ngắn Hay
+Nhà hát Bánh Mì
+SyTV - Phim Ngắn Việt
+CCAP Dramas
+Kẹo Sữa Drama
+Only Phim
+Mê Phim Tổng Tài
+Nắng Ngọt Drama
+Tiệm Ngọt Drama
+Dừa Xanh Drama
+Nhà Hát Drama Alice
+Mầm Xanh Drama
+Nhà hát Chuối
+Vườn Mật Ngọt
+Nghiện Hoa Ngữ
+CineNgắn
+Phim Bong Bóng
+KK Studio - Tiểu Vũ Review Phim
+Góc Phim Ngôn Tình
+DaisyTV
+Cùng Nhau Mê Phim
+Matcha Latte Drama
+Tiểu Khá Ái
+Nâu Review Phim
+Mê Lạc Review
+Tây Lam Vi
+TRAM ME PHIM
+Mộng Nữ Review
+Góc Vui Phết
+Góc Manhua Review
+Mứt Táo Review
+ĐẬU SUB
+Reviiu Phim AI
+Pon Kể Chuyện</textarea>
+<div>
+  <button id="go">Tìm mã kênh</button>
+  <button id="dl" class="alt">Tải channels.json</button>
+</div>
+<div id="msg"></div>
+<table id="tbl"><thead><tr><th>Tên bạn nhập</th><th></th><th>Kênh tìm được</th><th>Mã kênh</th></tr></thead><tbody></tbody></table>
+<script>
+(function () {
+  var found = {}, used = 0;
+  // Đọc channels.json cũ (nếu có) để không tìm lại kênh đã có
+  fetch('channels.json?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (d && d.channels) d.channels.forEach(function (c) { found[c.name] = c; });
+  }).catch(function () {});
+
+  function api(path, params) {
+    var key = document.getElementById('key').value.trim();
+    var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+    used += path === 'search' ? 100 : 1;
+    return fetch('https://www.googleapis.com/youtube/v3/' + path + '?' + q + '&key=' + encodeURIComponent(key))
+      .then(function (r) { return r.json(); }).then(function (d) { if (d.error) throw new Error(d.error.message); return d; });
+  }
+  function norm(s) {
+    return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9@]/g, '');
+  }
+  function find(name) {
+    if (/^@/.test(name) || /^UC[\w-]{22}$/.test(name)) {
+      var p = { part: 'snippet' }; if (name[0] === '@') p.forHandle = name; else p.id = name;
+      return api('channels', p).then(function (d) {
+        var it = (d.items || [])[0]; if (!it) return null;
+        return { name: name, id: it.id, title: it.snippet.title, thumb: (it.snippet.thumbnails.high || it.snippet.thumbnails.default || {}).url || '' };
+      });
+    }
+    return api('search', { part: 'snippet', type: 'channel', q: name, maxResults: 5 }).then(function (d) {
+      var items = d.items || [], want = norm(name), best = null;
+      items.forEach(function (i) { if (!best && norm(i.snippet.title) === want) best = i; });
+      items.forEach(function (i) { var t = norm(i.snippet.title); if (!best && (t.indexOf(want) >= 0 || want.indexOf(t) >= 0)) best = i; });
+      best = best || items[0];
+      if (!best) return null;
+      return { name: name, id: best.id.channelId, title: best.snippet.title, thumb: (best.snippet.thumbnails.high || best.snippet.thumbnails.default || {}).url || '' };
+    });
+  }
+  function row(name, c, err) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td></td><td></td><td></td><td></td>';
+    tr.children[0].textContent = name;
+    if (c) {
+      var im = document.createElement('img'); im.src = c.thumb; tr.children[1].appendChild(im);
+      tr.children[2].textContent = c.title; tr.children[2].className = norm(c.title) === norm(name) ? 'ok' : '';
+      tr.children[3].textContent = c.id;
+    } else { tr.children[2].textContent = err || 'Không tìm thấy'; tr.children[2].className = 'bad'; }
+    document.querySelector('#tbl tbody').appendChild(tr);
+  }
+  document.getElementById('go').onclick = function () {
+    if (!document.getElementById('key').value.trim()) { alert('Hãy dán API key'); return; }
+    var names = document.getElementById('names').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    document.querySelector('#tbl tbody').innerHTML = '';
+    used = 0;
+    var msg = document.getElementById('msg');
+    var i = 0;
+    (function next() {
+      if (i >= names.length) { msg.textContent = 'Xong. Đã dùng khoảng ' + used + ' đơn vị. Kiểm tra cột “Kênh tìm được”, kênh nào sai thì sửa thành @tên-kênh rồi bấm lại.'; return; }
+      var n = names[i++];
+      msg.textContent = 'Đang tìm ' + i + '/' + names.length + ': ' + n;
+      if (found[n]) { row(n, found[n]); next(); return; }
+      find(n).then(function (c) { if (c) found[n] = c; row(n, c); next(); })
+        .catch(function (e) { row(n, null, e.message); next(); });
+    })();
+  };
+  document.getElementById('dl').onclick = function () {
+    var names = document.getElementById('names').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    var list = names.filter(function (n) { return found[n]; }).map(function (n) { return found[n]; });
+    if (!list.length) { alert('Chưa có kênh nào. Bấm “Tìm mã kênh” trước.'); return; }
+    var blob = new Blob([JSON.stringify({ updated: new Date().toISOString(), channels: list }, null, 1)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'channels.json'; a.click();
+  };
+})();
+</script>
+</body>
+</html>

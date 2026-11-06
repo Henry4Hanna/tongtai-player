@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Tổng Tài TV – trình phát</title>
+<!--
+  Trang trung gian phát YouTube cho app Tổng Tài TV trên Samsung TV.
+  App Samsung chạy từ file nội bộ nên YouTube báo lỗi 153; trang này nằm trên https
+  (GitHub Pages) nên YouTube cho phát. App điều khiển trang qua postMessage.
+  Trang KHÔNG chứa API key hay thông tin cá nhân.
+-->
+<style>
+  html, body, #p { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+  iframe { width: 100%; height: 100%; border: 0; }
+</style>
+</head>
+<body>
+<div id="p"></div>
+<script>
+(function () {
+  var yt = null, apiReady = false, pending = null, calls = [];
+
+  function send(m) { try { parent.postMessage(JSON.stringify(m), '*'); } catch (e) {} }
+
+  function snap() {
+    if (!yt || !yt.getCurrentTime) return;
+    var tracks = [];
+    try { tracks = (yt.getOption && yt.getOption('captions', 'tracklist')) || []; } catch (e) {}
+    send({
+      type: 'snap',
+      t: yt.getCurrentTime() || 0, d: yt.getDuration() || 0, s: yt.getPlayerState(),
+      q: yt.getPlaybackQuality ? yt.getPlaybackQuality() : '',
+      tracks: tracks.map(function (t) { return { languageCode: t.languageCode, displayName: t.displayName, kind: t.kind }; })
+    });
+  }
+
+  function create(m) {
+    var vars = m.vars || {};
+    vars.origin = location.origin;
+    vars.widget_referrer = location.href;
+    yt = new YT.Player('p', {
+      width: '100%', height: '100%', videoId: m.videoId, playerVars: vars,
+      events: {
+        onReady: function () { send({ type: 'ready' }); calls.splice(0).forEach(run); },
+        onStateChange: function (e) { send({ type: 'state', data: e.data }); snap(); },
+        onError: function (e) { send({ type: 'error', data: e.data }); }
+      }
+    });
+  }
+
+  function run(m) {
+    if (!yt || typeof yt[m.fn] !== 'function') { calls.push(m); return; }
+    try { yt[m.fn].apply(yt, m.args || []); } catch (e) {}
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.source !== parent) return;
+    var m;
+    try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+    if (!m || !m.cmd) return;
+    if (m.cmd === 'create') { if (apiReady) create(m); else pending = m; }
+    else if (m.cmd === 'call') run(m);
+  });
+
+  window.onYouTubeIframeAPIReady = function () {
+    apiReady = true;
+    if (pending) { create(pending); pending = null; }
+  };
+
+  setInterval(snap, 500);
+  send({ type: 'hello' });
+})();
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

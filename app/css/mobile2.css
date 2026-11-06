@@ -1,0 +1,121 @@
+/* Giao diện điện thoại kiểu app xem phim: poster dọc, xếp hạng số lớn, lưới 2 cột. */
+.monly, #mhead { display: none; }
+.mobile .monly { display: flex; }
+.mobile .dbg.monly { display: block; }
+
+/* ---- Đầu trang ---- */
+.mobile #topbar { padding: env(safe-area-inset-top) 0 0; background: var(--c-17191f); border-bottom: 0; }
+.mobile #topbar > .brand, .mobile #tabs { display: none; }
+.mobile #mhead { display: block; }
+.mlogo { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px 0 6px; font-size: 24px; font-weight: 800; letter-spacing: .5px; }
+.mlogo svg { width: 34px; height: 34px; }
+.mlogo b { color: var(--gold-ink); }
+.mquick { display: flex; justify-content: center; gap: 8px; padding: 6px 12px 10px; }
+.mq { flex: 1; max-width: 76px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 7px; border-radius: 12px; background: var(--c-23262e); color: var(--c-c9cdd6); font-size: 11px; font-weight: 600; }
+.mq svg { width: 22px; height: 22px; }
+.mbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: var(--c-1d2027); border-top: 1px solid var(--c-2a2e38); }
+.mbtn { width: 40px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--c-e6e8ee); }
+.mtitle { font-size: 15px; font-weight: 700; color: var(--c-f5d58e); }
+.mobile #views { top: calc(166px + env(safe-area-inset-top)); transition: top .2s; }
+html.mobile.mscrolled .mlogo, html.mobile.mscrolled .mquick { display: none; }
+html.mobile.mscrolled #views { top: calc(49px + env(safe-area-inset-top)); }
+#mdrawer { position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,.55); }
+.mdpanel { position: absolute; left: 0; top: 0; bottom: 0; width: 72%; max-width: 300px; padding: calc(20px + env(safe-area-inset-top)) 12px 20px; background: var(--c-17191f); box-shadow: 10px 0 30px rgba(0,0,0,.5); }
+.mditem { padding: 14px 16px; border-radius: 12px; font-size: 16px; font-weight: 600; color: var(--c-e6e8ee); }
+.mditem.on { background: rgba(232,176,75,.16); color: var(--c-f5d58e); }
+
+/* ---- Trang chủ: thứ tự kiểu app phim ---- */
+.mobile .homev { display: flex; flex-direction: column; background: var(--c-17191f); }
+.mobile .homev > * { flex: none; }
+.mobile .homev .hero { display: none; }
+.mobile .homev .row-hot { order: 1; }
+.mobile .homev .mseg { order: 2; }
+.mobile .homev .mpills { order: 3; }
+.mobile .homev .row-fresh { order: 4; }
+.mobile .homev .row-anime { order: 4; display: none; }
+.mobile .homev .row-movie { order: 4; display: none; }
+.mobile .homev.showanime .row-fresh, .mobile .homev.showmovie .row-fresh { display: none; }
+.mobile .homev.showanime .row-anime { display: block; }
+.mobile .homev.showmovie .row-movie { display: block; }
+.mobile .homev .row-cont { order: 6; }
+.mobile .homev .row-rec { order: 7; }
+
+/* Tiêu đề mục: chữ in hoa cam, gạch chân màu */
+.mobile .rowhead { position: relative; padding: 18px 14px 10px; margin: 0 0 6px; border-bottom: 1px solid var(--c-2a2e38); }
+.mobile .rt { font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; background: linear-gradient(90deg, #FF9A3C, #FF4D6D); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mobile .rowhead::after { content: ''; position: absolute; left: 14px; bottom: -1px; width: 150px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #FF9A3C, #FF4D6D); }
+.mobile .row-hot .rt::before { content: '🔥 '; -webkit-text-fill-color: initial; }
+.mobile .rowhead .rh { color: var(--c-8c92a0); }
+
+/* Thẻ phim: poster dọc, chữ đè lên ảnh */
+.mobile .card { position: relative; width: 132px; }
+.mobile .thumb { height: 0; padding-bottom: 140%; border-radius: 12px; }
+.mobile .thumb::after { background: linear-gradient(0deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 60%); }
+.mobile .card .ctitle { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 26px; margin: 0; font-size: 13px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px #000; -webkit-line-clamp: 2; }
+.mobile .card .csub { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; font-size: 11px; color: #C9CDD6; }
+.mobile .badge.dur { left: 6px; right: auto; top: 6px; bottom: auto; background: rgba(23,25,31,.85); border: 1px solid rgba(255,255,255,.15); }
+.mobile .badge.dur::before { content: '▶ '; font-size: 8px; color: #6EC7FF; }
+.mobile .badge.tag { background: rgba(23,25,31,.85); color: #F5D58E; border: 1px solid rgba(232,176,75,.4); }
+.mobile .badge.tag::before { content: '★ '; }
+.mobile .badge.cat { display: block; left: auto; right: 6px; top: 6px; bottom: auto; max-width: 62%; font-size: 9px; padding: 1px 5px; background: rgba(23,25,31,.85); }
+.mobile .badge.tag ~ .badge.cat { top: 28px; }
+.mobile .row-hot .badge.tag ~ .badge.cat, .mobile .row-hot .badge.cat { top: auto; bottom: 6px; right: 6px; font-size: 10px; }
+.mobile .badge.new { top: 30px; }
+.mobile .badge.multi { top: 30px; }
+
+/* Đang thịnh hành: poster lớn + số thứ hạng lớn bên dưới */
+.mobile .row-hot .track { gap: 14px; padding-bottom: 8px; }
+.mobile .row-hot .card { width: 190px; padding-bottom: 62px; overflow: visible; }
+.mobile .row-hot .thumb { padding-bottom: 130%; border-radius: 16px; transform: perspective(600px) rotateY(-4deg); }
+/* Số thứ hạng nằm trong ảnh, góc trái dưới (phần tử .rank nằm trong khung ảnh nên xoay cùng ảnh).
+   Không dùng chữ nghiêng (Safari cắt chữ nghiêng khi tô gradient): nghiêng bằng skew và chừa khoảng trống. */
+.mobile .row-hot .card .rank { display: block; z-index: 4; left: 8px; bottom: 4px; min-width: 36px; padding: 4px 8px 6px 4px; text-align: center; font-size: 58px; font-weight: 900; font-style: normal; line-height: 1.1; text-shadow: none; background: linear-gradient(180deg, #FFE7A3, #E8A33B); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; transform: skewX(-12deg); transform-origin: left bottom; filter: drop-shadow(0 2px 5px rgba(0,0,0,.75)); }
+/* Tên phim và thông tin nằm dưới ảnh */
+.mobile .row-hot .card .ctitle { position: absolute; left: 2px; right: 2px; bottom: 22px; top: auto; font-size: 14px; color: var(--c-f4f1ec); -webkit-line-clamp: 1; text-shadow: none; }
+.mobile .row-hot .card .csub { position: absolute; left: 2px; right: 2px; bottom: 4px; color: var(--c-9aa0ae); }
+.mobile .row-hot .badge.dur { display: none; }
+
+/* Nút chuyển + thể loại */
+.mseg { gap: 10px; padding: 18px 14px 8px; }
+.msegb { flex: 1; min-width: 0; white-space: nowrap; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--c-23262e); border: 1px solid var(--c-343846); color: var(--c-e6e8ee); font-size: 15px; font-weight: 800; }
+.msegb.on { background: linear-gradient(180deg, #2FC4FF, #0E8FD6); border-color: transparent; color: #fff; box-shadow: 0 6px 18px rgba(14,143,214,.45); }
+.mpills { gap: 8px; padding: 6px 14px 4px; overflow-x: auto; scrollbar-width: none; }
+.mpills::-webkit-scrollbar { display: none; }
+.mpill { flex: none; padding: 9px 16px; border-radius: 12px; background: var(--c-23262e); border: 1px solid var(--c-343846); color: var(--c-d5d8e0); font-size: 14px; font-weight: 700; }
+
+/* Lưới 2 cột cho Mới cập nhật / Hoạt hình AI */
+.mobile .row-fresh .track, .mobile .row-anime .track, .mobile .row-movie .track { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; overflow: visible; scroll-snap-type: none; padding-top: 12px; }
+.mobile .row-fresh .card, .mobile .row-anime .card, .mobile .row-movie .card { width: auto; }
+.mobile .row-fresh .thumb, .mobile .row-anime .thumb, .mobile .row-movie .thumb { padding-bottom: 145%; }
+.mobile .row-fresh .rowhead, .mobile .row-anime .rowhead { padding-top: 14px; }
+.mobile .row-fresh .rh.cdown { display: none; }
+.mobile .grid4 .thumb, .mobile .grid3 .thumb { padding-bottom: 145%; }
+.mobile .grid4 .card, .mobile .grid3 .card { width: auto; }
+
+/* ---- Chi tiết phim: poster giữa, nền mờ ---- */
+.dbg { position: absolute; left: 0; right: 0; top: 0; height: 520px; background-size: cover; background-position: center; filter: blur(28px) brightness(.45); transform: scale(1.2); z-index: 0; }
+.mobile .dtop { position: relative; z-index: 1; align-items: center; text-align: center; padding-top: 18px; }
+.mobile .poster { width: 58%; height: auto; padding-bottom: 82%; border-radius: 14px; border: 2px solid rgba(var(--fg-rgb),.15); box-shadow: 0 20px 40px rgba(0,0,0,.6); }
+.mobile .poster .badge, .mobile .poster .rank { display: none; }
+.mobile .dinfo { align-items: center; width: 100%; }
+.mobile .dtitle { font-size: 22px; color: var(--c-f0c36a); }
+.mobile .dinfo .chips { justify-content: center; }
+.mobile .dinfo .chip { background: rgba(var(--fg-rgb),.1); border: 1px solid rgba(var(--fg-rgb),.12); font-size: 12px; padding: 5px 12px; }
+.mobile .dinfo .chip.white { background: linear-gradient(180deg, #2FC4FF, #0E8FD6); color: #fff; border: 0; }
+.mobile .dmeta { color: var(--c-c9cdd6); }
+.mobile .ddesc { text-align: left; color: var(--c-b9beca); }
+.mobile .dsrc { display: none; }
+.mobile .dinfo .btns { justify-content: center; width: 100%; }
+.mobile .dinfo .btns .btn { background: rgba(var(--fg-rgb),.1); border: 1px solid rgba(var(--fg-rgb),.15); }
+.mobile .dinfo .btns .btn.gold { order: -1; width: 70%; justify-content: center; height: 50px; font-size: 18px; font-weight: 800; color: #fff; background: linear-gradient(180deg, #F5A524, #C9620E); border: 0; box-shadow: 0 8px 22px rgba(201,98,14,.45); margin-bottom: 4px; }
+.mobile .dinfo .btns .btn.gold + .btn { margin-left: 0; }
+.mobile .dprog { width: 100%; }
+
+/* Danh sách tập: nút số tập */
+.mobile .dtop ~ .rowwrap .card .thumb { padding-bottom: 56%; }
+.mobile .dtop ~ .rowwrap .card .ctitle, .mobile .dtop ~ .rowwrap .card .csub { position: static; text-shadow: none; }
+.mobile .dtop ~ .rowwrap .card .ctitle { margin-top: 6px; color: var(--c-f4f1ec); }
+.mobile .dtop ~ .rowwrap .card .csub { color: var(--c-9aa0ae); }
+.mobile .dtop ~ .rowwrap .card { width: 152px; }
+
+.mseg .msegb { font-size: 14px; }

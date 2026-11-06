@@ -185,6 +185,59 @@
       .then(function (r) { if (r && r.id) w.Store.applyRaw('syncFile', r.id); return r; });
   }
 
+  /* ---------- GitHub Gist: cách đồng bộ khác, không cần đăng nhập Google ----------
+     Người dùng dán một token GitHub (classic, chỉ tick quyền "gist"). Dữ liệu nằm trong một Gist RIÊNG TƯ
+     của chính họ. Token chỉ lưu trên thiết bị này (không đồng bộ, không nằm trong code). */
+
+  var GIST_DESC = 'tongtai-sync';
+  function ghToken() { var g = w.Store.raw('gh', null); return g && g.token ? g.token : ''; }
+  function gh(method, path, body) {
+    var h = { Authorization: 'Bearer ' + ghToken(), Accept: 'application/vnd.github+json' };
+    if (body) h['Content-Type'] = 'application/json';
+    return http(method, 'https://api.github.com' + path, h, body ? JSON.stringify(body) : '');
+  }
+  function gistFind() {
+    var id = w.Store.raw('ghGist', '');
+    if (id) return Promise.resolve(id);
+    return gh('GET', '/gists?per_page=100').then(function (list) {
+      var f = (Array.isArray(list) ? list : []).filter(function (g) { return g.description === GIST_DESC && g.files && g.files[FILE]; })[0];
+      if (f) w.Store.applyRaw('ghGist', f.id);
+      return f ? f.id : '';
+    });
+  }
+  function gistDownload(id) {
+    if (!id) return Promise.resolve(null);
+    return gh('GET', '/gists/' + id).then(function (g) {
+      var f = g && g.files && g.files[FILE];
+      if (!f) return null;
+      var text = f.truncated && f.raw_url ? http('GET', f.raw_url, {}) : Promise.resolve(f.content);
+      return text.then(function (t) { try { return typeof t === 'string' ? JSON.parse(t) : t; } catch (e) { return null; } });
+    }, function (e) {
+      if (e && e.status === 404) { w.Store.applyRaw('ghGist', ''); return null; }
+      throw e;
+    });
+  }
+  function gistUpload(id, data) {
+    var files = {}; files[FILE] = { content: JSON.stringify(data) };
+    if (id) return gh('PATCH', '/gists/' + id, { files: files });
+    return gh('POST', '/gists', { description: GIST_DESC, public: false, files: files })
+      .then(function (r) { if (r && r.id) w.Store.applyRaw('ghGist', r.id); return r; });
+  }
+  // Kết nối: kiểm tra token đúng chưa rồi lưu
+  function connectGithub(tok) {
+    tok = String(tok || '').replace(/\s+/g, '');
+    if (tok.length < 20) return Promise.reject({ bad: true });
+    w.Store.applyRaw('gh', { token: tok });
+    return gh('GET', '/user').then(function () { return sync('login'); }, function (e) {
+      w.Store.applyRaw('gh', null);
+      throw e;
+    });
+  }
+  function disconnectGithub() {
+    w.Store.applyRaw('gh', null); w.Store.applyRaw('ghGist', '');
+    notify();
+  }
+
   /* ---------- Gộp dữ liệu hai bên ---------- */
 
   // API key và PLAYER_HOST là riêng từng máy (TV và web có thể dùng key khác nhau): không đồng bộ
@@ -266,27 +319,38 @@
   function status() {
     var a = S();
     return {
-      configured: configured(), web: isWeb, loggedIn: !!(a && (a.refresh || a.access || a.kind === 'web')),
+      configured: configured(), web: isWeb, google: !!(a && (a.refresh || a.access || a.kind === 'web')),
+      github: !!ghToken(),
+      loggedIn: !!(a && (a.refresh || a.access || a.kind === 'web')) || !!ghToken(),
       email: a && a.email || '', lastSync: w.Store.raw('syncAt', 0), error: w.Store.raw('syncErr', ''),
       needTap: !!(a && a.needTap), expired: !!(a && a.expired)
     };
   }
   function notify() { listeners.forEach(function (f) { try { f(status()); } catch (e) { /* bỏ qua */ } }); }
 
+  // Một "nơi lưu": Google Drive hoặc GitHub Gist
+  var DRIVE = { on: function () { var a = S(); return !!(a && (a.refresh || a.access || a.kind === 'web')); }, find: findFile, download: download, upload: upload };
+  var GIST = { on: function () { return !!ghToken(); }, find: gistFind, download: gistDownload, upload: gistUpload };
+
+  function syncOne(B) {
+    return B.find().then(function (id) {
+      return B.download(id).then(function (remote) {
+        var merged = merge(snapshot(), remote);
+        var changed = apply(merged);
+        return B.upload(id, merged).then(function () { return changed; });
+      });
+    });
+  }
+
   function sync(why) {
     if (busy) return busy;
     if (!status().loggedIn) return Promise.resolve(false);
-    busy = findFile().then(function (id) {
-      return download(id).then(function (remote) {
-        var merged = merge(snapshot(), remote);
-        var changed = apply(merged);
-        return upload(id, merged).then(function () {
-          w.Store.applyRaw('syncAt', Date.now());
-          w.Store.applyRaw('syncErr', '');
-          return changed;
-        });
-      });
-    }).then(function (changed) {
+    var list = [DRIVE, GIST].filter(function (B) { return B.on(); });
+    busy = list.reduce(function (p, B) {
+      return p.then(function (ch) { return syncOne(B).then(function (c) { return ch || c; }); });
+    }, Promise.resolve(false)).then(function (changed) {
+      w.Store.applyRaw('syncAt', Date.now());
+      w.Store.applyRaw('syncErr', '');
       busy = null;
       notify();
       if (changed && why === 'start' && w.Screens && w.Screens.current && w.Screens.current().name === 'home') w.Screens.goTab('home');
@@ -294,7 +358,10 @@
     }, function (e) {
       busy = null;
       var msg = e && e.needTap ? 'Chạm “Đồng bộ ngay” để đăng nhập lại' :
-        e && e.net ? 'Mất mạng, sẽ thử lại' : e && e.status === 403 ? 'Chưa bật Google Drive API' :
+        e && e.net ? 'Mất mạng, sẽ thử lại' :
+        e && e.status === 401 && ghToken() ? 'Token GitHub sai hoặc hết hạn' :
+        e && e.status === 403 && ghToken() ? 'GitHub từ chối: token cần quyền gist' :
+        e && e.status === 403 ? 'Chưa bật Google Drive API' :
         e && e.data && e.data.error === 'invalid_grant' ? 'Hết hạn đăng nhập, hãy đăng nhập lại' : 'Lỗi đồng bộ';
       w.Store.applyRaw('syncErr', msg);
       notify();
@@ -310,7 +377,7 @@
   function logout() {
     w.Store.applyRaw('google', null);
     w.Store.applyRaw('syncFile', '');
-    w.Store.applyRaw('syncAt', 0);
+    if (!ghToken()) w.Store.applyRaw('syncAt', 0);
     try { if (isWeb && w.google && w.google.accounts) w.google.accounts.oauth2.revoke(''); } catch (e) { /* bỏ qua */ }
     notify();
   }
@@ -330,7 +397,7 @@
 
   w.Sync = {
     status: status, sync: sync, dirty: dirty, logout: logout, init: init,
-    startDevice: startDevice, webLogin: webLoginTap, onChange: function (f) { listeners.push(f); },
+    startDevice: startDevice, webLogin: webLoginTap, connectGithub: connectGithub, disconnectGithub: disconnectGithub, onChange: function (f) { listeners.push(f); },
     _merge: merge
   };
 })(window);

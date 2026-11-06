@@ -727,6 +727,17 @@
         rr.cards(rel, function (it) { return UI.card(it, { onSelect: function (x) { push(Detail(x)); } }); });
         v.appendChild(rr.wrap);
       }
+      // Top 10 phim trong tuần: phim ra trong 7 ngày qua, từ tất cả kênh phim ngắn đang theo dõi, xem nhiều nhất trước
+      var tt = UI.row('Top 10 phim trong tuần', 'Phim mới ra trong 7 ngày · xem nhiều nhất');
+      tt.wrap.classList.add('row-hot', 'row-top10');   // dùng lại kiểu số hạng 1, 2, 3… của hàng Đang hot
+      v.appendChild(tt.wrap);
+      Api.followedFilms().then(function (all) {
+        var week = Date.now() - 7 * 86400e3;
+        var top = all.filter(function (f) { return new Date(f.pub || 0).getTime() > week; })
+          .sort(function (a, b) { return (b.views || 0) - (a.views || 0); }).slice(0, 10);
+        if (!top.length) { tt.msg('Tuần này chưa có phim mới từ các kênh theo dõi.'); return; }
+        tt.cards(top, function (it, i) { return UI.card(it, { rank: i + 1, onSelect: function (x) { push(Detail(x)); } }); });
+      }).catch(function (e) { tt.msg(Api.explain(e)); });
     }
 
     updateButtons();
@@ -916,12 +927,12 @@
     row('Đăng nhập Google', 'Giữ lịch sử, phim xem dở, danh sách, cài đặt giống nhau trên TV, điện thoại, máy tính', function () {
       var s = Sync.status();
       if (!s.configured) return { t: 'Chưa cài Client ID' };
-      if (s.loggedIn && !s.expired) return { t: s.email || 'Đã đăng nhập', on: true };
+      if (s.google && !s.expired) return { t: s.email || 'Đã đăng nhập', on: true };
       return { t: s.expired ? 'Đăng nhập lại' : 'Đăng nhập', on: false };
     }, function (paint) {
       var s = Sync.status();
       if (!s.configured) { UI.toast('Cần điền Google Client ID trong config.js (xem Hướng dẫn → Đăng nhập Google)'); return; }
-      if (s.loggedIn && !s.expired && !s.needTap) { UI.toast('Đã đăng nhập ' + (s.email || '') + '. Chọn “Đăng xuất” để đổi tài khoản.'); return; }
+      if (s.google && !s.expired && !s.needTap) { UI.toast('Đã đăng nhập ' + (s.email || '') + '. Chọn “Đăng xuất” để đổi tài khoản.'); return; }
       if (s.web) {
         Sync.webLogin().then(function () { paint(); UI.toast('Đã đăng nhập và đồng bộ'); goTab('settings'); },
           function () { UI.toast('Chưa đăng nhập được Google'); });
@@ -933,16 +944,36 @@
       return { t: s.error ? s.error : 'Lần cuối ' + hhmm2(s.lastSync), on: !s.error };
     }, function (paint) {
       var s = Sync.status();
-      if (!s.loggedIn) { UI.toast('Hãy đăng nhập Google trước'); return; }
-      var p = s.needTap && s.web ? Sync.webLogin() : Sync.sync('manual');
+      if (!s.loggedIn) { UI.toast('Hãy đăng nhập Google hoặc kết nối GitHub trước'); return; }
+      var p = s.google && s.needTap && s.web ? Sync.webLogin() : Sync.sync('manual');
       UI.toast('Đang đồng bộ…');
       p.then(function () { paint(); var st = Sync.status(); UI.toast(st.error || 'Đã đồng bộ'); }, function () { paint(); });
     });
     row('Đăng xuất Google', 'Dữ liệu trên máy này vẫn giữ nguyên', function () {
-      return { t: Sync.status().loggedIn ? 'Đăng xuất' : '—' };
+      return { t: Sync.status().google ? 'Đăng xuất' : '—' };
     }, function (paint) {
-      if (!Sync.status().loggedIn) return;
+      if (!Sync.status().google) return;
       Sync.logout(); UI.toast('Đã đăng xuất Google'); goTab('settings');
+    });
+
+    sec('Đồng bộ bằng GitHub (cách khác, không cần Google)');
+    row('Token GitHub', 'Dán token quyền gist (xem Hướng dẫn). Lưu trên máy này, dữ liệu nằm trong Gist riêng tư của bạn', function () {
+      return Sync.status().github ? { t: 'Đã kết nối', on: true } : { t: 'Chưa có' };
+    }, function (paint) {
+      push(TextEdit('Token GitHub (quyền gist)', '', function (val) {
+        UI.toast('Đang kiểm tra token…');
+        Sync.connectGithub(val).then(function () { UI.toast(Sync.status().error || 'Đã kết nối GitHub và đồng bộ'); goTab('settings'); },
+          function (e) {
+            UI.toast(e && e.bad ? 'Token quá ngắn, hãy dán lại đủ' : e && e.status === 401 ? 'Token GitHub không đúng hoặc đã hết hạn' :
+              e && e.net ? 'Không có mạng' : 'GitHub từ chối token (cần quyền gist)');
+          });
+      }));
+    });
+    row('Ngắt kết nối GitHub', 'Dữ liệu trên máy này vẫn giữ nguyên', function () {
+      return { t: Sync.status().github ? 'Ngắt kết nối' : '—' };
+    }, function () {
+      if (!Sync.status().github) return;
+      Sync.disconnectGithub(); UI.toast('Đã ngắt kết nối GitHub'); goTab('settings');
     });
 
     sec('Remote');
@@ -1227,7 +1258,7 @@
       qk('Ước tính theo Cài đặt', '~' + e.hour + ' đơn vị/giờ · mở 8 tiếng ≈ ' + num(e.day) + '/ngày');
       qk('Cập nhật phim mới', nr.text);
       var sy = Sync.status();
-      if (sy.loggedIn) qk('Đồng bộ Google', (sy.email || 'Đã đăng nhập') + ' · ' + (sy.error || 'lần cuối ' + (sy.lastSync ? UI.hhmm(sy.lastSync) : '—')), sy.error ? 'bad' : '');
+      if (sy.loggedIn) qk('Đồng bộ', ((sy.google ? (sy.email || 'Google') : '') + (sy.google && sy.github ? ' + ' : '') + (sy.github ? 'GitHub' : '')) + ' · ' + (sy.error || 'lần cuối ' + (sy.lastSync ? UI.hhmm(sy.lastSync) : '—')), sy.error ? 'bad' : '');
       var pct = Math.min(100, q.units / 100);
       fill.style.width = Math.max(1, pct) + '%';
       fill.className = 'qfill' + (pct > 80 || over ? ' bad' : pct > 50 ? ' mid' : '');
@@ -1316,6 +1347,7 @@
       { img: 'g_cats', t: 'Danh mục và Tìm kiếm', l: ['16 thể loại, mỗi ô dùng ảnh của phim nổi bật trong thể loại đó.', 'Tìm kiếm: chọn chữ trên bàn phím màn hình, không cần gõ dấu.'] },
       { img: 'g_addch', t: 'Thêm kênh mới', l: ['Cài đặt → Kênh theo dõi → “+ Thêm kênh mới”. Gõ tên kênh (không cần dấu) hoặc @tên-kênh.', 'Chọn “Lưu vào Phim ngắn”, “Lưu vào Phim lẻ hay” hoặc “Lưu vào Hoạt hình”.', 'Mỗi kênh có nút đổi loại: Phim ngắn → Phim lẻ hay → Hoạt hình → Tắt.'] },
       { img: 'g_google', t: 'Đăng nhập Google (đồng bộ nhiều máy)', l: ['Cài đặt → Tài khoản Google → “Đăng nhập Google”.', 'TV: mở google.com/device trên điện thoại, đăng nhập Gmail, nhập mã hiện trên TV. Màn hình TV tự chuyển khi xong.', 'Trình duyệt / iPhone: chọn tài khoản Google trong cửa sổ hiện ra.', 'Lịch sử, phim xem dở, danh sách, phim đã bỏ, cài đặt, kênh bạn thêm giống nhau trên mọi máy cùng Gmail. API key và PLAYER_HOST giữ riêng từng máy.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M60 78a22 22 0 0 1 4-43 30 30 0 0 1 58-2 26 26 0 0 1 8 51z" fill="none" stroke="#E8B04B" stroke-width="6" stroke-linejoin="round"/><path d="M88 62l12-12 12 12M100 50v30" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Đồng bộ bằng GitHub (không cần Google)', l: ['Lấy token: github.com → ảnh đại diện → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).', 'Đặt tên bất kỳ, chọn hạn dùng, CHỈ tick ô “gist”, bấm Generate rồi sao chép token (chỉ hiện một lần).', 'Trong app: Cài đặt → Đồng bộ bằng GitHub → Token GitHub → dán token → OK. Làm lại trên mỗi máy muốn đồng bộ.', 'Dữ liệu nằm trong một Gist riêng tư tên tongtai-sync. Token chỉ lưu trên máy, giữ kín như mật khẩu, đừng gửi cho ai. Mất hoặc lộ token thì xóa nó trong GitHub Settings.', 'GitHub không nhận username và mật khẩu cho việc này, chỉ nhận token.'] },
       { img: 'g_key', t: 'Nhập YouTube API key', l: ['Lấy key ở console.cloud.google.com → APIs & Services → Credentials (chuỗi 39 ký tự, giữ kín, đừng gửi cho ai).', 'Trên TV: Cài đặt → Kết nối → “YouTube API key” → OK.', 'Gõ từng ký tự: “Chữ HOA” đổi hoa/thường, “Xóa” xóa 1 ký tự. Xong chọn “Lưu”.', 'Kiểm tra: tab Thông tin → Nguồn dữ liệu ghi “YouTube API: đã kết nối”.'] },
       { img: 'g_host', t: 'Nhập PLAYER_HOST (chỉ Samsung)', l: ['Chỉ TV Samsung cần. Hisense / Android TV bỏ qua bước này.', 'Cài đặt → Kết nối → “PLAYER_HOST (Samsung)” → OK. Đã có sẵn “https://”.', 'Gõ tiếp địa chỉ GitHub Pages của bạn, dạng tên-của-bạn.github.io/tongtai-player/ (dùng phím . / -) rồi “Lưu”.', 'Kiểm tra: tab Thông tin → Trình phát ghi “Qua https://…”. Còn lỗi 153 là địa chỉ chưa đúng.'] },
       { img: 'g_set_update', t: 'Cài đặt: Cập nhật phim mới', l: ['Tự cập nhật phim mới: Bật thì app tự lấy phim mới khi đang mở.', 'Cập nhật mỗi: 1, 2, 3, 6 hoặc 12 giờ. Càng thưa càng tiết kiệm hạn mức.', 'Tạm dừng khi TV để không: không ai bấm remote sau 1, 3 hoặc 6 giờ thì ngừng cập nhật.', 'Số video lấy mỗi kênh: 10, 25 hoặc 50 (gồm hết video mới + video cũ chọn ngẫu nhiên).'] },

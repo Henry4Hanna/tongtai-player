@@ -25,8 +25,8 @@ window.APP_CONFIG = {
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.9.3',
-  BUILD: 32,
+  VERSION: '2.9.5',
+  BUILD: 34,
   UPDATED: '05/11/2026',
   CONTACT: '',
 

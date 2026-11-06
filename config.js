@@ -1,7 +1,7 @@
 /* Cấu hình Tổng Tài TV. Chỉ cần điền API_KEY là chạy được. */
 window.APP_CONFIG = {
   // Khóa YouTube Data API v3. Để trống = chế độ demo (dữ liệu mẫu, chưa phát được video).
-  API_KEY: 'AIzaSyCXEkZ-8jg9V3SQgAKEhwms0Naqsl8h-bo',   // ĐỂ TRỐNG: bản web công khai, nhập key trong Cài đặt (chỉ lưu trên trình duyệt của bạn)
+  API_KEY: '',   // ĐỂ TRỐNG: bản web công khai, nhập key trong Cài đặt (chỉ lưu trên trình duyệt của bạn)
 
   // Samsung TV: địa chỉ trang phát video trên GitHub Pages (xem README mục PLAYER_HOST).
   // Android không cần. CHỈ có một dòng PLAYER_HOST trong file này.

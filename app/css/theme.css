@@ -1,0 +1,80 @@
+/* Màu giao diện: Tối (mặc định) và Sáng. Các file css khác dùng biến --c-xxxxxx (xxxxxx = mã màu bản Tối). */
+:root {
+  --c-0b0d12: #0B0D12;
+  --c-151922: #151922;
+  --c-17191f: #17191F;
+  --c-1a1f2b: #1A1F2B;
+  --c-1b1710: #1B1710;
+  --c-1b2030: #1B2030;
+  --c-1d2027: #1D2027;
+  --c-1d2230: #1D2230;
+  --c-1e2330: #1E2330;
+  --c-222838: #222838;
+  --c-23262e: #23262E;
+  --c-262c3b: #262C3B;
+  --c-2a2e38: #2A2E38;
+  --c-2a3042: #2A3042;
+  --c-343846: #343846;
+  --c-7fd3ae: #7FD3AE;
+  --c-8c92a0: #8C92A0;
+  --c-9aa0ae: #9AA0AE;
+  --c-b9beca: #B9BECA;
+  --c-c9cdd6: #C9CDD6;
+  --c-d5d8e0: #D5D8E0;
+  --c-e3e5ec: #E3E5EC;
+  --c-e6e8ee: #E6E8EE;
+  --c-ede6dd: #EDE6DD;
+  --c-f0c36a: #F0C36A;
+  --c-f0e6dc: #F0E6DC;
+  --c-f4f1ec: #F4F1EC;
+  --c-f5d58e: #F5D58E;
+  --c-ff8a80: #FF8A80;
+  --ring: #FFFFFF;
+  --gold-ink: #E8B04B;
+  --bg-rgb: 11, 13, 18;
+  --fg-rgb: 255, 255, 255;
+  color-scheme: dark;
+}
+html.light {
+  --c-0b0d12: #F5F3EE;
+  --c-151922: #FFFFFF;
+  --c-17191f: #F0EDE6;
+  --c-1a1f2b: #EDE9DF;
+  --c-1b1710: #F3EFE6;
+  --c-1b2030: #E7E3D9;
+  --c-1d2027: #F7F5F0;
+  --c-1d2230: #DEDACF;
+  --c-1e2330: #DEDACF;
+  --c-222838: #E3DFD4;
+  --c-23262e: #E7E3D9;
+  --c-262c3b: #E3DFD4;
+  --c-2a2e38: #DAD6CB;
+  --c-2a3042: #D9D5CA;
+  --c-343846: #CFCBBE;
+  --c-7fd3ae: #1E7A55;
+  --c-8c92a0: #6A7080;
+  --c-9aa0ae: #6A7080;
+  --c-b9beca: #444B5C;
+  --c-c9cdd6: #3C4252;
+  --c-d5d8e0: #2F3442;
+  --c-e3e5ec: #2A2F3B;
+  --c-e6e8ee: #2A2F3B;
+  --c-ede6dd: #2F3442;
+  --c-f0c36a: #8A5A00;
+  --c-f0e6dc: #2A2F3B;
+  --c-f4f1ec: #1A1D26;
+  --c-f5d58e: #8A5A00;
+  --c-ff8a80: #C0392B;
+  --ring: #1A1D26;
+  --gold-ink: #9A6000;
+  --bg-rgb: 245, 243, 238;
+  --fg-rgb: 26, 29, 38;
+  color-scheme: light;
+}
+/* Chi tiết phim: ảnh nền mờ nhạt hơn để chữ tối đọc được */
+html.light .dbg { filter: blur(28px) brightness(1.1); opacity: .28; }
+html.light #boot, html.light body { background: #F5F3EE; color: #1A1D26; }
+/* Trình phát video luôn tối ở cả hai giao diện */
+html.light #player, html.light #pl-ui { color: #F4F1EC; }
+/* Thẻ thể loại nằm trên nền gradient màu: chữ luôn trắng */
+html.light .catcard { color: #F4F1EC; }

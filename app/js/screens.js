@@ -631,6 +631,10 @@
       favLabel();
     }, UI.ICON_PLUS);
     btns.appendChild(bPlay); btns.appendChild(bRe); btns.appendChild(bFav);
+    if (!isAnime) {   // danh sách phát hoạt hình (nhiều tập) không có một video để xem bình luận
+      btns.appendChild(UI.button('Bình luận', '', function () { push(Comments(item)); },
+        '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>'));
+    }
     info.appendChild(btns);
     top.appendChild(info);
     v.appendChild(top);
@@ -727,6 +731,67 @@
 
     updateButtons();
     return { name: 'detail', el: v, refresh: updateButtons };
+  }
+
+  /* ---------- Bình luận của phim (YouTube commentThreads, 1 đơn vị hạn mức mỗi lần tải) ---------- */
+
+  function Comments(item) {
+    var v = UI.view();
+    v.classList.add('scroller');
+    var head = el('div', 'pagehead', 'Bình luận');
+    head.appendChild(el('span', 'rh', item.title));
+    var order = 'relevance';
+    var bSort = UI.button('Hay nhất', 'small', function () {
+      order = order === 'relevance' ? 'time' : 'relevance';
+      bSort.setLabel(order === 'relevance' ? 'Hay nhất' : 'Mới nhất');
+      load(true);
+    });
+    head.appendChild(bSort);
+    v.appendChild(head);
+    var list = el('div', 'cmlist');
+    v.appendChild(list);
+    var more = null, busy = false;
+
+    function fmtN(n) { return n >= 1000 ? (Math.round(n / 100) / 10) + 'K' : String(n); }
+    function note(t) { var m = el('div', 'cmnote f', t); m._ok = function () {}; list.appendChild(m); return m; }
+
+    function load(reset, page) {
+      if (busy) return;
+      busy = true;
+      if (reset) { list.innerHTML = ''; more = null; }
+      if (more && more.parentNode) more.parentNode.removeChild(more);
+      var wait = el('div', 'cmnote', 'Đang tải bình luận…');
+      list.appendChild(wait);
+      Api.comments(item.id, { order: order, page: page || '' }).then(function (r) {
+        busy = false;
+        if (wait.parentNode) list.removeChild(wait);
+        if (!r.items.length && reset) { var m = note('Chưa có bình luận nào.'); Nav.focus(m); return; }
+        var first = null;
+        r.items.forEach(function (c) {
+          var row = el('div', 'cm f');
+          var top = el('div', 'cmtop');
+          top.appendChild(el('span', 'cmwho', c.who));
+          top.appendChild(el('span', 'cmmeta', (c.at ? UI.fmtAgo(c.at) + '  ·  ' : '') + '♥ ' + fmtN(c.likes) + (c.replies ? '  ·  ' + c.replies + ' trả lời' : '')));
+          row.appendChild(top);
+          row.appendChild(el('div', 'cmtxt', c.text));
+          row._ok = function () { row.classList.toggle('open'); };   // OK: mở rộng / thu gọn bình luận dài
+          list.appendChild(row);
+          if (!first) first = row;
+        });
+        if (r.next) {
+          more = UI.button('Xem thêm bình luận', 'small', function () { load(false, r.next); });
+          list.appendChild(more);
+        }
+        if (reset && first) Nav.focus(first);
+      }, function (e) {
+        busy = false;
+        if (wait.parentNode) list.removeChild(wait);
+        var m = note(e && e.nokey ? 'Cần YouTube API key để xem bình luận. Vào Cài đặt → YouTube API key.' : Api.explain(e));
+        Nav.focus(m);
+      });
+    }
+    load(true);
+    return { name: 'comments', el: v };
   }
 
   /* ---------- Lịch sử ---------- */
@@ -1244,8 +1309,8 @@
       { svg: REMOTE, t: 'Remote', l: ['Mũi tên để di chuyển, OK để chọn. Ô đang chọn có viền trắng.', 'Bấm OK 2 lần thật nhanh: về Trang chủ từ bất kỳ đâu (kể cả đang xem phim). Tắt được trong Cài đặt → Remote.', 'Back để quay lại trang trước. Ở trang chủ bấm Back 2 lần để thoát app.'] },
       { img: 'g_home', t: 'Trang chủ', l: ['Ảnh lớn đầu trang là phim mới nhất. “Xem ngay” để phát, “Chi tiết” để xem thông tin.', 'Các hàng: Tiếp tục xem, Phim mới cập nhật, Đang hot, Phim lẻ hay, Đề xuất (2 danh mục mỗi ngày), Hoạt hình.', 'Dòng vàng cạnh “Phim mới cập nhật” cho biết còn bao lâu app tự lấy phim mới.'] },
       { img: 'g_play', t: 'Xem phim', l: ['OK: tạm dừng / phát. Trái / phải: tua 10 giây (bấm liên tục để tua nhanh).', 'Mũi tên lên: chọn các nút −10s, +10s, Bỏ phim, Phụ đề, Chất lượng. Bấm ▲ 2 lần nhanh: bật/tắt phụ đề tiếng Việt.', 'Thanh điều khiển tự ẩn sau 5 giây. Back để thoát phim, app nhớ chỗ đang xem.'] },
-      { img: 'g_quality', t: 'Phụ đề và chất lượng', l: ['Nút Phụ đề: bật/tắt phụ đề tiếng Việt (YouTube tự dịch nếu phim chỉ có phụ đề khác).', 'Nút Chất lượng: Tự động, 4K, 1080p… YouTube có thể tự hạ khi mạng yếu.', 'Bỏ phim: ẩn phim lỗi. Hiện lại trong Lịch sử hoặc Cài đặt.'] },
-      { img: 'g_detail', t: 'Tiếp tục xem', l: ['Phim xem dở có thanh tiến độ và thời gian còn lại.', '“Tiếp tục xem” để xem tiếp, “Xem từ đầu” để xem lại.', '“+ Danh sách” để lưu phim, xem lại trong tab Lịch sử.'] },
+      { img: 'g_quality', t: 'Phụ đề và chất lượng', l: ['Nút Phụ đề: bật/tắt phụ đề tiếng Việt (YouTube tự dịch nếu phim chỉ có phụ đề khác).', 'Nút Chất lượng: Tự động, 4K, 1080p, 720p… app đổi kích thước khung phát để YouTube chọn mức tương ứng, mất vài giây mới đổi. YouTube vẫn có thể tự hạ khi mạng yếu hoặc video không có mức đó.', 'Bỏ phim: ẩn phim lỗi. Hiện lại trong Lịch sử hoặc Cài đặt.'] },
+      { img: 'g_detail', t: 'Tiếp tục xem', l: ['Phim xem dở có thanh tiến độ và thời gian còn lại.', '“Tiếp tục xem” để xem tiếp, “Xem từ đầu” để xem lại.', '“+ Danh sách” để lưu phim, xem lại trong tab Lịch sử.', '“Bình luận”: đọc bình luận của phim trên YouTube (Hay nhất / Mới nhất). OK để mở rộng bình luận dài. Cần API key, tốn 1 đơn vị hạn mức mỗi lần tải.'] },
       { img: 'g_anime', t: 'Hoạt hình nhiều tập', l: ['Các tập cùng một bộ được gộp thành 1 phim, thẻ phim ghi số tập.', 'Vào phim: “Xem từ tập 1” hoặc chọn tập trong Danh sách tập bên dưới.', 'Xem hết một tập, app tự chuyển sang tập sau. Xem dở thì nút ghi “Tiếp tục xem tập …”.'] },
       { img: 'g_chans', t: 'Kênh', l: ['Tất cả kênh bạn theo dõi. Chữ vàng là kênh có phim mới hôm nay.', 'OK để xem phim mới nhất của kênh. Kênh hoạt hình ghi “Hoạt hình”, kênh phim lẻ ghi “Phim lẻ hay”.', 'Dấu “?” là kênh chưa tìm được (thường do hết hạn mức), app tự thử lại.'] },
       { img: 'g_cats', t: 'Danh mục và Tìm kiếm', l: ['16 thể loại, mỗi ô dùng ảnh của phim nổi bật trong thể loại đó.', 'Tìm kiếm: chọn chữ trên bàn phím màn hình, không cần gõ dấu.'] },
@@ -1306,7 +1371,7 @@
   }
 
   w.Screens = {
-    init: init, back: back, goTab: goTab, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
+    init: init, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
     depth: function () { return S.stack.length; },
     current: function () { return current(); }
   };

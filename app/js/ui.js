@@ -94,11 +94,11 @@
     if (item.tag) t.appendChild(el('div', 'badge tag', item.tag));
     if (o.isNew) t.appendChild(el('div', 'badge new', 'MỚI'));
     if (item.kind === 'anime' && (item.eps || 0) > 1) t.appendChild(el('div', 'badge multi' + (o.isNew ? ' shift' : ''), 'Nhiều tập'));
-    if (o.rank) t.appendChild(el('div', 'rank', String(o.rank)));
+    if (o.rank) { t.classList.add('ranked'); t.appendChild(el('div', 'rank', String(o.rank))); }
     var dur = item.kind === 'anime' ? (item.eps ? item.eps + ' tập' : '') : (item.dur ? fmtDur(item.dur) : '');
     if (dur) t.appendChild(el('div', 'badge dur', dur));
     var cats = w.Api ? w.Api.catsOf(item) : [];
-    if (cats.length && !o.rank) t.appendChild(el('div', 'badge cat', cats[0]));
+    if (cats.length) t.appendChild(el('div', 'badge cat', cats[0]));
     if (o.progress != null) {
       var pb = el('div', 'pbar'), pf = el('div', 'pfill');
       pf.style.width = Math.round(Math.min(1, o.progress) * 100) + '%';

@@ -90,18 +90,48 @@
 
   function renderLabel() { if (isOpen && mode !== 'menu') renderBtns(); }
 
+  /* Chất lượng: YouTube đã bỏ khả năng ép chất lượng từ ứng dụng nhúng (setPlaybackQuality bị bỏ qua),
+     nhưng chế độ Tự động chọn độ phân giải theo KÍCH THƯỚC khung phát (tính bằng điểm ảnh thật).
+     Nên app đổi kích thước khung: khung 640x360 -> xin ~360p, khung 3840x2160 -> xin 4K,
+     rồi phóng / thu lại cho vừa màn hình bằng transform. */
+  var Q_H = { hd2160: 2160, hd1080: 1080, hd720: 720, large: 480, medium: 360 };
+
+  function sizeForQuality() {
+    var host = $('yt-host'), fr = host && host.querySelector('iframe');
+    if (!fr) return;
+    var qp = qPref(), H = Q_H[qp];
+    var set = function (k, v) { fr.style.setProperty(k, v, 'important'); };
+    if (!H) {                                        // Tự động: trả về như mặc định
+      ['width', 'height', 'transform', '-webkit-transform', 'transform-origin'].forEach(function (k) { fr.style.removeProperty(k); });
+      return;
+    }
+    var hw = host.offsetWidth, hh = host.offsetHeight, r = host.getBoundingClientRect();
+    var devH = r.height * (w.devicePixelRatio || 1);   // chiều cao thật của khung, tính bằng điểm ảnh màn hình
+    if (!hw || !hh || !devH) return;
+    var f = Math.max(0.15, Math.min(3, H / devH));
+    set('width', Math.round(hw * f) + 'px');
+    set('height', Math.round(hh * f) + 'px');
+    set('transform-origin', '0 0');
+    set('transform', 'scale(' + (1 / f) + ')');
+    set('-webkit-transform', 'scale(' + (1 / f) + ')');
+  }
+
   function applyQuality(tell) {
     var qp = qPref();
+    sizeForQuality();
     try {
-      if (qp !== 'auto' && yt && yt.setPlaybackQuality) yt.setPlaybackQuality(qp);
+      if (qp !== 'auto' && yt && yt.setPlaybackQuality) yt.setPlaybackQuality(qp);   // vẫn gửi gợi ý, đề phòng YouTube còn nghe
     } catch (x) { /* bỏ qua */ }
     if (tell) {
-      setTimeout(function () {
-        if (!isOpen) return;
-        var now = qNow();
-        w.UI.toast('Chất lượng: ' + qLabel(qp) + (now && qp !== 'auto' && now !== qLabel(qp) ? ' · YouTube đang phát ' + now : (now ? ' · đang phát ' + now : '')));
-        renderBtns();
-      }, 1200);
+      w.UI.toast('Đang chuyển sang ' + qLabel(qp) + '… YouTube cần vài giây');
+      [3500, 8000].forEach(function (ms, i) {
+        setTimeout(function () {
+          if (!isOpen) return;
+          var now = qNow();
+          renderBtns();
+          if (i === 1 && now) w.UI.toast('Chất lượng: ' + qLabel(qp) + ' · đang phát ' + now + (qp !== 'auto' && now !== qLabel(qp) ? ' (video này chỉ có tới mức đó hoặc mạng chưa đủ)' : ''));
+        }, ms);
+      });
     }
   }
 

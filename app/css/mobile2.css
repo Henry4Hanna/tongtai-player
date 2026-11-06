@@ -57,7 +57,9 @@ html.mobile.mscrolled #views { top: calc(49px + env(safe-area-inset-top)); }
 .mobile .badge.dur::before { content: '▶ '; font-size: 8px; color: #6EC7FF; }
 .mobile .badge.tag { background: rgba(23,25,31,.85); color: #F5D58E; border: 1px solid rgba(232,176,75,.4); }
 .mobile .badge.tag::before { content: '★ '; }
-.mobile .badge.cat { display: none; }
+.mobile .badge.cat { display: block; left: auto; right: 6px; top: 6px; bottom: auto; max-width: 62%; font-size: 9px; padding: 1px 5px; background: rgba(23,25,31,.85); }
+.mobile .badge.tag ~ .badge.cat { top: 28px; }
+.mobile .row-hot .badge.tag ~ .badge.cat, .mobile .row-hot .badge.cat { top: auto; bottom: 6px; right: 6px; font-size: 10px; }
 .mobile .badge.new { top: 30px; }
 .mobile .badge.multi { top: 30px; }
 

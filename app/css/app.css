@@ -175,6 +175,7 @@ body { font-family: 'Be Vietnam Pro', 'Noto Sans', system-ui, sans-serif; color:
 #toast { color: #F4F1EC; position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 99; padding: 18px 40px; border-radius: 999px; background: rgba(21,25,34,.96); border: 2px solid #2A3042; font-size: 24px; font-weight: 600; max-width: 1400px; text-align: center; }
 
 /* 1.2.0: nhãn danh mục, khối tiến độ, phụ đề và chất lượng */
+.thumb.ranked .badge.cat { left: auto; right: 12px; bottom: 58px; }
 .badge.cat { left: 12px; bottom: 14px; max-width: 58%; background: rgba(11,13,18,.78); color: #F5D58E; border: 1px solid rgba(232,176,75,.55); font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip.cat { background: rgba(232,176,75,.14); color: var(--c-f5d58e); border: 1px solid rgba(232,176,75,.5); }
 .dprog { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
@@ -326,3 +327,19 @@ body { font-family: 'Be Vietnam Pro', 'Noto Sans', system-ui, sans-serif; color:
 .mobile .gbox { width: auto; margin: 20px 14px; padding: 20px; }
 .mobile .gt { font-size: 22px; } .mobile .gsteps { font-size: 14px; } .mobile .gurl { font-size: 22px; } .mobile .gcode { font-size: 34px; letter-spacing: 4px; } .mobile .gnote { font-size: 12px; }
 .btns.center { justify-content: center; }
+
+/* Bình luận */
+.cmlist { padding: 20px 80px 60px; max-width: 1500px; }
+.cm, .cmnote { padding: 18px 26px; margin-bottom: 14px; border-radius: 16px; background: var(--c-151922); border: 2px solid transparent; }
+.cm.focus, .cm:focus { border-color: var(--ring); }
+.cmnote { color: var(--c-9aa0ae); font-size: 26px; }
+.cmtop { font-size: 24px; margin-bottom: 6px; }
+.cmwho { font-weight: 800; margin-right: 18px; }
+.cmmeta { color: var(--c-9aa0ae); font-size: 21px; }
+.cmtxt { font-size: 26px; line-height: 1.45; color: var(--c-d5d8e0); max-height: 112px; overflow: hidden; white-space: pre-line; word-break: break-word; }
+.cm.open .cmtxt { max-height: none; }
+.mobile .cmlist { padding: 12px 14px 60px; }
+.mobile .cm, .mobile .cmnote { padding: 12px 14px; margin-bottom: 10px; border-radius: 12px; font-size: 14px; }
+.mobile .cmtop { font-size: 13px; }
+.mobile .cmmeta { font-size: 11px; }
+.mobile .cmtxt { font-size: 14px; max-height: 80px; }

@@ -6,7 +6,17 @@
   var BASE = 'https://www.googleapis.com/youtube/v3/';
 
   // "AI" viết hoa đứng riêng (tránh nhầm với từ "ai" trong tiếng Việt)
-  var AI_RE = /\bAI\b|trí tuệ nhân tạo|AI[- ]generated/;
+  var AI_RE = /\bAI\b|trí tuệ nhân tạo|AI[- ]generated|#ai\b|\b(?:Sora|Veo ?\d?|Kling|Hailuo|Seedance|Midjourney|Runway)\b/;
+  // Phim do AI tạo: YouTube yêu cầu người đăng khai báo "nội dung tổng hợp / bị thay đổi" (status.containsSyntheticMedia),
+  // đây là cờ chính thức, đáng tin hơn đoán chữ. Không có cờ thì đoán theo tiêu đề, mô tả, thẻ.
+  function isAiVideo(v) {
+    var sn = v.snippet || {}, st = v.status || {};
+    if (st.containsSyntheticMedia === true) return true;
+    var tags = sn.tags || [];
+    for (var i = 0; i < tags.length; i++) if (/^(ai|#ai|ai video|phim ai|video ai|ai generated)$/i.test(String(tags[i]).trim())) return true;
+    var text = (sn.title || '') + ' ' + (sn.description || '').slice(0, 500) + ' ' + tags.join(' ');
+    return AI_RE.test(text);
+  }
   var D3_RE = /\b3D\b/i;
   var D2_RE = /\b2D\b/i;
   // Nhãn hoạt hình: 3D / 2D / AI theo tiêu đề, mô tả, thẻ; không rõ thì dùng nhãn mặc định của kênh
@@ -17,7 +27,7 @@
     if (AI_RE.test(sn.title || '')) return 'AI';
     if (D3_RE.test(t)) return '3D';
     if (D2_RE.test(t)) return '2D';
-    if (AI_RE.test(t)) return 'AI';
+    if (isAiVideo(v)) return 'AI';
     return def || '';
   }
 
@@ -127,6 +137,7 @@
 
   function explain(e) {
     if (!e) return 'Có lỗi xảy ra.';
+    if (e.disabled) return 'Phim này đã tắt bình luận.';
     if (e.quota) return 'Hôm nay đã dùng hết hạn mức YouTube API. Mai thử lại nhé.';
     if (e.badKey) return 'API key không hợp lệ. Kiểm tra lại trong Cài đặt → YouTube API key.';
     if (e.net) return e.message + '. Kiểm tra mạng của TV.';
@@ -202,7 +213,7 @@
       dur: parseDur(v.contentDetails.duration),
       views: +((v.statistics || {}).viewCount || 0),
       pub: sn.publishedAt, desc: (sn.description || '').slice(0, 280),
-      tag: AI_RE.test(text) ? 'AI' : '', src: src || '', cc: (v.contentDetails || {}).caption === 'true'
+      tag: isAiVideo(v) ? 'AI' : '', src: src || '', cc: (v.contentDetails || {}).caption === 'true'
     };
   }
 
@@ -222,7 +233,7 @@
 
   function films(q, order) {
     if (!hasKey()) return Promise.resolve(demoFilms(order));
-    var ck = 'f5:' + q + ':' + (order || 'relevance');
+    var ck = 'f6:' + q + ':' + (order || 'relevance');
     var hit = Store.cacheGet(ck, C.CACHE_HOURS);
     if (hit) { hit = notBlocked(hit); addPool(hit); return Promise.resolve(hit); }
     return call('search', {
@@ -686,11 +697,34 @@
     return Promise.resolve(out);
   }
 
+  /* ---------- Bình luận (commentThreads.list: 1 đơn vị hạn mức mỗi lần) ---------- */
+
+  function comments(videoId, o) {
+    o = o || {};
+    if (!hasKey()) return Promise.reject({ message: 'Chưa có API key', nokey: true });
+    return call('commentThreads', {
+      part: 'snippet', videoId: videoId, maxResults: 25, order: o.order === 'time' ? 'time' : 'relevance',
+      textFormat: 'plainText', pageToken: o.page || ''
+    }).then(function (d) {
+      return {
+        next: d.nextPageToken || '',
+        items: (d.items || []).map(function (x) {
+          var c = ((x.snippet || {}).topLevelComment || {}).snippet || {};
+          return { who: c.authorDisplayName || 'Ẩn danh', text: c.textDisplay || '', likes: +c.likeCount || 0,
+            at: c.publishedAt || '', replies: +(x.snippet || {}).totalReplyCount || 0 };
+        })
+      };
+    }, function (e) {
+      if (e && /commentsDisabled|disabled comments/i.test(e.message || '')) e.disabled = true;
+      throw e;
+    });
+  }
+
   w.Api = {
-    hasKey: hasKey, films: films, anime: anime, animeAll: animeAll, episodes: episodes,
+    comments: comments, hasKey: hasKey, films: films, anime: anime, animeAll: animeAll, episodes: episodes,
     explain: explain, pool: function () { return pool; }, catsOf: catsOf,
     channels: channels, channelFilms: channelFilms, groupEpisodes: groupEpisodes, movieFilms: movieFilms,
-    cachedFilms: function (q) { return (q && Store.cacheGetAny('f5:' + q + ':relevance')) || []; },
+    cachedFilms: function (q) { return (q && Store.cacheGetAny('f6:' + q + ':relevance')) || []; },
     missingChannels: function () { return lastMissing; }, quotaToday: quotaToday, followedFilms: followedFilms, catFilms: catFilms, animeSearchLocal: animeSearchLocal
   };
 })(window);

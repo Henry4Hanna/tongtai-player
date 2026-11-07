@@ -5,7 +5,7 @@ window.APP_CONFIG = {
 
   // Samsung TV: địa chỉ trang phát video trên GitHub Pages (xem README mục PLAYER_HOST).
   // Android không cần. CHỈ có một dòng PLAYER_HOST trong file này.
-  PLAYER_HOST: '',
+  PLAYER_HOST: 'https://henry4hanna.github.io/tongtai-player/app/',
 
   REGION: 'VN',
   LANG: 'vi',
@@ -65,7 +65,7 @@ window.APP_CONFIG = {
   // Đăng nhập Google để đồng bộ lịch sử, tiến độ, danh sách, cài đặt giữa các máy (xem README mục ĐỒNG BỘ GOOGLE)
   GOOGLE_TV_CLIENT_ID: '',       // bản web không dùng       // loại "TVs and Limited Input devices" (cho Samsung, Hisense)
   GOOGLE_TV_CLIENT_SECRET: '',   // KHÔNG điền ở bản web công khai
-  GOOGLE_WEB_CLIENT_ID: '',      // loại "Web application" (cho bản trình duyệt)
+  GOOGLE_WEB_CLIENT_ID: '731796759414-phlt51jepekbfrkft40d1u4rrulajt2r.apps.googleusercontent.com',      // loại "Web application" (cho bản trình duyệt)
 
   OK2_HOME: true,              // bấm OK 2 lần liên tục để về Trang chủ
   CHANNELS_JSON: '',           // bản trình duyệt: địa chỉ channels.json (để trống = tự tìm cạnh trang)

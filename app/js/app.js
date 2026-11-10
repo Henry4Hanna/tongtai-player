@@ -111,7 +111,35 @@
   });
 
   /* ---------- Chuột / màn hình cảm ứng (bản trình duyệt) ---------- */
+  /* Giữ lâu (điện thoại, máy tính) trên phim / kênh / hồ sơ: hiện dấu ✕ để xóa.
+     Không có dấu ✕ thì làm như giữ lâu OK trên remote (hỏi xóa). */
+  var lpAt = 0;
+  function setupLongPress() {
+    var timer = 0, sx = 0, sy = 0, target = null;
+    function cancel() { clearTimeout(timer); timer = 0; target = null; }
+    d.addEventListener('pointerdown', function (e) {
+      if (bootOn || w.Player.isOpen() || (e.button && e.button !== 0)) return;
+      var f = e.target.closest && e.target.closest('.f');
+      if (!f || !f._hold) return;
+      target = f; sx = e.clientX; sy = e.clientY;
+      timer = setTimeout(function () {
+        var t = target; cancel();
+        if (!t) return;
+        lpAt = Date.now();
+        try { if (w.navigator.vibrate) w.navigator.vibrate(30); } catch (x) { /* bỏ qua */ }
+        [].forEach.call(d.querySelectorAll('.showdel'), function (x) { if (x !== t) x.classList.remove('showdel'); });
+        if (t.querySelector('.cdel, .chdel')) t.classList.add('showdel');
+        else t._hold();
+      }, 600);
+    });
+    d.addEventListener('pointermove', function (e) { if (timer && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 12) cancel(); });
+    d.addEventListener('pointerup', cancel);
+    d.addEventListener('pointercancel', cancel);
+    d.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('.f') && Date.now() - lpAt < 1500) e.preventDefault(); });
+  }
+
   function setupPointer() {
+    setupLongPress();
     // Bấm vào ô nào thì chọn và mở ô đó
     d.addEventListener('click', function (e) {
       var t = e.target;
@@ -126,7 +154,11 @@
         return;
       }
       if (t.tagName === 'INPUT') return;
-      if (t.closest && t.closest('.cdel:not(.on)')) return;   // nút ✕ xóa tự xử lý
+      if (Date.now() - lpAt < 700) return;   // vừa giữ lâu: không mở phim
+      if (t.closest && t.closest('.cdel:not(.on), .chdel')) return;   // nút ✕ xóa tự xử lý
+      // bấm ra ngoài: ẩn các dấu ✕ đang hiện
+      var shown = d.querySelectorAll('.showdel');
+      if (shown.length && !(t.closest && t.closest('.showdel'))) { [].forEach.call(shown, function (x) { x.classList.remove('showdel'); }); return; }
       var f = t.closest && t.closest('.f');
       if (!f) return;
       w.lastKeyAt = Date.now();
@@ -195,7 +227,9 @@
       panel.innerHTML = '';
       var me = d.createElement('div');
       me.className = 'mditem who';
-      me.textContent = '👤 ' + w.Store.profileName() + ' · Đổi hồ sơ';
+      var cur = w.Store.profiles().filter(function (x) { return x.id === w.Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
+      me.appendChild(w.Screens.avatarEl(cur, 'md'));
+      me.appendChild(d.createTextNode(cur.name + ' · Đổi hồ sơ'));
       me.onclick = function (e) { e.stopPropagation(); dr.classList.add('hidden'); w.Screens.who(); };
       panel.appendChild(me);
       [].forEach.call(d.querySelectorAll('#tabs .tab'), function (t) {
@@ -260,13 +294,16 @@
       fill.style.width = Math.max(4, Math.round(Math.min(1, n / Math.max(1, need)) * 100)) + '%';
     }
     paint(0);
+    // Cài đặt → Giao diện → Màn hình khởi động: số giây cố định, hoặc 'auto' = đến khi tải xong kênh
+    var fixed = C.BOOT_SECS === 'auto' ? 0 : (+C.BOOT_SECS || 3);
     w.Api.onProgress(function (n) {
       paint(n);
-      if (n >= need) bootDone(250);
+      if (n >= need && !fixed) bootDone(250);
     });
-    if (!w.Api.hasKey() || !need) bootDone(900);
+    if (fixed) setTimeout(hideBoot, fixed * 1000);
+    else if (!w.Api.hasKey() || !need) bootDone(900);
     setTimeout(function () { if (bootOn) hint.textContent = 'Bấm OK để vào ngay, phim sẽ tiếp tục tải phía sau'; }, 4000);
-    bootT = setTimeout(function () {
+    if (!fixed) bootT = setTimeout(function () {
       if (!bootOn) return;
       if (w.Log) w.Log.warn('Khởi động: sau 25 giây mới tải được ' + w.Api.progress().n + '/' + need + ' kênh (mạng chậm?)');
       bootDone(0);

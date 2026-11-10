@@ -17,11 +17,11 @@
     API_KEY: C.API_KEY, PLAYER_HOST: C.PLAYER_HOST,
     AUTO_REFRESH: true, REFRESH_HOURS: C.REFRESH_HOURS,
     IDLE_STOP_HOURS: C.IDLE_STOP_HOURS, CHANNEL_VIDEOS: C.CHANNEL_VIDEOS,
-    SHOW_CONT: true, SHOW_FRESH: true, SHOW_HOT: true, SHOW_MOVIE: true, SHOW_REC: true, SHOW_TOP10: true, SHOW_ANIME: true,
+    SHOW_CONT: true, SHOW_FAVCH: true, SHOW_FRESH: true, SHOW_HOT: true, SHOW_MOVIE: true, SHOW_REC: true, SHOW_TOP10: true, SHOW_ANIME: true,
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
     THEME: C.THEME || 'dark',
-    CLOCK_12: !!C.CLOCK_12,
+    CLOCK_12: !!C.CLOCK_12, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX !== false,
     AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
     AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
@@ -87,7 +87,13 @@
     apply();
   }
 
+  /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
+     Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
+  var PP = { THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+    SHOW_CONT: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
+  function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {
+    if (PP[k]) { var ps = psaved(); if (ps[k] !== undefined) return ps[k]; }
     var s = saved();
     return s[k] !== undefined ? s[k] : BASE[k];
   }
@@ -104,7 +110,7 @@
       s.PIN_H = pinHash(C.PIN_FORCE); s.pinForced = s.PIN_H;
       w.Store.setPref(KEY, s);
     }
-    for (k in BASE) C[k] = s[k] !== undefined ? s[k] : BASE[k];
+    for (k in BASE) C[k] = get(k);
     var chs = allChannels();
     C.CHANNELS = chs.filter(function (c) { return c.type === 'drama'; }).map(strip);
     C.ANIME_CHANNELS = chs.filter(function (c) { return c.type === 'anime'; }).map(strip);
@@ -137,6 +143,13 @@
   }
 
   function set(k, v) {
+    if (PP[k]) {   // lưu vào hồ sơ đang xem
+      var all = w.Store.pref('psettings', {}) || {}, me = w.Store.profile();
+      all[me] = all[me] || {}; all[me][k] = v;
+      w.Store.setPref('psettings', all);
+      apply();
+      return;
+    }
     var s = saved();
     if (v === BASE[k] || (Array.isArray(v) && JSON.stringify(v) === JSON.stringify(BASE[k]))) delete s[k]; else s[k] = v;
     w.Store.setPref(KEY, s);
@@ -151,7 +164,9 @@
     if (s.API_KEY) keep.API_KEY = s.API_KEY;
     if (s.PLAYER_HOST) keep.PLAYER_HOST = s.PLAYER_HOST;
     if (s.AGE_WORDS) keep.AGE_WORDS = s.AGE_WORDS;
-    if (s.PIN_H) keep.PIN_H = s.PIN_H;   // giữ mã PIN đã đổi   // danh sách từ khóa bạn tự quản lý: giữ lại
+    if (s.PIN_H) keep.PIN_H = s.PIN_H;
+    var all = w.Store.pref('psettings', {}) || {};   // xóa cài đặt riêng của hồ sơ đang xem
+    delete all[w.Store.profile()]; w.Store.setPref('psettings', all);   // giữ mã PIN đã đổi   // danh sách từ khóa bạn tự quản lý: giữ lại
     w.Store.setPref(KEY, keep);
     apply();
   }
@@ -208,6 +223,8 @@
   w.Settings = {
     get: get, set: set, reset: reset, apply: apply, estimate: estimate, base: BASE,
     checkPin: function (v) { return pinHash(v) === get('PIN_H'); },
+    perProfile: function (k) { return !!PP[k]; },
+    hashPin: pinHash,
     setPin: function (v) { set('PIN_H', pinHash(v)); },
     pinIsDefault: function () { return get('PIN_H') === pinHash('1234'); },
     hides: hides, hitWord: hitWord, addWord: addWord, removeWord: removeWord,

@@ -674,3 +674,38 @@ html.season-on .tab.active { box-shadow: 0 0 0 2px var(--season); }
 .mobile .snicon { width: 46px; height: 46px; margin-right: 10px; border-radius: 12px; } .mobile .snicon svg { width: 32px; height: 32px; }
 .mobile .snname { font-size: 15px; } .mobile .snsub { font-size: 11px; }
 .mobile .sntile.focus { outline: 0; transform: none; }
+/* 2.16.0: kênh yêu thích */
+.chcard { position: relative; }
+.chcard.fav { box-shadow: inset 0 0 0 2px rgba(232,176,75,.7); }
+.chstar { position: absolute; right: 12px; top: 10px; font-size: 26px; color: #E8B04B; text-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.btn.favch.on { background: rgba(232,176,75,.2); color: var(--c-f5d58e); }
+.favwrap { padding: 20px 80px 80px; }
+.favgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.favrow { display: flex; align-items: center; padding: 14px 18px; border-radius: 18px; background: var(--c-151922); border: 2px solid transparent; transition: transform .12s; }
+.favrow.on { border-color: rgba(232,176,75,.6); background: linear-gradient(160deg, var(--c-1b2030), var(--c-151922)); }
+.favrow.focus { outline: 4px solid var(--ring); outline-offset: 2px; transform: scale(1.02); }
+.chav.sm { flex: none; width: 60px; height: 60px; margin-right: 16px; }
+.chav.sm .chini { font-size: 26px; }
+.favtx { flex: 1; min-width: 0; }
+.favname { font-size: 23px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.favtype { font-size: 17px; color: var(--c-9aa0ae); margin-top: 2px; }
+.favstar { flex: none; font-size: 36px; color: var(--c-8c92a0); margin-left: 12px; }
+.favrow.on .favstar { color: #E8B04B; }
+.mobile .favwrap { padding: 10px 12px 60px; } .mobile .favgrid { grid-template-columns: 1fr; gap: 6px; }
+.mobile .favrow { padding: 8px 10px; border-radius: 12px; } .mobile .chav.sm { width: 38px; height: 38px; margin-right: 10px; }
+.mobile .favname { font-size: 14px; } .mobile .favtype { font-size: 11px; } .mobile .favstar { font-size: 24px; }
+.mobile .favrow.focus { outline: 0; transform: none; } .mobile .chstar { font-size: 16px; right: 8px; top: 6px; }
+/* 2.17.0: dấu ✕ xóa chỉ hiện khi GIỮ LÂU (điện thoại, máy tính) */
+.cdel:not(.on), .chdel { display: none !important; }
+.showdel .cdel:not(.on), .showdel .chdel { display: block !important; opacity: 1 !important; animation: delpop .18s ease-out; }
+.showdel { outline: 3px dashed #E5484D !important; outline-offset: 3px; }
+@keyframes delpop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mobile .f, .card, .wtile, .setrow { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* 2.17.1: hình hồ sơ trong menu ☰ và cài đặt riêng từng hồ sơ */
+.mditem.who { display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 800; }
+.wav.md { width: 46px; height: 46px; font-size: 22px; border-radius: 50%; flex: none; box-shadow: 0 0 0 2px #E8B04B; }
+.wav.pp { display: inline-flex; vertical-align: -6px; width: 30px; height: 30px; font-size: 15px; border-radius: 50%; margin-right: 10px; }
+.ppinfo { display: flex; align-items: center; }
+.ppinfo .wav.pp { flex: none; width: 40px; height: 40px; margin-right: 14px; }
+.mobile .wav.pp { width: 20px; height: 20px; font-size: 11px; vertical-align: -4px; margin-right: 6px; }
+.mobile .ppinfo .wav.pp { width: 26px; height: 26px; margin-right: 8px; }

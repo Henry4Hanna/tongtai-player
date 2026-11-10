@@ -22,12 +22,13 @@ window.APP_CONFIG = {
   // Hoạt hình: CHỈ lấy hoạt hình AI, loại hẳn hoạt hình 3D
   ANIME_QUERIES: ['hoạt hình AI tập', 'phim hoạt hình AI'],
 
+  BOOT_SECS: 3,      // màn hình khởi động hiện bao lâu: số giây (1, 2, 3, 5, 8) hoặc 'auto' = đến khi tải xong kênh
   CLOCK_12: false,   // đồng hồ: false = 24 giờ (14:05), true = 12 giờ (2:05 PM). Đổi trong Cài đặt → Giao diện
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.15.2',
-  BUILD: 61,
+  VERSION: '2.17.1',
+  BUILD: 64,
   UPDATED: '09/11/2026',
   CONTACT: '',
   // Kiểm tra bản mới: địa chỉ file version.json. Để trống = tự dùng PLAYER_HOST + 'app/version.json' (TV)
@@ -44,7 +45,7 @@ window.APP_CONFIG = {
   PIN_FORCE: '',        // QUÊN MÃ PIN: điền mã mới ở đây (ví dụ '1234'), tải lại app một lần, rồi để trống lại          // mã PIN mặc định (đổi trong Cài đặt → Mã PIN). Dùng cho: tắt lọc lứa tuổi, sửa từ khóa, khôi phục mặc định, đổi PIN    // sao lưu tự động hằng tuần vào Google Drive / GitHub Gist (khi đã đăng nhập)
 
   // Chỉ chọn phim phù hợp lứa tuổi: ẩn phim có các từ khóa này trong tên/mô tả (sửa trong Cài đặt → Lọc theo lứa tuổi)
-  AGE_FILTER: true,
+  AGE_FILTER: false,
   AGE_WORDS: ['18+', 'cảnh nóng', 'nóng bỏng', 'gợi cảm', 'sexy', 'khỏa thân', 'máu me', 'kinh dị', 'rùng rợn', 'bạo lực', 'tra tấn', 'ma túy', 'cờ bạc'],
 
   // Kênh YouTube bạn theo dõi. App tự tìm kênh theo tên (chỉ 1 lần, rồi nhớ luôn).

@@ -122,7 +122,7 @@
     profile: function () { return prof; },
     profiles: function () {
       var pr = get('prefs', {}), list = pr.profiles || [];
-      var out = [{ id: 'guest', name: 'Guest', c: 0, av: pr.guestAv }];
+      var out = [{ id: 'guest', name: 'Guest', c: 0, av: pr.guestAv, pinH: pr.guestPin }];
       list.forEach(function (x) { if (x && x.id && x.id !== 'guest') out.push(x); });
       return out;
     },
@@ -134,6 +134,13 @@
       if (!Store.profiles().some(function (x) { return x.id === id; })) id = 'guest';
       prof = id;
       try { w.localStorage.setItem(P + 'profile', id); } catch (e) { /* bỏ qua */ }
+    },
+    // Mã PIN riêng của hồ sơ (lưu dạng băm). hash = null để bỏ mã
+    setProfilePin: function (id, hash) {
+      var m = get('prefs', {});
+      if (id === 'guest') { if (hash) m.guestPin = hash; else delete m.guestPin; }
+      else (m.profiles || []).forEach(function (x) { if (x.id === id) { if (hash) x.pinH = hash; else delete x.pinH; } });
+      set('prefs', m);
     },
     // Đổi hình con thú của một hồ sơ (Guest cũng đổi được)
     setAvatar: function (id, av) {
@@ -193,6 +200,18 @@
       return get(id === 'guest' ? 'stats' : 'stats@' + id, {});
     },
     clearStats: function () { pset('stats', {}); },
+
+    /* ---------- Kênh yêu thích (riêng từng hồ sơ, lưu trong prefs nên được đồng bộ) ---------- */
+    favChs: function () { return ((get('prefs', {}).favch || {})[prof]) || []; },
+    isFavCh: function (id) { return !!id && Store.favChs().some(function (x) { return x.id === id; }); },
+    toggleFavCh: function (ch) {
+      if (!ch || !ch.id) return false;
+      var m = get('prefs', {}), all = m.favch || {}, l = (all[prof] || []).slice();
+      var has = l.some(function (x) { return x.id === ch.id; });
+      l = has ? l.filter(function (x) { return x.id !== ch.id; }) : l.concat([{ id: ch.id, name: String(ch.title || ch.name || '').slice(0, 60) }]);
+      all[prof] = l; m.favch = all; set('prefs', m);
+      return !has;
+    },
 
     /* ---------- Lịch sử tìm kiếm: 5 từ khóa gần nhất (riêng từng hồ sơ) ---------- */
     searches: function () { return pget('sq', []); },

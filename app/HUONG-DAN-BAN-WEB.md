@@ -1,4 +1,4 @@
-# Tổng Tài TV – bản xem trên trình duyệt (2.15.2, miễn phí, GitHub Pages)
+# Tổng Tài TV – bản xem trên trình duyệt (2.17.1, miễn phí, GitHub Pages)
 
 ## CÀI ĐẶT LÊN GITHUB PAGES
 
@@ -32,13 +32,14 @@ Phụ đề: khi đang xem phim, bấm ▲ 2 lần nhanh để bật/tắt phụ
 
 Cập nhật bản mới: tải đè thư mục app lên GitHub như bước 2 (gồm cả version.json), chờ 1–2 phút rồi tải lại trang (kéo xuống hoặc F5).
 
-## HƯỚNG DẪN SỬ DỤNG (bản 2.15.2)
+## HƯỚNG DẪN SỬ DỤNG (bản 2.17.1)
 
 Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy tính, điện thoại). Trên TV dùng remote; trên máy tính bấm chuột hoặc dùng bàn phím (mũi tên, Enter, Esc); trên điện thoại chạm và vuốt.
 
 ### 1. Mở app
 
 - **Màn hình khởi động**: logo vương miện vàng, thanh tiến độ và dòng "Đang lấy phim mới… 3/38 kênh". Mạng chậm thì bấm **OK** để vào ngay, phim vẫn tải tiếp phía sau.
+- Hiện bao lâu: Cài đặt → Giao diện → **Màn hình khởi động**: 1, 2, **3 giây** (mặc định), 5, 8 giây, hoặc "Đến khi tải xong".
 - **Ai đang xem?**: chọn hồ sơ của mình (Guest hoặc hồ sơ đã tạo). Không muốn bị hỏi: Cài đặt → Hồ sơ người xem → "Hỏi Ai đang xem? khi mở app" → Tắt.
 - Lần đầu: Cài đặt → Kết nối → **YouTube API key** → nhập key → Lưu. Samsung điền thêm **PLAYER_HOST**.
 - **Đồng hồ** góc trên: Cài đặt → Giao diện → Đồng hồ → **24 giờ** (14:05) hoặc **12 giờ** (2:05 PM, 12:00 AM). Mọi giờ trong app (sao lưu, hạn mức, thống kê) đổi theo.
@@ -59,14 +60,21 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 - Mỗi hồ sơ có **lịch sử, phim xem dở, danh sách, phim đã xem, 5 từ khóa tìm gần nhất và thống kê** riêng.
 - **Thêm**: màn hình "Ai đang xem?" → "+ Thêm" → gõ tên → Lưu → chọn 1 trong **25 hình thú kawaii** (mèo, chó, gấu trúc, thỏ, capybara, rùa, kỳ lân…). Tối đa 8 hồ sơ.
-- **Đổi hồ sơ**: ô tròn hình con thú ở góc trên bên phải (điện thoại: menu ☰ → Đổi hồ sơ).
+- **Đổi hồ sơ**: ô tròn hình con thú ở góc trên bên phải (điện thoại: menu ☰ → dòng có hình con thú → Đổi hồ sơ).
+- **Cài đặt riêng từng hồ sơ**: giao diện Tối/Sáng, đồng hồ, chủ đề theo mùa, hiệu ứng rơi, tự phát phim tiếp theo, ẩn phim đã xem, các hàng Trang chủ và lọc lứa tuổi là của RIÊNG hồ sơ đang xem (dòng có hình con thú trong Cài đặt). Mỗi người chỉnh theo ý mình, đổi hồ sơ là đổi theo. Các mục khác (API key, kênh, cập nhật, sao lưu, mã PIN người lớn) dùng chung cả máy.
 - **Đổi hình**: nút "Đổi hình cho …" ở màn hình Ai đang xem, hoặc Cài đặt → Hồ sơ người xem → Hình đại diện.
-- **Xóa hồ sơ**: giữ lâu OK trên hồ sơ (máy tính: bấm ✕). Guest không xóa được.
+- **Xóa hồ sơ**: giữ lâu OK trên hồ sơ (điện thoại, máy tính: giữ lâu để hiện dấu ✕ rồi bấm ✕). Guest không xóa được.
+- **Mã PIN riêng từng hồ sơ**: Cài đặt → Hồ sơ người xem → **Mã PIN của hồ sơ này** → nhập mã 4–8 số hai lần. Hồ sơ có 🔒 phải nhập mã mới mở hoặc xóa được. Đổi mã: nhập mã cũ rồi mã mới; để trống mã mới = bỏ mã. Quên mã: dùng mã PIN người lớn (mục 9).
+
+### 3b. Kênh yêu thích
+- Mỗi hồ sơ chọn kênh yêu thích riêng. Phim mới của các kênh này hiện ở hàng **"Từ kênh yêu thích của …"** ngay dưới "Tiếp tục xem", ảnh lớn đầu Trang chủ cũng lấy từ đây, và phim tự phát tiếp theo ưu tiên các kênh này.
+- Cách chọn: tab **Kênh** → mở một kênh → **"☆ Yêu thích"**; hoặc trang chi tiết phim → **"☆ Thích kênh này"**; hoặc **Cài đặt → Hồ sơ người xem → Kênh yêu thích** (danh sách mọi kênh, OK để bật/tắt ★).
+- Ở tab Kênh, kênh yêu thích có ★ và nằm đầu danh sách. Ẩn hàng này: Cài đặt → Trang chủ → "Từ kênh yêu thích".
 
 ### 4. Trang chủ
 
 - Ảnh lớn đầu trang là phim mới nhất: "Xem ngay" hoặc "Chi tiết".
-- Các hàng: Tiếp tục xem, Phim mới cập nhật, Đang hot, Phim lẻ hay, Đề xuất, Top 10 trong tuần, Hoạt hình.
+- Các hàng: Tiếp tục xem, Từ kênh yêu thích, Phim mới cập nhật, Đang hot, Phim lẻ hay, Đề xuất, Top 10 trong tuần, Hoạt hình.
 - **Phim đã xem hết** (từ 92%) không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay. Nơi khác có dấu **"✓ Đã xem"**. Tắt: Cài đặt → Trang chủ → Ẩn phim đã xem hết.
 
 ### 5. Xem phim
@@ -89,12 +97,12 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 ### 8. Lịch sử và Thống kê xem
 
-- Lịch sử: "Đã xem gần đây" và "Danh sách của tôi". Xóa một phim: giữ lâu OK (máy tính: ✕), hoặc nút "Xóa từng phim".
+- Lịch sử: "Đã xem gần đây" và "Danh sách của tôi". Xóa một phim: TV giữ lâu OK; điện thoại, máy tính **giữ lâu** trên ảnh phim để hiện dấu ✕ rồi bấm ✕.
 - **Thống kê xem** (nút ở đầu trang Lịch sử, hoặc Cài đặt → Hồ sơ người xem): chọn **7 ngày** hoặc **30 ngày**. Có 4 ô số liệu (tổng, trung bình mỗi ngày, hôm nay, phim xem hết; bản 7 ngày so với 7 ngày trước), biểu đồ cột theo ngày có đường trung bình (chọn từng cột để xem chi tiết ngày đó), **Nhận xét** tự động (ngày xem nhiều nhất, khung giờ cao điểm, chuỗi ngày liên tiếp), **Khung giờ hay xem** trong ngày, 5 kênh xem nhiều nhất và **so sánh các hồ sơ**. Chỉ tính lúc phim đang chạy; mỗi thiết bị tính riêng, giữ 35 ngày. Xóa thống kê cần mã PIN.
 
 ### 9. Lọc theo lứa tuổi và mã PIN
 
-- Cài đặt → **Lọc theo lứa tuổi** → "Chỉ hiện phim phù hợp lứa tuổi" (bật sẵn): ẩn phim có từ khóa nhạy cảm trong tên/mô tả ở mọi trang.
+- Cài đặt → **Lọc theo lứa tuổi** → "Chỉ hiện phim phù hợp lứa tuổi" (mặc định **Tắt**, bật khi cần): ẩn phim có từ khóa nhạy cảm trong tên/mô tả ở mọi trang.
 - **Từ khóa nhạy cảm**: thêm/xóa từ khóa. Gõ không dấu cũng được ("ma tuy" khớp "Ma Túy").
 - **Mã PIN** (mặc định **1234**) cần khi: tắt lọc, sửa từ khóa, khôi phục mặc định, xóa thống kê, đổi PIN.
 - **Đổi PIN**: Cài đặt → Lọc theo lứa tuổi → Mã PIN → nhập PIN cũ → PIN mới (4–8 số) hai lần. PIN mới đồng bộ sang các máy đã đăng nhập.
@@ -115,6 +123,7 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 ### 12. Khi có lỗi
 
+- Xóa kênh (Cài đặt → Kênh theo dõi): TV giữ lâu OK; điện thoại, máy tính giữ lâu trên dòng kênh để hiện ✕.
 - Thông báo lỗi ghi rõ nguyên nhân và cách xử lý: mất mạng, mạng chậm, hết hạn mức YouTube (kèm giờ làm mới, khoảng 15:00 giờ Việt Nam), API key sai, key chưa bật YouTube Data API v3, key bị giới hạn.
 - **Nhật ký lỗi**: Cài đặt → Hỗ trợ → Nhật ký lỗi (50 dòng gần nhất, lỗi màu đỏ). **"Sao chép để gửi"**: máy tính/điện thoại chép vào bộ nhớ tạm; TV hiện mã QR để quét bằng điện thoại rồi gửi qua Zalo/Messenger.
 - Phim lỗi: nút "Bỏ phim" để ẩn. Hiện lại: Lịch sử hoặc Cài đặt → "Hiện lại phim đã bỏ".
@@ -127,6 +136,9 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 ## LỊCH SỬ PHIÊN BẢN
 
+- Phiên bản 2.17.1 (09/11/2026): Cài đặt riêng từng hồ sơ (giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi); menu ☰ trên điện thoại hiện hình con thú của hồ sơ.
+- Phiên bản 2.17.0 (09/11/2026): Mã PIN riêng cho từng hồ sơ (🔒); dấu ✕ xóa (lịch sử, kênh, hồ sơ) chỉ hiện khi giữ lâu, bỏ nút "Xóa từng phim"; lọc lứa tuổi mặc định Tắt; chọn thời gian màn hình khởi động (mặc định 3 giây).
+- Phiên bản 2.16.0 (09/11/2026): kênh yêu thích riêng từng hồ sơ; hàng "Từ kênh yêu thích" đầu Trang chủ; nút ☆ Yêu thích ở trang kênh và trang chi tiết phim; Cài đặt → Kênh yêu thích.
 - Phiên bản 2.15.2 (09/11/2026): chọn đồng hồ 12 giờ (AM/PM) hoặc 24 giờ trong Cài đặt → Giao diện.
 - Phiên bản 2.15.1 (09/11/2026): trang Thống kê xem làm lại kiểu bảng điều khiển: chọn 7/30 ngày, so sánh với 7 ngày trước, biểu đồ có đường trung bình và chi tiết từng ngày, nhận xét tự động, khung giờ hay xem.
 - Phiên bản 2.15.0 (09/11/2026):

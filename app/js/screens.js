@@ -133,6 +133,7 @@
         var sc = 0;
         if (!watched[x.id]) sc += 10;
         if (x.ch && x.ch === item.ch) sc += 3;
+        if (Store.isFavCh(x.chId)) sc += 4;
         if (Api.catsOf(x).some(function (c) { return cats.indexOf(c) >= 0; })) sc += 2;
         return sc + Math.min(2, (x.views || 0) / 1e6);
       }
@@ -202,6 +203,7 @@
 
     var rows = {
       cont: UI.row('Tiếp tục xem'),
+      favch: UI.row('Từ kênh yêu thích', ''),
       fresh: UI.row('Phim mới cập nhật', 'Từ các kênh bạn theo dõi'),
       hot: UI.row('Đang hot', 'Xem nhiều nhất trong 30 ngày'),
       rec: UI.row('Đề xuất cho bạn'),
@@ -209,7 +211,7 @@
       movie: UI.row('Phim lẻ hay', 'Từ ' + (C.MOVIE_CHANNELS || []).length + ' kênh phim lẻ'),
       anime: UI.row('Hoạt hình', 'Từ ' + (C.ANIME_CHANNELS || []).length + ' kênh hoạt hình · AI, 2D, 3D')
     };
-    ['cont', 'fresh', 'hot', 'movie', 'rec', 'top', 'anime'].forEach(function (k) { if (k !== 'top') rows[k].wrap.classList.add('row-' + k); v.appendChild(rows[k].wrap); });
+    ['cont', 'favch', 'fresh', 'hot', 'movie', 'rec', 'top', 'anime'].forEach(function (k) { if (k !== 'top') rows[k].wrap.classList.add('row-' + k); v.appendChild(rows[k].wrap); });
     v.classList.add('homev');
 
     // Điện thoại: nút chuyển "Mới cập nhật | Hoạt hình AI" + thanh thể loại (TV không hiện)
@@ -240,7 +242,7 @@
     function tickCd() { if (!d.body.contains(v) && cdT) { clearInterval(cdT); return; } cd.textContent = '· ' + nextRefresh().text; }
     var cdT = setInterval(tickCd, 30000);
     setTimeout(tickCd, 50);
-    var on = { cont: C.SHOW_CONT !== false, fresh: C.SHOW_FRESH !== false, hot: C.SHOW_HOT !== false, movie: C.SHOW_MOVIE !== false, rec: C.SHOW_REC !== false, anime: C.SHOW_ANIME !== false };
+    var on = { cont: C.SHOW_CONT !== false, favch: C.SHOW_FAVCH !== false, fresh: C.SHOW_FRESH !== false, hot: C.SHOW_HOT !== false, movie: C.SHOW_MOVIE !== false, rec: C.SHOW_REC !== false, anime: C.SHOW_ANIME !== false };
     Object.keys(on).forEach(function (k) { if (!on[k]) rows[k].hide(); });
 
     function renderCont() {
@@ -261,7 +263,9 @@
     }
     renderCont();
 
+    var heroFav = false;
     function setHero(item) {
+      if (item && Store.isFavCh(item.chId)) heroFav = true;
       hero.innerHTML = '';
       var bg = UI.thumb(item, true);
       bg.className = 'thumb hero-img';
@@ -297,7 +301,7 @@
       if (!all.length) throw { message: 'Chưa lấy được phim từ các kênh theo dõi' };
       var list = unseen(all);
       rows.fresh.cards(spread(list, 2, 30), function (it, i) { return UI.card(it, cardOpts({ isNew: Date.now() - new Date(it.pub || 0).getTime() < 86400e3 })); });
-      setHero(list[0]);
+      if (!heroFav) setHero(list[0]);
       var month = Date.now() - 30 * 86400e3;
       var hot = list.filter(function (f) { return new Date(f.pub || 0).getTime() > month; });
       if (hot.length < 10) hot = list.slice();
@@ -324,6 +328,29 @@
     if (catB === catA) catB = filmCats[(dayN + 1) % filmCats.length];
     rows.rec.wrap.querySelector('.rt').textContent = 'Đề xuất cho bạn';
     rows.rec.wrap.querySelector('.rowhead').appendChild(el('span', 'rh', 'Hôm nay: ' + catA.name + ' · ' + catB.name));
+    // Kênh yêu thích của hồ sơ đang xem: hàng riêng ngay dưới "Tiếp tục xem", và ảnh lớn đầu trang lấy từ đây
+    if (on.favch) {
+      var favs = Store.favChs(), favSet = {};
+      favs.forEach(function (x) { favSet[x.id] = 1; });
+      rows.favch.wrap.querySelector('.rt').textContent = 'Từ kênh yêu thích của ' + Store.profileName();
+      if (!favs.length) {
+        rows.favch.msg('Chưa có kênh yêu thích. Vào tab Kênh, mở một kênh rồi chọn “☆ Yêu thích” (hoặc Cài đặt → Kênh yêu thích).');
+      } else {
+        var rh = el('span', 'rh', favs.length + ' kênh · mới nhất trước');
+        rows.favch.wrap.querySelector('.rowhead').appendChild(rh);
+        Promise.all([Api.followedFilms().catch(function () { return []; }), Api.movieFilms().catch(function () { return []; }), Api.animeAll().catch(function () { return []; })]).then(function (r) {
+          var seen = {}, list = [];
+          r[0].concat(r[1], r[2]).forEach(function (f) { if (f && favSet[f.chId] && !seen[f.id]) { seen[f.id] = 1; list.push(f); } });
+          list.sort(function (a, b) { return String(b.pub || '').localeCompare(String(a.pub || '')); });
+          list = spread(unseen(list), 3, 24);
+          if (!list.length) { rows.favch.msg('Các kênh yêu thích chưa có phim mới. Phim sẽ hiện ở đây khi kênh đăng phim.'); return; }
+          rows.favch.cards(list, function (it) { return UI.card(it, cardOpts({ isNew: Date.now() - new Date(it.pub || 0).getTime() < 86400e3 })); });
+          var first = list.filter(function (f) { return f.kind === 'film'; })[0];
+          if (first) setHero(first);
+        });
+      }
+    }
+
     if (on.rec) Promise.all([Api.catFilms(catA, true), Api.catFilms(catB, true)]).then(function (r) {
       var out = [], seen = {}, i;
       for (i = 0; i < 14; i++) {
@@ -377,8 +404,10 @@
     Api.channels().then(function (chs) {
       g.innerHTML = '';
       if (!chs.length && !Api.missingChannels().length) { g.appendChild(el('div', 'rowmsg', 'Chưa tìm được kênh nào. Kiểm tra API key và mạng.')); return; }
+      chs = chs.slice().sort(function (a, b) { return Store.isFavCh(b.id) - Store.isFavCh(a.id); });   // kênh yêu thích lên đầu
       chs.forEach(function (c) {
-        var e = el('div', 'chcard f rowwrap');
+        var e = el('div', 'chcard f rowwrap' + (Store.isFavCh(c.id) ? ' fav' : ''));
+        if (Store.isFavCh(c.id)) e.appendChild(el('div', 'chstar', '★'));
         e._hold = function () {
           push(ConfirmDel('Kênh theo dõi', c.title || c.name, function () {
             Settings.removeChannel(c.name); Store.clearCache(); UI.toast('Đã xóa kênh'); setTimeout(function () { goTab('chans'); }, 50);
@@ -492,6 +521,16 @@
     v.classList.add('scroller');
     var h = el('div', 'pagehead', c.title || c.name);
     h.appendChild(el('span', 'rh', 'Phim mới nhất của kênh'));
+    if (c.id && String(c.id).indexOf('demo') !== 0) {
+      var bFav = UI.button('', 'small favch', function () {
+        var on = Store.toggleFavCh(c);
+        paintFav();
+        UI.toast(on ? 'Đã thêm “' + (c.title || c.name) + '” vào kênh yêu thích của ' + Store.profileName() : 'Đã bỏ khỏi kênh yêu thích');
+      });
+      var paintFav = function () { var on = Store.isFavCh(c.id); bFav.setLabel(on ? '★ Kênh yêu thích' : '☆ Yêu thích'); bFav.classList.toggle('on', on); };
+      paintFav();
+      h.appendChild(bFav);
+    }
     v.appendChild(h);
     var holder = el('div', 'gridwrap');
     holder.appendChild(el('div', 'rowmsg', 'Đang tải…'));
@@ -766,6 +805,16 @@
       favLabel();
     }, UI.ICON_PLUS);
     btns.appendChild(bPlay); btns.appendChild(bRe); btns.appendChild(bFav);
+    if (item.chId) {
+      var bCh = UI.button('', 'favch', function () {
+        var on = Store.toggleFavCh({ id: item.chId, name: item.ch });
+        chLabel();
+        UI.toast(on ? 'Đã thích kênh “' + (item.ch || '') + '”. Phim mới của kênh sẽ hiện đầu Trang chủ' : 'Đã bỏ kênh khỏi danh sách yêu thích');
+      });
+      var chLabel = function () { var on = Store.isFavCh(item.chId); bCh.setLabel(on ? '★ Kênh yêu thích' : '☆ Thích kênh này'); bCh.classList.toggle('on', on); };
+      chLabel();
+      btns.appendChild(bCh);
+    }
     var bSeen = null;
     if (!isAnime) {
       bSeen = UI.button('Đánh dấu đã xem', '', function () {
@@ -968,20 +1017,13 @@
       Store.clearBlocked();
       UI.toast(n ? 'Đã hiện lại ' + n + ' phim' : 'Chưa bỏ phim nào');
     });
-    var delMode = false;
-    var delBtn = UI.button('Xóa từng phim', 'small', function () {
-      delMode = !delMode;
-      delBtn.setLabel(delMode ? 'Xong' : 'Xóa từng phim');
-      render();
-      if (delMode) UI.toast('Chọn phim rồi nhấn OK để xóa khỏi danh sách');
-    });
+    var delMode = false, delBtn = clr;
     h.appendChild(UI.button('Thống kê xem', 'small', function () { push(Stats()); }));
     h.appendChild(unb);
-    h.appendChild(delBtn);
     h.appendChild(clr);
     v.appendChild(h);
-    if (w.tizen || w.AndroidApp) v.appendChild(el('div', 'histhint', 'Xóa từng phim: chọn phim rồi GIỮ LÂU nút giữa (OK) của remote, sẽ hiện hộp hỏi xóa. Hoặc dùng nút “Xóa từng phim” ở trên.'));
-    else v.appendChild(el('div', 'histhint', 'Xóa từng phim: bấm dấu ✕ ở góc ảnh phim (điện thoại: luôn hiện; máy tính: hiện khi rê chuột).'));
+    if (w.tizen || w.AndroidApp) v.appendChild(el('div', 'histhint', 'Xóa một phim: chọn phim rồi GIỮ LÂU nút giữa (OK) của remote, sẽ hiện hộp hỏi xóa.'));
+    else v.appendChild(el('div', 'histhint', 'Xóa một phim: GIỮ LÂU trên ảnh phim để hiện dấu ✕, rồi bấm ✕.'));
 
     var r1 = UI.row('Đã xem gần đây');
     var r2 = UI.row('Danh sách của tôi');
@@ -1096,14 +1138,32 @@
         return o ? { t: o.t, on: o.on } : { t: String(curV) };
       };
     }
-    function opt(key, label, desc, opts, after) { return row(label, desc, shower(key, opts), cycle(key, opts, after)); }
+    // Dòng cài đặt riêng của hồ sơ: hình con thú nhỏ trước tên
+    var meP = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
+    function markPP(r) {
+      var sl = r.querySelector('.sl');
+      sl.insertBefore(avatar(meP, 'pp'), sl.firstChild);
+      r.classList.add('ppr');
+      return r;
+    }
+    function opt(key, label, desc, opts, after) {
+      var r = row(label, desc, shower(key, opts), cycle(key, opts, after));
+      return Settings.perProfile(key) ? markPP(r) : r;
+    }
     var ONOFF = [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }];
     var SHOWHIDE = [{ v: true, t: 'Hiện', on: true }, { v: false, t: 'Ẩn' }];
     function reloadLists() { Store.clearCache(); UI.toast('Đã lưu. Danh sách phim sẽ tải lại theo cài đặt mới'); }
 
+    var ppInfo = el('div', 'setinfo ppinfo');
+    ppInfo.appendChild(avatar(meP, 'pp'));
+    ppInfo.appendChild(el('span', '', 'Dòng có hình ' + meP.name + ' là cài đặt RIÊNG của hồ sơ “' + meP.name + '” (giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi). Mỗi người chỉnh theo ý mình; đổi hồ sơ là đổi theo. Các dòng khác dùng chung cho cả máy.'));
+    wrap.appendChild(ppInfo);
     sec('Giao diện');
     opt('THEME', 'Giao diện Tối / Sáng', 'Tự động = đổi theo chế độ của điện thoại / máy tính',
       [{ v: 'dark', t: 'Tối', on: true }, { v: 'light', t: 'Sáng', on: true }, { v: 'auto', t: 'Tự động', on: true }]);
+    opt('BOOT_SECS', 'Màn hình khởi động', 'Hiện logo bao lâu khi mở app. Bấm OK để vào ngay bất cứ lúc nào', [
+      { v: 'auto', t: 'Đến khi tải xong', on: true }, { v: 1, t: '1 giây', on: true }, { v: 2, t: '2 giây', on: true }, { v: 3, t: '3 giây', on: true },
+      { v: 5, t: '5 giây', on: true }, { v: 8, t: '8 giây', on: true }]);
     opt('CLOCK_12', 'Đồng hồ', 'Kiểu giờ ở góc trên và trong app', [{ v: false, t: '24 giờ (14:05)', on: true }, { v: true, t: '12 giờ (2:05 PM)', on: true }]);
 
     sec('Hồ sơ người xem');
@@ -1117,19 +1177,46 @@
       var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0];
       push(AvatarPick(me.name, me.av != null ? me.av : freeAvatar(), function (av) { Store.setAvatar(me.id, av); paintWho(); paint(); UI.toast('Đã đổi hình'); }));
     });
+    row('Kênh yêu thích', 'Phim mới của các kênh này hiện đầu Trang chủ (riêng từng hồ sơ)', function () {
+      var n = Store.favChs().length; return { t: n ? n + ' kênh' : 'Chưa chọn', on: !!n };
+    }, function () { push(FavChannels()); });
     row('Thống kê xem', 'Số phút xem mỗi ngày, kênh xem nhiều nhất, so sánh các hồ sơ', function () {
       var t = 0; weekOf(Store.stats()).forEach(function (d) { t += d.s; });
       return { t: '7 ngày: ' + fmtMin(t) };
     }, function () { push(Stats()); });
+    row('Mã PIN của hồ sơ này', 'Khóa hồ sơ đang xem: chọn hồ sơ này ở “Ai đang xem?” phải nhập mã. Mã PIN người lớn mở được mọi hồ sơ', function () {
+      var me = profileOf(Store.profile()) || {}; return me.pinH ? { t: '🔒 Đã đặt · Đổi', on: true } : { t: 'Chưa đặt' };
+    }, function (paint) {
+      var me = profileOf(Store.profile());
+      unlockProfile(me, 'đổi PIN hồ sơ', function () {
+        setTimeout(function () {
+          push(TextEdit('Mã PIN mới cho ' + me.name + ' (4–8 số)', '', function (p1) {
+            p1 = String(p1 || '').trim();
+            if (!p1) {
+              if (me.pinH) { Store.setProfilePin(me.id, null); UI.toast('Đã bỏ mã PIN của ' + me.name); paint(); }
+              return;
+            }
+            if (!/^\d{4,8}$/.test(p1)) { UI.toast('Mã PIN phải gồm 4 đến 8 chữ số'); return; }
+            setTimeout(function () {
+              push(TextEdit('Nhập lại mã PIN mới', '', function (p2) {
+                if (String(p2 || '').trim() !== p1) { UI.toast('Hai lần nhập không khớp, chưa đặt mã'); return; }
+                Store.setProfilePin(me.id, Settings.hashPin(p1)); paint();
+                UI.toast('Đã đặt mã PIN cho ' + me.name);
+              }, { mask: true, hint: 'Nhập lại đúng mã vừa chọn rồi chọn Lưu.' }));
+            }, 30);
+          }, { mask: true, hint: me.pinH ? 'Nhập mã mới rồi Lưu. Để TRỐNG rồi Lưu = bỏ mã PIN.' : 'Chọn số bằng mũi tên, OK để nhập, rồi chọn Lưu.' }));
+        }, 30);
+      });
+    });
     opt('ASK_PROFILE', 'Hỏi “Ai đang xem?” khi mở app', '', ONOFF);
 
     sec('Lọc theo lứa tuổi');
-    row('Chỉ hiện phim phù hợp lứa tuổi', 'Ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả. Tắt cần mã PIN', function () {
+    markPP(row('Chỉ hiện phim phù hợp lứa tuổi', 'Riêng từng hồ sơ: ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả. Tắt cần mã PIN người lớn', function () {
       var on = Settings.get('AGE_FILTER') === true; return { t: on ? 'Bật' : 'Tắt', on: on };
     }, function (paint) {
       if (Settings.get('AGE_FILTER') !== true) { Settings.set('AGE_FILTER', true); paint(); UI.toast('Đã bật lọc theo lứa tuổi'); return; }
       withPin('tắt lọc theo lứa tuổi', function () { Settings.set('AGE_FILTER', false); paint(); UI.toast('Đã tắt lọc theo lứa tuổi'); });
-    });
+    }));
     row('Từ khóa nhạy cảm', 'Danh sách bạn tự quản lý: thêm, xóa từ khóa. Cần mã PIN', function () {
       return { t: (Settings.get('AGE_WORDS') || []).length + ' từ khóa' };
     }, function () { withPin('sửa từ khóa nhạy cảm', function () { push(AgeWords()); }); });
@@ -1249,6 +1336,7 @@
     sec('Trang chủ');
     opt('HIDE_WATCHED', 'Ẩn phim đã xem hết', 'Không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay. Nơi khác có dấu “✓ Đã xem”', ONOFF);
     opt('SHOW_CONT', 'Tiếp tục xem', '', SHOWHIDE);
+    opt('SHOW_FAVCH', 'Từ kênh yêu thích', 'Hàng phim mới của các kênh hồ sơ đang xem yêu thích', SHOWHIDE);
     opt('SHOW_FRESH', 'Phim mới cập nhật', '', SHOWHIDE);
     opt('SHOW_HOT', 'Đang hot', '', SHOWHIDE);
     opt('SHOW_REC', 'Đề xuất cho bạn', '', SHOWHIDE);
@@ -1301,7 +1389,7 @@
     });
 
     sec('Kênh theo dõi');
-    if (w.tizen || w.AndroidApp) wrap.appendChild(el('div', 'setinfo', 'Xóa một kênh: chọn kênh rồi GIỮ LÂU nút giữa (OK), sẽ hiện hộp hỏi xóa.')); else wrap.appendChild(el('div', 'setinfo', 'Xóa một kênh: bấm dấu ✕ bên phải tên kênh.'));
+    if (w.tizen || w.AndroidApp) wrap.appendChild(el('div', 'setinfo', 'Xóa một kênh: chọn kênh rồi GIỮ LÂU nút giữa (OK), sẽ hiện hộp hỏi xóa.')); else wrap.appendChild(el('div', 'setinfo', 'Xóa một kênh: GIỮ LÂU trên dòng kênh để hiện dấu ✕, rồi bấm ✕.'));
     var TYPES = [{ v: 'drama', t: 'Phim ngắn', on: true }, { v: 'movie', t: 'Phim lẻ hay', on: true }, { v: 'anime', t: 'Hoạt hình', on: true }, { v: 'off', t: 'Tắt' }];
     function addRow() {
       row('+ Thêm kênh mới', 'Gõ tên kênh, @tên-kênh hoặc mã kênh UC…, rồi chọn Phim ngắn, Phim lẻ hay hoặc Hoạt hình', function () {
@@ -1627,8 +1715,22 @@
     b.appendChild(avatar(me, 'sm'));
     b.title = 'Đang xem: ' + me.name + ' (bấm để đổi)';
   }
-  function chooseProfile(id) {
+  // Hồ sơ có mã PIN riêng: phải nhập đúng (hoặc mã PIN người lớn) mới vào được
+  function profileOf(id) { return Store.profiles().filter(function (x) { return x.id === id; })[0]; }
+  function unlockProfile(p, what, fn) {
+    if (!p || !p.pinH) { fn(); return; }
+    push(TextEdit('Mã PIN của ' + p.name, '', function (val) {
+      if (Settings.hashPin(val) !== p.pinH && !Settings.checkPin(val)) { UI.toast('Sai mã PIN của ' + p.name); if (w.Log) w.Log.warn('Nhập sai PIN hồ sơ ' + p.name + ' khi ' + what); return; }
+      fn();
+    }, { mask: true, hint: 'Nhập mã PIN của hồ sơ này rồi chọn Lưu. Quên mã: dùng mã PIN người lớn. Back để hủy.' }));
+  }
+  function chooseProfile(id, skipPin) {
+    if (!skipPin) {
+      var pp = profileOf(id);
+      if (pp && pp.pinH) { unlockProfile(pp, 'mở hồ sơ', function () { setTimeout(function () { chooseProfile(id, true); }, 30); }); return; }
+    }
     Store.setProfile(id);
+    Settings.apply();   // cài đặt riêng của hồ sơ (giao diện, chủ đề, đồng hồ…)
     paintWho();
     chainSeen = {};
     UI.toast('Xin chào ' + Store.profileName() + '!');
@@ -1647,11 +1749,14 @@
     Store.profiles().forEach(function (p) {
       var t = el('div', 'wtile f');
       t.appendChild(avatar(p));
-      t.appendChild(el('div', 'wname', p.name));
+      t.appendChild(el('div', 'wname', (p.pinH ? '🔒 ' : '') + p.name));
       if (p.id === Store.profile()) { t.classList.add('cur'); t.appendChild(el('div', 'wcur', 'Đang xem')); mine = t; }
       t._ok = function () { chooseProfile(p.id); };
       if (p.id !== 'guest') {
         var del = function () {
+          unlockProfile(p, 'xóa hồ sơ', function () { setTimeout(delGo, 30); });
+        };
+        var delGo = function () {
           push(ConfirmDel('Hồ sơ', p.name, function () {
             Store.removeProfile(p.id); paintWho(); UI.toast('Đã xóa hồ sơ ' + p.name);
             setTimeout(function () { back(); push(Who()); }, 30);
@@ -1697,7 +1802,7 @@
       }));
     }));
     v.appendChild(bx);
-    v.appendChild(el('div', 'whoh', tv ? 'Giữ lâu nút OK trên một hồ sơ để xóa. Hồ sơ Guest luôn có sẵn.' : 'Bấm ✕ trên hồ sơ để xóa. Hồ sơ Guest luôn có sẵn.'));
+    v.appendChild(el('div', 'whoh', tv ? 'Giữ lâu nút OK trên một hồ sơ để xóa. Hồ sơ có 🔒 cần mã PIN riêng. Guest luôn có sẵn.' : 'Giữ lâu trên hồ sơ để hiện dấu ✕ xóa. Hồ sơ có 🔒 cần mã PIN riêng. Guest luôn có sẵn.'));
     var view = { name: 'who', el: v };
     setTimeout(function () { if (mine && current() === view) Nav.focus(mine); }, 0);
     return view;
@@ -1986,6 +2091,46 @@
     wrap.appendChild(foot);
     var view = { name: 'stats', el: v };
     setTimeout(function () { var on = seg.querySelector('.on'); if (on && current() === view) Nav.focus(on); }, 0);
+    return view;
+  }
+
+  /* ---------- Chọn kênh yêu thích (OK để bật/tắt ★) ---------- */
+  function FavChannels() {
+    var v = UI.view();
+    v.classList.add('scroller');
+    var head = el('div', 'pagehead', 'Kênh yêu thích');
+    head.appendChild(el('span', 'rh', Store.profileName() + ' · chọn kênh rồi nhấn OK để bật/tắt ★'));
+    v.appendChild(head);
+    var wrap = el('div', 'favwrap');
+    wrap.appendChild(el('div', 'rowmsg', 'Đang tải kênh…'));
+    v.appendChild(wrap);
+    var view = { name: 'favch', el: v };
+    Api.channels().then(function (chs) {
+      wrap.innerHTML = '';
+      if (!chs.length) { wrap.appendChild(el('div', 'rowmsg', 'Chưa tải được danh sách kênh. Kiểm tra API key và mạng.')); return; }
+      var TYPE = { drama: 'Phim ngắn', movie: 'Phim lẻ hay', anime: 'Hoạt hình' };
+      var g = el('div', 'favgrid');
+      chs.forEach(function (c) {
+        var r = el('div', 'favrow f');
+        var av = el('div', 'chav sm');
+        av.style.background = UI.grad(c.id);
+        av.appendChild(el('span', 'chini', (c.title || c.name).replace(/[^A-Za-zÀ-ỹ0-9]/g, '').slice(0, 1).toUpperCase()));
+        if (c.thumb) { var im = d.createElement('img'); im.onload = function () { im.classList.add('on'); }; im.onerror = function () { im.remove(); }; im.src = c.thumb; av.appendChild(im); }
+        r.appendChild(av);
+        var tx = el('div', 'favtx');
+        tx.appendChild(el('div', 'favname', c.title || c.name));
+        tx.appendChild(el('div', 'favtype', TYPE[c.type] || ''));
+        r.appendChild(tx);
+        var star = el('div', 'favstar');
+        function paint() { var on = Store.isFavCh(c.id); star.textContent = on ? '★' : '☆'; r.classList.toggle('on', on); }
+        paint();
+        r.appendChild(star);
+        r._ok = function () { Store.toggleFavCh(c); paint(); };
+        g.appendChild(r);
+      });
+      wrap.appendChild(g);
+      if (current() === view) Nav.focus(g.firstChild);
+    }).catch(function (e) { wrap.innerHTML = ''; wrap.appendChild(el('div', 'rowmsg', Api.explain(e))); });
     return view;
   }
 
@@ -2407,25 +2552,25 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">2.15.0</text></svg>', t: 'Có gì mới (2.10 – 2.15)', l: ['Màn hình khởi động vàng kim có tiến độ tải kênh. Hồ sơ người xem với 25 hình thú kawaii.', 'Hẹn giờ tắt, tự phát phim tiếp theo, đánh dấu “Đã xem”, thống kê thời gian xem từng hồ sơ.', 'Lọc phim theo lứa tuổi có mã PIN (đổi được), lịch sử tìm kiếm, chủ đề theo mùa và ngày lễ.', 'Nhật ký lỗi, thông báo lỗi dễ hiểu, sao lưu tự động hằng tuần, nút kiểm tra bản mới. Chi tiết từng mục ở bên dưới.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh” và thanh tiến độ cho biết app đang tải phim từ bao nhiêu kênh.', 'Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.', 'Dịp lễ: dòng chữ dưới logo đổi thành lời chúc (ví dụ “Giáng Sinh An Lành”).'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">2.17.0</text></svg>', t: 'Có gì mới (2.10 – 2.17)', l: ['Màn hình khởi động vàng kim có tiến độ tải kênh. Hồ sơ người xem với 25 hình thú kawaii.', 'Hẹn giờ tắt, tự phát phim tiếp theo, đánh dấu “Đã xem”, thống kê thời gian xem từng hồ sơ.', 'Lọc phim theo lứa tuổi có mã PIN (đổi được), lịch sử tìm kiếm, chủ đề theo mùa và ngày lễ, kênh yêu thích theo hồ sơ, đồng hồ 12 giờ.', 'Nhật ký lỗi, thông báo lỗi dễ hiểu, sao lưu tự động hằng tuần, nút kiểm tra bản mới. Chi tiết từng mục ở bên dưới.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh” và thanh tiến độ cho biết app đang tải phim từ bao nhiêu kênh.', 'Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.', 'Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây, hoặc “Đến khi tải xong”.', 'Dịp lễ: dòng chữ dưới logo đổi thành lời chúc (ví dụ “Giáng Sinh An Lành”).'] },
       { svg: REMOTE, t: 'Remote', l: ['Mũi tên để di chuyển, OK để chọn. Ô đang chọn có viền trắng.', 'Đồng hồ góc trên: Cài đặt → Giao diện → Đồng hồ: 24 giờ hoặc 12 giờ (AM/PM).', 'Bấm OK 2 lần thật nhanh: về Trang chủ từ bất kỳ đâu (kể cả đang xem phim). Tắt được trong Cài đặt → Remote.', 'Back để quay lại trang trước. Ở trang chủ bấm Back 2 lần để thoát app.', 'GIỮ LÂU nút OK (khoảng 1 giây): hỏi xóa phim ở Lịch sử, xóa kênh, xóa hồ sơ.'] },
       { img: 'g_home', t: 'Trang chủ', l: ['Ảnh lớn đầu trang là phim mới nhất. “Xem ngay” để phát, “Chi tiết” để xem thông tin.', 'Các hàng: Tiếp tục xem, Phim mới cập nhật, Đang hot, Phim lẻ hay, Đề xuất (2 danh mục mỗi ngày), Top 10 phim trong tuần, Hoạt hình.', 'Dòng vàng cạnh “Phim mới cập nhật” cho biết còn bao lâu app tự lấy phim mới.'] },
       { img: 'g_play', t: 'Xem phim', l: ['OK: tạm dừng / phát. Trái / phải: tua 10 giây (bấm liên tục để tua nhanh).', 'Mũi tên lên: chọn các nút −10s, +10s, Danh sách, Bỏ phim, Phụ đề, Hẹn giờ, Chất lượng. Bấm ▲ 2 lần nhanh: bật/tắt phụ đề tiếng Việt.', 'Thanh điều khiển tự ẩn sau 5 giây. Back để thoát phim, app nhớ chỗ đang xem.'] },
       { img: 'g_quality', t: 'Phụ đề và chất lượng', l: ['Nút Phụ đề: bật/tắt phụ đề tiếng Việt (YouTube tự dịch nếu phim chỉ có phụ đề khác).', 'Nút Chất lượng: Tự động, 4K, 1080p, 720p… app đổi kích thước khung phát để YouTube chọn mức tương ứng, mất vài giây mới đổi. YouTube vẫn có thể tự hạ khi mạng yếu hoặc video không có mức đó.', 'Bỏ phim: ẩn phim lỗi. Hiện lại trong Lịch sử hoặc Cài đặt.'] },
       { img: 'g_detail', t: 'Tiếp tục xem', l: ['Phim xem dở có thanh tiến độ và thời gian còn lại.', '“Tiếp tục xem” để xem tiếp, “Xem từ đầu” để xem lại.', '“+ Danh sách” để lưu phim, xem lại trong tab Lịch sử.', '“Bình luận”: đọc bình luận của phim trên YouTube (Hay nhất / Mới nhất). OK để mở rộng bình luận dài. Cần API key, tốn 1 đơn vị hạn mức mỗi lần tải.'] },
       { img: 'g_anime', t: 'Hoạt hình nhiều tập', l: ['Các tập cùng một bộ được gộp thành 1 phim, thẻ phim ghi số tập.', 'Vào phim: “Xem từ tập 1” hoặc chọn tập trong Danh sách tập bên dưới.', 'Xem hết một tập, app tự chuyển sang tập sau. Xem dở thì nút ghi “Tiếp tục xem tập …”.'] },
-      { img: 'g_chans', t: 'Kênh', l: ['Tất cả kênh bạn theo dõi. Chữ vàng là kênh có phim mới hôm nay.', 'OK để xem phim mới nhất của kênh. Kênh hoạt hình ghi “Hoạt hình”, kênh phim lẻ ghi “Phim lẻ hay”.', 'Dấu “?” là kênh chưa tìm được (thường do hết hạn mức), app tự thử lại.'] },
+      { img: 'g_chans', t: 'Kênh', l: ['Tất cả kênh bạn theo dõi. Chữ vàng là kênh có phim mới hôm nay. Kênh yêu thích có ★ và nằm đầu danh sách.', 'Kênh yêu thích (riêng từng hồ sơ): mở một kênh → “☆ Yêu thích”, hoặc trang chi tiết phim → “☆ Thích kênh này”, hoặc Cài đặt → Kênh yêu thích. Phim mới của các kênh này hiện ở hàng “Từ kênh yêu thích” đầu Trang chủ và trong ảnh lớn.', 'OK để xem phim mới nhất của kênh. Kênh hoạt hình ghi “Hoạt hình”, kênh phim lẻ ghi “Phim lẻ hay”.', 'Dấu “?” là kênh chưa tìm được (thường do hết hạn mức), app tự thử lại.'] },
       { img: 'g_cats', t: 'Danh mục và Tìm kiếm', l: ['16 thể loại, mỗi ô dùng ảnh của phim nổi bật trong thể loại đó.', 'Tìm kiếm: chọn chữ trên bàn phím màn hình, không cần gõ dấu.', '“Tìm gần đây”: 5 từ khóa vừa tìm (riêng từng hồ sơ), chọn để tìm lại ngay, khỏi gõ lại. “Xóa lịch sử tìm” để xóa.'] },
       { img: 'g_addch', t: 'Thêm kênh mới', l: ['Cài đặt → Kênh theo dõi → “+ Thêm kênh mới”. Gõ tên kênh (không cần dấu) hoặc @tên-kênh.', 'Chọn “Lưu vào Phim ngắn”, “Lưu vào Phim lẻ hay” hoặc “Lưu vào Hoạt hình”.', 'Mỗi kênh có nút đổi loại: Phim ngắn → Phim lẻ hay → Hoạt hình → Tắt.'] },
       { img: 'g_google', t: 'Đăng nhập Google (đồng bộ nhiều máy)', l: ['Cài đặt → Tài khoản Google → “Đăng nhập Google”.', 'TV: mở google.com/device trên điện thoại, đăng nhập Gmail, nhập mã hiện trên TV. Màn hình TV tự chuyển khi xong.', 'Trình duyệt / iPhone: chọn tài khoản Google trong cửa sổ hiện ra.', 'Lịch sử, phim xem dở, danh sách, phim đã bỏ, cài đặt, kênh bạn thêm giống nhau trên mọi máy cùng Gmail. API key và PLAYER_HOST giữ riêng từng máy.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M60 78a22 22 0 0 1 4-43 30 30 0 0 1 58-2 26 26 0 0 1 8 51z" fill="none" stroke="#E8B04B" stroke-width="6" stroke-linejoin="round"/><path d="M88 62l12-12 12 12M100 50v30" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Đồng bộ bằng GitHub (không cần Google)', l: ['Lấy token: github.com → ảnh đại diện → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).', 'Đặt tên bất kỳ, chọn hạn dùng, CHỈ tick ô “gist”, bấm Generate rồi sao chép token (chỉ hiện một lần).', 'Trong app: Cài đặt → Đồng bộ bằng GitHub → Token GitHub → dán token → OK. Làm lại trên mỗi máy muốn đồng bộ.', 'Dữ liệu nằm trong một Gist riêng tư tên tongtai-sync. Token chỉ lưu trên máy, giữ kín như mật khẩu, đừng gửi cho ai. Mất hoặc lộ token thì xóa nó trong GitHub Settings.', 'GitHub không nhận username và mật khẩu cho việc này, chỉ nhận token.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="70" cy="52" r="18" fill="#E8B04B"/><path d="M40 96c0-17 13-28 30-28s30 11 30 28z" fill="#E8B04B"/><circle cx="130" cy="56" r="14" fill="#4FAE8A"/><path d="M106 96c0-14 11-23 24-23s24 9 24 23z" fill="#4FAE8A"/></svg>', t: 'Hồ sơ người xem (Ai đang xem?)', l: ['Mở app sẽ hỏi “Ai đang xem?”. Chọn Guest hoặc hồ sơ của bạn. Đổi hồ sơ bất cứ lúc nào: ô tròn chữ cái góc trên bên phải, hoặc Cài đặt → Hồ sơ người xem.', 'Mỗi hồ sơ có lịch sử xem, phim xem dở, danh sách và 5 từ khóa tìm gần nhất riêng.', '“+ Thêm” để tạo hồ sơ mới (tối đa 8): gõ tên rồi chọn 1 trong 25 hình thú kawaii. Nút “Đổi hình” để đổi hình cho hồ sơ đang xem (Guest cũng đổi được). Xóa hồ sơ: giữ lâu nút OK trên hồ sơ đó (máy tính: bấm ✕).', 'Không muốn bị hỏi mỗi lần mở app: Cài đặt → “Hỏi Ai đang xem? khi mở app” → Tắt.', 'Chủ đề theo mùa và ngày lễ: Cài đặt → Chủ đề. Tự động đổi theo ngày (Tết, Noel, Valentine, Halloween, 4 mùa…), chọn tay một chủ đề, hoặc Tắt. TV chậm thì tắt “Hiệu ứng rơi”.', 'Thống kê xem (Lịch sử → “Thống kê xem”, hoặc Cài đặt → Hồ sơ người xem): số phút xem 7 ngày qua, kênh xem nhiều nhất, so sánh các hồ sơ. Xóa thống kê cần mã PIN.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="70" cy="52" r="18" fill="#E8B04B"/><path d="M40 96c0-17 13-28 30-28s30 11 30 28z" fill="#E8B04B"/><circle cx="130" cy="56" r="14" fill="#4FAE8A"/><path d="M106 96c0-14 11-23 24-23s24 9 24 23z" fill="#4FAE8A"/></svg>', t: 'Hồ sơ người xem (Ai đang xem?)', l: ['Mở app sẽ hỏi “Ai đang xem?”. Chọn Guest hoặc hồ sơ của bạn. Đổi hồ sơ bất cứ lúc nào: ô tròn chữ cái góc trên bên phải, hoặc Cài đặt → Hồ sơ người xem.', 'Mỗi hồ sơ có lịch sử xem, phim xem dở, danh sách và 5 từ khóa tìm gần nhất riêng.', '“+ Thêm” để tạo hồ sơ mới (tối đa 8): gõ tên rồi chọn 1 trong 25 hình thú kawaii. Nút “Đổi hình” để đổi hình cho hồ sơ đang xem (Guest cũng đổi được). Xóa hồ sơ: giữ lâu nút OK trên hồ sơ đó (điện thoại, máy tính: giữ lâu để hiện dấu ✕ rồi bấm ✕).', 'Cài đặt riêng từng hồ sơ: các dòng có hình con thú trong Cài đặt (giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi) là của riêng người đang xem; đổi hồ sơ là đổi theo.', 'Mã PIN riêng cho từng hồ sơ: Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này. Hồ sơ có 🔒 phải nhập mã mới vào được; mã PIN người lớn mở được mọi hồ sơ.', 'Không muốn bị hỏi mỗi lần mở app: Cài đặt → “Hỏi Ai đang xem? khi mở app” → Tắt.', 'Chủ đề theo mùa và ngày lễ: Cài đặt → Chủ đề. Tự động đổi theo ngày (Tết, Noel, Valentine, Halloween, 4 mùa…), chọn tay một chủ đề, hoặc Tắt. TV chậm thì tắt “Hiệu ứng rơi”.', 'Thống kê xem (Lịch sử → “Thống kê xem”, hoặc Cài đặt → Hồ sơ người xem): số phút xem 7 ngày qua, kênh xem nhiều nhất, so sánh các hồ sơ. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="26" width="120" height="68" rx="10" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M88 46v28l22-14z" fill="#F4F1EC"/><path d="M40 104h120" stroke="#4FAE8A" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Tự phát phim tiếp theo', l: ['Hết phim, màn hình hiện phim/tập tiếp theo và đếm ngược 30 giây rồi tự phát.', '“Phát ngay” để xem luôn, “Hủy” (hoặc Back) để dừng lại. Trái/phải để chọn nút.', 'Phim tiếp theo ưu tiên phim chưa xem, cùng kênh, cùng thể loại. Tắt trong Cài đặt → Xem phim → Tự phát phim tiếp theo.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="62" r="38" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M100 40v24l16 10" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Hẹn giờ tắt và Đã xem', l: ['Đang xem phim: bấm ▲ để hiện nút, chọn “Hẹn giờ”. Mỗi lần OK đổi: 30 phút → 60 phút → 90 phút → Hết phim này → Tắt.', 'Hết giờ, phim tạm dừng và hiện thông báo; bấm OK để xem tiếp. Còn 1 phút app nhắc trước.', 'Phim xem hết có dấu “✓ Đã xem” và không hiện lại ở Phim mới, Đang hot, Đề xuất (tắt trong Cài đặt → Trang chủ).', 'Trang chi tiết phim: nút “Đánh dấu đã xem” / “Đã xem ✓” để tự đánh dấu hoặc bỏ đánh dấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="80" width="18" height="22" rx="3" fill="#E8B04B"/><rect x="66" y="56" width="18" height="46" rx="3" fill="#E8B04B"/><rect x="92" y="66" width="18" height="36" rx="3" fill="#E8B04B"/><rect x="118" y="34" width="18" height="68" rx="3" fill="#E8B04B"/><rect x="144" y="46" width="18" height="56" rx="3" fill="#4FAE8A"/></svg>', t: 'Thống kê xem', l: ['Lịch sử → nút “Thống kê xem” (hoặc Cài đặt → Hồ sơ người xem → Thống kê xem). Chọn 7 ngày hoặc 30 ngày ở góc phải.', 'Tổng, trung bình, hôm nay, phim xem hết (so với 7 ngày trước); biểu đồ theo ngày có đường trung bình, chọn từng cột để xem chi tiết; nhận xét tự động; khung giờ hay xem; 5 kênh xem nhiều nhất.', 'So sánh thời gian xem của tất cả hồ sơ, tiện theo dõi bé xem bao lâu. Chỉ tính lúc phim đang chạy, mỗi thiết bị tính riêng, giữ 35 ngày. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><g fill="#fff"><circle cx="40" cy="30" r="4"/><circle cx="160" cy="24" r="5"/><circle cx="120" cy="90" r="4"/><circle cx="66" cy="96" r="3"/></g><path d="M30 104h140" stroke="#D7262E" stroke-width="2"/><circle cx="50" cy="104" r="5" fill="#F5C542"/><circle cx="80" cy="104" r="5" fill="#2FA84F"/><circle cx="110" cy="104" r="5" fill="#D7262E"/><circle cx="140" cy="104" r="5" fill="#4FA3FF"/><path d="M100 22l26 52H74z" fill="#2FA84F"/><rect x="95" y="74" width="10" height="12" fill="#8A5A33"/><path d="M100 14l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6-4.5-4 6-1z" fill="#F5C542"/></svg>', t: 'Chủ đề theo mùa và ngày lễ', l: ['Cài đặt → Chủ đề theo mùa và ngày lễ → Chủ đề: Tự động (đổi theo ngày), Tắt, hoặc chọn tay một chủ đề.', '17 chủ đề: Tết, Valentine, Năm mới, Giáng sinh, 8/3, 20/10, 1/6, Ngày của Mẹ, Ngày của Cha, Trung thu, Halloween, Lễ Tạ Ơn, Hoa anh đào, Xuân, Hạ, Thu, Đông. Tết và Trung thu tính theo âm lịch.', 'Có tuyết, hoa, lá, trái tim… rơi; dây đèn nhấp nháy; lồng đèn; hình nhỏ trên logo; lời chúc. TV chạy chậm: tắt “Hiệu ứng rơi”.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 18l58 22v28c0 26-24 44-58 52-34-8-58-26-58-52V40z" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M76 66l16 16 32-32" fill="none" stroke="#4FAE8A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Lọc phim theo lứa tuổi và mã PIN', l: ['Cài đặt → Lọc theo lứa tuổi → “Chỉ hiện phim phù hợp lứa tuổi”: ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả, ở mọi trang.', '“Từ khóa nhạy cảm”: thêm hoặc xóa từ khóa (gõ không dấu cũng được, “ma tuy” khớp “Ma Túy”).', 'Mã PIN (mặc định 1234) cần khi: tắt lọc, sửa từ khóa, khôi phục mặc định, xóa thống kê. Trẻ nhỏ không tự tắt được.', 'Đổi mã PIN: Cài đặt → Lọc theo lứa tuổi → Mã PIN. Nhập PIN cũ, rồi PIN mới (4–8 số) hai lần. PIN mới đồng bộ sang các máy đã đăng nhập.', 'Quên PIN: người lớn mở js/config.js, điền PIN_FORCE: ‘1234’, mở lại app một lần, rồi xóa đi.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 18l58 22v28c0 26-24 44-58 52-34-8-58-26-58-52V40z" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M76 66l16 16 32-32" fill="none" stroke="#4FAE8A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Lọc phim theo lứa tuổi và mã PIN', l: ['Cài đặt → Lọc theo lứa tuổi → “Chỉ hiện phim phù hợp lứa tuổi”: ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả, ở mọi trang.', '“Từ khóa nhạy cảm”: thêm hoặc xóa từ khóa (gõ không dấu cũng được, “ma tuy” khớp “Ma Túy”).', 'Lọc mặc định TẮT; bật trong Cài đặt khi cần.', 'Mã PIN (mặc định 1234) cần khi: tắt lọc, sửa từ khóa, khôi phục mặc định, xóa thống kê. Trẻ nhỏ không tự tắt được.', 'Đổi mã PIN: Cài đặt → Lọc theo lứa tuổi → Mã PIN. Nhập PIN cũ, rồi PIN mới (4–8 số) hai lần. PIN mới đồng bộ sang các máy đã đăng nhập.', 'Quên PIN: người lớn mở js/config.js, điền PIN_FORCE: ‘1234’, mở lại app một lần, rồi xóa đi.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M60 82a22 22 0 0 1 4-43 30 30 0 0 1 58-2 26 26 0 0 1 8 51z" fill="none" stroke="#E8B04B" stroke-width="6" stroke-linejoin="round"/><path d="M84 64l12 12 22-24" fill="none" stroke="#4FAE8A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Sao lưu tự động hằng tuần', l: ['Đã đăng nhập Google hoặc kết nối GitHub thì app tự sao lưu mỗi tuần và báo “Đã sao lưu lúc…”.', 'Google Drive giữ 4 bản gần nhất (thư mục ẩn của app). GitHub giữ mọi bản trong mục Revisions của Gist tongtai-sync.', 'Cài đặt → Sao lưu tự động hằng tuần: “Sao lưu ngay” hoặc “Khôi phục bản sao lưu” (gộp, không xóa dữ liệu đang có).'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="34" y="20" width="132" height="80" rx="10" fill="#151922" stroke="#2A3042" stroke-width="3"/><path d="M50 40h70M50 56h96M50 72h60M50 88h80" stroke="#9AA0AE" stroke-width="6" stroke-linecap="round"/><path d="M50 56h96" stroke="#FF6B6B" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Nhật ký lỗi và báo lỗi', l: ['Cài đặt → Hỗ trợ → Nhật ký lỗi: 50 dòng gần nhất, lỗi tô màu đỏ.', 'Máy tính / điện thoại: “Sao chép để gửi” rồi dán vào Zalo, Messenger hoặc email.', 'TV: “Sao chép để gửi” hiện mã QR, quét bằng camera điện thoại để lấy nội dung rồi gửi.', 'Thông báo lỗi ghi rõ nguyên nhân và cách xử lý: mất mạng, hết hạn mức, API key sai…'] },
       { img: 'g_key', t: 'Nhập YouTube API key', l: ['Lấy key ở console.cloud.google.com → APIs & Services → Credentials (chuỗi 39 ký tự, giữ kín, đừng gửi cho ai).', 'Trên TV: Cài đặt → Kết nối → “YouTube API key” → OK.', 'Gõ từng ký tự: “Chữ HOA” đổi hoa/thường, “Xóa” xóa 1 ký tự. Xong chọn “Lưu”.', 'Kiểm tra: tab Thông tin → Nguồn dữ liệu ghi “YouTube API: đã kết nối”.'] },
@@ -2434,7 +2579,7 @@
       { img: 'g_set_home', t: 'Cài đặt: Trang chủ, danh mục, phim', l: ['Ẩn phim đã xem hết: Bật thì phim xem xong không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay.', 'Ẩn/Hiện từng hàng: Tiếp tục xem, Phim mới cập nhật, Đang hot, Phim lẻ hay, Đề xuất, Top 10 phim trong tuần, Hoạt hình.', 'Danh mục ít phim thì tìm thêm trên YouTube: Tắt để tiết kiệm (~100 đơn vị mỗi lần tìm).', 'Phim lẻ dài tối thiểu, Hoạt hình dài tối thiểu, Phim quay dọc Hiện/Ẩn. Đổi xong app tải lại danh sách.'] },
       { img: 'g_set_more', t: 'Cài đặt: Xem phim, kênh, nút cuối trang', l: ['Tự phát phim tiếp theo (Bật/Tắt), Phụ đề tiếng Việt khi mở phim, Chất lượng mặc định.', 'Hồ sơ người xem: đổi hồ sơ, hình đại diện, thống kê, hỏi “Ai đang xem?”. Hỗ trợ: Nhật ký lỗi, Giới thiệu.', 'Kênh theo dõi: “+ Thêm kênh mới”; mỗi kênh đổi Phim ngắn → Phim lẻ hay → Hoạt hình → Tắt.', 'Ước tính hạn mức hiện ngay theo cài đặt bạn chọn.', 'Cập nhật ngay · Hiện lại phim đã bỏ · Khôi phục mặc định (vẫn giữ kênh, API key, PLAYER_HOST).'] },
       { img: 'g_info', t: 'Thông tin, giới thiệu và hạn mức', l: ['Khung “Giới thiệu”: phiên bản, tác giả, lưu ý bản quyền. Nút “Kiểm tra bản mới” so với bản trên GitHub Pages (version.json).', 'Hạn mức YouTube đã dùng hôm nay trên TV này, còn bao lâu làm mới hạn mức.', 'Ước tính theo Cài đặt và còn bao nhiêu phút cập nhật phim mới.', 'Xem phim không tốn hạn mức. Hạn mức làm mới lúc 0 giờ giờ California (3 giờ chiều VN).'] },
-      { img: 'g_web', t: 'Xem trên trình duyệt (máy tính, điện thoại)', l: ['Mở địa chỉ bản web (dạng tên-của-bạn.github.io/tongtai-player/app/) bằng Chrome hoặc Safari.', 'Bấm chuột / chạm vào phim để mở. Lăn chuột hoặc vuốt để di chuyển. Phím mũi tên, Enter, Esc cũng dùng được.', 'Nút “‹ Quay lại” ở góc dưới bên trái. Khi xem phim: bấm vào video để tạm dừng, bấm các nút để tua.', 'iPhone: giao diện điện thoại riêng, cuộn bằng tay. Safari → nút Chia sẻ → “Thêm vào MH chính” để có biểu tượng như app.', 'Lần đầu: Cài đặt → YouTube API key, dán key (key chỉ lưu trong trình duyệt của bạn).'] },
+      { img: 'g_web', t: 'Xem trên trình duyệt (máy tính, điện thoại)', l: ['Mở địa chỉ bản web (dạng tên-của-bạn.github.io/tongtai-player/app/) bằng Chrome hoặc Safari.', 'Bấm chuột / chạm vào phim để mở. Lăn chuột hoặc vuốt để di chuyển. Phím mũi tên, Enter, Esc cũng dùng được.', 'Xóa phim ở Lịch sử, xóa kênh, xóa hồ sơ: GIỮ LÂU (chạm giữ hoặc giữ chuột) để hiện dấu ✕, rồi bấm ✕. Bấm ra chỗ khác để ẩn.', 'Nút “‹ Quay lại” ở góc dưới bên trái. Khi xem phim: bấm vào video để tạm dừng, bấm các nút để tua.', 'iPhone: giao diện điện thoại riêng, cuộn bằng tay. Safari → nút Chia sẻ → “Thêm vào MH chính” để có biểu tượng như app.', 'Lần đầu: Cài đặt → YouTube API key, dán key (key chỉ lưu trong trình duyệt của bạn).'] },
     ];
     SECTIONS.forEach(function (s) {
       var c = el('div', 'gcard f rowwrap');
@@ -2490,7 +2635,7 @@
   }
 
   w.Screens = {
-    init: init, who: function () { push(Who()); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
+    init: init, who: function () { push(Who()); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
     depth: function () { return S.stack.length; },
     current: function () { return current(); }
   };

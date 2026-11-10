@@ -4,15 +4,27 @@
   var C = w.APP_CONFIG;
   var KEY = 'settings';
 
+  // Mã PIN không lưu dạng chữ thường, chỉ lưu dấu băm (nhìn vào mã sao lưu cũng không thấy PIN)
+  function pinHash(v) {
+    var s = 'tongtai-pin:' + String(v == null ? '' : v).trim(), h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return 'h' + h.toString(36);
+  }
+
   // Giá trị gốc từ config.js (để "Khôi phục mặc định")
   var BASE = {
+    PIN_H: pinHash(C.PIN || '1234'),
     API_KEY: C.API_KEY, PLAYER_HOST: C.PLAYER_HOST,
     AUTO_REFRESH: true, REFRESH_HOURS: C.REFRESH_HOURS,
     IDLE_STOP_HOURS: C.IDLE_STOP_HOURS, CHANNEL_VIDEOS: C.CHANNEL_VIDEOS,
     SHOW_CONT: true, SHOW_FRESH: true, SHOW_HOT: true, SHOW_MOVIE: true, SHOW_REC: true, SHOW_TOP10: true, SHOW_ANIME: true,
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
-    THEME: C.THEME || 'dark'
+    THEME: C.THEME || 'dark',
+    CLOCK_12: !!C.CLOCK_12,
+    SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX !== false,
+    AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
+    AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
 
   // Danh sách kênh gốc trong config.js
@@ -29,9 +41,10 @@
   // Tất cả kênh (gốc + tự thêm) kèm loại: 'drama' (Phim ngắn), 'movie' (Phim lẻ hay), 'anime' (Hoạt hình), 'off' (tắt)
   function allChannels() {
     var s = saved(), ov = s.CH_TYPE || {}, out = [], seen = {};
+    var del = {}; (s.CH_DEL || []).forEach(function (n) { del[nk(n)] = 1; });
     function add(c, def, extra) {
       var k = nk(c.name);
-      if (seen[k]) return;
+      if (seen[k] || del[k]) return;
       seen[k] = 1;
       out.push({ name: c.name, id: c.id, tag: c.tag, type: ov[c.name] || def, extra: !!extra });
     }
@@ -57,6 +70,7 @@
     var found = allChannels().filter(function (c) { return nk(c.name) === nk(name); })[0];
     if (found) { setChannelType(found.name, type); return 'exists:' + found.name; }
     var s = saved();
+    s.CH_DEL = (s.CH_DEL || []).filter(function (n) { return nk(n) !== nk(name); });
     s.CH_EXTRA = (s.CH_EXTRA || []).concat([{ name: name, type: type }]);
     w.Store.setPref(KEY, s);
     apply();
@@ -65,6 +79,8 @@
 
   function removeChannel(name) {
     var s = saved();
+    var dl = (s.CH_DEL || []).filter(function (n) { return nk(n) !== nk(name); });
+    dl.push(name); s.CH_DEL = dl;
     s.CH_EXTRA = (s.CH_EXTRA || []).filter(function (c) { return c.name !== name; });
     if (s.CH_TYPE) delete s.CH_TYPE[name];
     w.Store.setPref(KEY, s);
@@ -83,6 +99,11 @@
       delete s.CH_EXTRA; delete s.CH_TYPE; s.chSet = C.CHANNEL_SET || 0;
       w.Store.setPref(KEY, s);
     }
+    // Quên mã PIN: PIN_FORCE trong config.js đặt lại mã (chỉ áp dụng một lần cho mỗi giá trị)
+    if (C.PIN_FORCE && s.pinForced !== pinHash(C.PIN_FORCE)) {
+      s.PIN_H = pinHash(C.PIN_FORCE); s.pinForced = s.PIN_H;
+      w.Store.setPref(KEY, s);
+    }
     for (k in BASE) C[k] = s[k] !== undefined ? s[k] : BASE[k];
     var chs = allChannels();
     C.CHANNELS = chs.filter(function (c) { return c.type === 'drama'; }).map(strip);
@@ -93,6 +114,8 @@
     C.CACHE_HOURS = C.REFRESH_HOURS;
     if (!C.AUTO_REFRESH) { C.CHANNEL_HOURS = 24; C.CACHE_HOURS = 24; }
     applyTheme();
+    if (w.Season) w.Season.apply();
+    if (w.appClock) try { w.appClock(); } catch (e) { /* chưa khởi động */ }
   }
 
   // Giao diện Tối / Sáng / Tự động (theo máy). Ghi nhớ nhanh để lần mở sau không bị chớp màu.
@@ -115,7 +138,7 @@
 
   function set(k, v) {
     var s = saved();
-    if (v === BASE[k]) delete s[k]; else s[k] = v;
+    if (v === BASE[k] || (Array.isArray(v) && JSON.stringify(v) === JSON.stringify(BASE[k]))) delete s[k]; else s[k] = v;
     w.Store.setPref(KEY, s);
     apply();
   }
@@ -127,8 +150,49 @@
     if (s.CH_TYPE) keep.CH_TYPE = s.CH_TYPE;
     if (s.API_KEY) keep.API_KEY = s.API_KEY;
     if (s.PLAYER_HOST) keep.PLAYER_HOST = s.PLAYER_HOST;
+    if (s.AGE_WORDS) keep.AGE_WORDS = s.AGE_WORDS;
+    if (s.PIN_H) keep.PIN_H = s.PIN_H;   // giữ mã PIN đã đổi   // danh sách từ khóa bạn tự quản lý: giữ lại
     w.Store.setPref(KEY, keep);
     apply();
+  }
+
+  /* ---------- Lọc phim theo lứa tuổi ----------
+     Ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả. So khớp không phân biệt dấu, hoa/thường, theo nguyên từ
+     ("ma" không khớp "mạnh"). Danh sách do bạn tự quản lý trong Cài đặt. */
+  function fold(s) {
+    s = String(s || '').toLowerCase();
+    try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { /* TV cũ */ }
+    return ' ' + s.replace(/đ/g, 'd').replace(/[^a-z0-9+]+/g, ' ').trim() + ' ';
+  }
+  var wordsCache = null, wordsKey = '';
+  function ageWords() {
+    var list = get('AGE_WORDS') || [], key = list.join('|');
+    if (key !== wordsKey) {
+      wordsKey = key;
+      wordsCache = list.map(function (x) { return fold(x); }).filter(function (x) { return x.trim(); });
+    }
+    return wordsCache;
+  }
+  function hitWord(text) {
+    var t = fold(text), ws = ageWords();
+    for (var i = 0; i < ws.length; i++) if (t.indexOf(ws[i]) >= 0) return ws[i].trim();
+    return '';
+  }
+  function hides(it) {
+    if (!it || C.AGE_FILTER !== true) return false;
+    return !!hitWord((it.title || '') + ' ' + (it.desc || ''));
+  }
+  function addWord(wd) {
+    wd = String(wd || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!wd) return false;
+    var list = (get('AGE_WORDS') || []).slice();
+    if (list.some(function (x) { return fold(x) === fold(wd); })) return 'exists';
+    list.push(wd);
+    set('AGE_WORDS', list);
+    return true;
+  }
+  function removeWord(wd) {
+    set('AGE_WORDS', (get('AGE_WORDS') || []).filter(function (x) { return x !== wd; }));
   }
 
   // Ước tính hạn mức YouTube API (đơn vị): mỗi giờ và khi mở app 8 tiếng/ngày
@@ -143,6 +207,10 @@
   apply();
   w.Settings = {
     get: get, set: set, reset: reset, apply: apply, estimate: estimate, base: BASE,
+    checkPin: function (v) { return pinHash(v) === get('PIN_H'); },
+    setPin: function (v) { set('PIN_H', pinHash(v)); },
+    pinIsDefault: function () { return get('PIN_H') === pinHash('1234'); },
+    hides: hides, hitWord: hitWord, addWord: addWord, removeWord: removeWord,
     channels: allChannels, addChannel: addChannel, setChannelType: setChannelType, removeChannel: removeChannel
   };
 })(window);

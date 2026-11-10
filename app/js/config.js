@@ -22,13 +22,30 @@ window.APP_CONFIG = {
   // Hoạt hình: CHỈ lấy hoạt hình AI, loại hẳn hoạt hình 3D
   ANIME_QUERIES: ['hoạt hình AI tập', 'phim hoạt hình AI'],
 
+  CLOCK_12: false,   // đồng hồ: false = 24 giờ (14:05), true = 12 giờ (2:05 PM). Đổi trong Cài đặt → Giao diện
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.9.15',
-  BUILD: 44,
-  UPDATED: '05/11/2026',
+  VERSION: '2.15.2',
+  BUILD: 61,
+  UPDATED: '09/11/2026',
   CONTACT: '',
+  // Kiểm tra bản mới: địa chỉ file version.json. Để trống = tự dùng PLAYER_HOST + 'app/version.json' (TV)
+  // hoặc version.json cạnh trang (bản web). Android không có PLAYER_HOST thì điền địa chỉ đầy đủ ở đây.
+  UPDATE_URL: '',
+
+  AUTO_NEXT: true,
+  HIDE_WATCHED: true,   // Trang chủ: ẩn phim đã xem hết khỏi Phim mới, Đang hot, Đề xuất, Phim lẻ hay      // hết phim: đếm ngược 30 giây rồi tự phát phim/tập tiếp theo
+  ASK_PROFILE: true,    // mở app hỏi "Ai đang xem?"
+  AUTO_BACKUP: true,
+  SEASON: 'auto',       // chủ đề theo mùa/ngày lễ: 'auto' (tự đổi theo ngày), 'off' (tắt), hoặc mã chủ đề (vd 'noel', 'tet')
+  SEASON_FX: true,      // hiệu ứng rơi (tuyết, hoa, lá…). Tắt nếu TV chạy chậm
+  PIN: '1234',
+  PIN_FORCE: '',        // QUÊN MÃ PIN: điền mã mới ở đây (ví dụ '1234'), tải lại app một lần, rồi để trống lại          // mã PIN mặc định (đổi trong Cài đặt → Mã PIN). Dùng cho: tắt lọc lứa tuổi, sửa từ khóa, khôi phục mặc định, đổi PIN    // sao lưu tự động hằng tuần vào Google Drive / GitHub Gist (khi đã đăng nhập)
+
+  // Chỉ chọn phim phù hợp lứa tuổi: ẩn phim có các từ khóa này trong tên/mô tả (sửa trong Cài đặt → Lọc theo lứa tuổi)
+  AGE_FILTER: true,
+  AGE_WORDS: ['18+', 'cảnh nóng', 'nóng bỏng', 'gợi cảm', 'sexy', 'khỏa thân', 'máu me', 'kinh dị', 'rùng rợn', 'bạo lực', 'tra tấn', 'ma túy', 'cờ bạc'],
 
   // Kênh YouTube bạn theo dõi. App tự tìm kênh theo tên (chỉ 1 lần, rồi nhớ luôn).
   // Nếu app tìm nhầm kênh: thêm id kênh, ví dụ { name: 'Only Phim', id: 'UCxxxxxxxxxxxxxxxxxxxxxx' }
@@ -53,7 +70,7 @@ window.APP_CONFIG = {
     { name: '@tieukhaai-t8e', tag: 'AI' }, { name: '@nautrang79', tag: 'AI' }, { name: '@MễLạcReview', tag: 'AI' },
     { name: '@isTayLamVi', tag: 'AI' }, { name: '@TramMePhim-naohetflopthidoi', tag: 'AI' }, { name: '@mongnureview', tag: 'AI' },
     { name: '@GOCVUIPHET', tag: 'AI' }, { name: '@GócManhuaReview', tag: 'AI' }, { name: '@ĐẬUSUB-l2c', tag: 'AI' },
-    { name: '@Reviuuphimai', tag: 'AI' }, { name: '@ponkechuyen', tag: 'AI' }
+    { name: '@Reviuuphimai', tag: 'AI' }, { name: '@ponkechuyen', tag: 'AI' }, { name: '@GÓCCHILLPHẾT', tag: 'AI' }
   ],
   // Kênh phim lẻ hay: hàng "Phim lẻ hay" trên Trang chủ
   MOVIE_CHANNELS: [

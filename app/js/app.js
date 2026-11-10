@@ -5,15 +5,17 @@
 
   function registerKeys() {
     try {
-      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop']
+      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop', 'ColorF2Yellow']
         .forEach(function (k) { w.tizen.tvinputdevice.registerKey(k); });
     } catch (e) { /* chạy ngoài TV */ }
   }
 
   function clock() {
-    var n = new Date(), h = n.getHours(), m = n.getMinutes();
-    d.getElementById('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+    var c = d.getElementById('clock');
+    c.textContent = w.UI.hhmm(Date.now());
+    c.classList.toggle('h12', !!w.APP_CONFIG.CLOCK_12);
   }
+  w.appClock = clock;
 
   var okAt = 0;
   var IS_TV = !!(w.tizen || w.AndroidApp);
@@ -30,9 +32,26 @@
     return true;
   }
 
+  // Giữ lâu nút giữa (OK) trên một phim có thể xóa: hiện hộp hỏi xóa. Nhấn nhanh vẫn là mở phim như thường.
+  var holdTimer = 0, holdFired = false;
+  d.addEventListener('keyup', function (e) {
+    if (e.keyCode !== 13) return;
+    if (holdTimer) {
+      clearTimeout(holdTimer); holdTimer = 0;
+      if (!holdFired) w.Nav.ok();   // nhả sớm = nhấn OK bình thường
+    }
+    holdFired = false;
+  });
+
   function onKey(e) {
     var k = e.keyCode;
     w.lastKeyAt = Date.now();
+    if (bootOn) {   // đang ở màn hình khởi động: OK / Back = vào ngay
+      if (k === 13 || k === 10009 || k === 27 || k === 8) hideBoot();
+      if (e.preventDefault) e.preventDefault();
+      return;
+    }
+    if (k === 13 && (e.repeat || holdTimer || holdFired)) { if (e.preventDefault) e.preventDefault(); return; }   // giữ phím OK: bỏ các lần lặp (tránh tính nhầm là OK hai lần)
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
       if (k === 27) { e.target.blur(); w.Screens.back(); e.preventDefault(); }
       return;   // đang gõ trong ô nhập thật (điện thoại)
@@ -59,7 +78,19 @@
       case 38: w.Nav.move('up'); break;
       case 39: w.Nav.move('right'); break;
       case 40: w.Nav.move('down'); break;
-      case 13: w.Nav.ok(); break;
+      case 13: {
+        var f0 = w.Nav.cur;
+        if (f0 && f0._hold && !w.Player.isOpen()) {
+          holdFired = false;
+          holdTimer = setTimeout(function () { holdTimer = 0; holdFired = true; f0._hold(); }, 650);
+        } else w.Nav.ok();
+        break;
+      }
+      case 405: case 89: {   // nút VÀNG (hoặc phím Y): hành động nhanh của màn hình (ví dụ xóa phim ở Lịch sử)
+        var sc = w.Screens.current && w.Screens.current();
+        if (sc && sc.onYellow) sc.onYellow(); else return;
+        break;
+      }
       case 10009: case 27: case 8: w.Screens.back(); break;
       default: return;
     }
@@ -84,7 +115,10 @@
     // Bấm vào ô nào thì chọn và mở ô đó
     d.addEventListener('click', function (e) {
       var t = e.target;
+      if (bootOn) { hideBoot(); return; }
       if (w.Player.isOpen()) {
+        var ub = t.closest && t.closest('.upbtn');
+        if (ub) { w.Player.upClick(ub.getAttribute('data-act')); return; }
         var pb = t.closest && t.closest('.plb');
         if (pb && pb._idx !== undefined) { w.Player.clickBtn(pb._idx); return; }
         if (t.closest && t.closest('#pl-close')) { w.Player.close(); return; }
@@ -92,6 +126,7 @@
         return;
       }
       if (t.tagName === 'INPUT') return;
+      if (t.closest && t.closest('.cdel:not(.on)')) return;   // nút ✕ xóa tự xử lý
       var f = t.closest && t.closest('.f');
       if (!f) return;
       w.lastKeyAt = Date.now();
@@ -158,6 +193,11 @@
     panel.className = 'mdpanel';
     function fillDrawer() {
       panel.innerHTML = '';
+      var me = d.createElement('div');
+      me.className = 'mditem who';
+      me.textContent = '👤 ' + w.Store.profileName() + ' · Đổi hồ sơ';
+      me.onclick = function (e) { e.stopPropagation(); dr.classList.add('hidden'); w.Screens.who(); };
+      panel.appendChild(me);
       [].forEach.call(d.querySelectorAll('#tabs .tab'), function (t) {
         var it = d.createElement('div');
         it.className = 'mditem' + (t.classList.contains('active') ? ' on' : '');
@@ -200,6 +240,62 @@
   // Ứng dụng Android gọi hàm này khi người dùng bấm phím trên remote
   w.androidKey = function (k) { onKey({ keyCode: k, preventDefault: function () {} }); };
 
+  /* ---------- Màn hình khởi động: logo + "Đang lấy phim mới… 3/38 kênh" ----------
+     Trang chủ tải ngầm phía sau. Xong hết kênh (hoặc quá 25 giây, hoặc bấm OK) thì tắt màn hình này,
+     rồi hỏi "Ai đang xem?" nếu bật trong Cài đặt. */
+  var bootOn = false, bootT = 0;
+  function bootWatch() {
+    var boot = d.getElementById('boot');
+    if (!boot) { afterBoot(); return; }
+    bootOn = true;
+    var C = w.APP_CONFIG, msgE = d.getElementById('bootmsg'), fill = d.getElementById('bootfill'), hint = d.getElementById('boothint');
+    var need = (C.CHANNELS || []).length + (C.SHOW_ANIME !== false ? (C.ANIME_CHANNELS || []).length : 0) + (C.SHOW_MOVIE !== false ? (C.MOVIE_CHANNELS || []).length : 0);
+    var t0 = Date.now();
+    function paint(n) {
+      if (!bootOn) return;
+      if (!w.Api.hasKey()) { msgE.textContent = 'Chế độ demo (chưa có YouTube API key)'; fill.style.width = '100%'; return; }
+      if (w.navigator.onLine === false) { msgE.textContent = 'Mất mạng: đang mở danh sách phim đã lưu…'; }
+      else if (!n) msgE.textContent = 'Đang tìm kênh theo dõi…';
+      else msgE.textContent = 'Đang lấy phim mới… ' + Math.min(n, need) + '/' + need + ' kênh';
+      fill.style.width = Math.max(4, Math.round(Math.min(1, n / Math.max(1, need)) * 100)) + '%';
+    }
+    paint(0);
+    w.Api.onProgress(function (n) {
+      paint(n);
+      if (n >= need) bootDone(250);
+    });
+    if (!w.Api.hasKey() || !need) bootDone(900);
+    setTimeout(function () { if (bootOn) hint.textContent = 'Bấm OK để vào ngay, phim sẽ tiếp tục tải phía sau'; }, 4000);
+    bootT = setTimeout(function () {
+      if (!bootOn) return;
+      if (w.Log) w.Log.warn('Khởi động: sau 25 giây mới tải được ' + w.Api.progress().n + '/' + need + ' kênh (mạng chậm?)');
+      bootDone(0);
+    }, 25000);
+    var minAt = t0 + 1800;   // hiện logo ít nhất 1,8 giây cho trọn hiệu ứng vương miện
+    function bootDone(delay) {
+      clearTimeout(bootT);
+      setTimeout(hideBoot, Math.max(delay, minAt - Date.now()));
+    }
+  }
+  function hideBoot() {
+    if (!bootOn) return;
+    bootOn = false;
+    var boot = d.getElementById('boot');
+    if (boot) {
+      boot.classList.add('out');
+      setTimeout(function () { if (boot.parentNode) boot.parentNode.removeChild(boot); }, 520);
+    }
+    afterBoot();
+  }
+  function afterBoot() {
+    if (w.Season) setTimeout(w.Season.greetOnce, 600);
+    if (w.APP_CONFIG.ASK_PROFILE !== false && w.Screens.who && !w.Player.isOpen()) w.Screens.who();
+  }
+
+  // Mất mạng / có mạng lại: báo ngay bằng câu dễ hiểu
+  w.addEventListener('offline', function () { if (w.UI) w.UI.toast('Mất mạng: kiểm tra Wi-Fi hoặc dây mạng. Phim đã tải vẫn xem lại được trong danh sách.'); });
+  w.addEventListener('online', function () { if (w.UI) w.UI.toast('Đã có mạng lại'); });
+
   // Khởi động ngay khi trang sẵn sàng (không chờ font/ảnh: TV mạng chậm vẫn mở nhanh)
   var started = false;
   function start() {
@@ -216,10 +312,24 @@
     setInterval(clock, 20000);
     d.addEventListener('keydown', onKey);
     if (!IS_TV) setupPointer();
+    if (w.Log) w.Log.info('Mở app ' + w.APP_CONFIG.VERSION + ' · hồ sơ ' + w.Store.profileName());
+    if (w.Season) w.Season.apply(true);
+    bootWatch();
     w.Screens.init();
     if (w.Sync) w.Sync.init();
-    var boot = d.getElementById('boot');
-    if (boot) boot.parentNode.removeChild(boot);
+    // Mở từ mã QR sao lưu: địa chỉ có dạng .../#bk=TTQR1:... -> tự nhập rồi xóa phần mã khỏi thanh địa chỉ
+    try {
+      var hm = /^#bk=(TT(?:QR|BK)1:[A-Za-z0-9+\/=_-]+)/.exec(w.location.hash || '');
+      if (hm && w.Sync && w.Sync.importAny) {
+        try { w.history.replaceState(null, '', w.location.pathname + w.location.search); } catch (e2) { /* bỏ qua */ }
+        w.Sync.importAny(hm[1]).then(function (r) {
+          w.UI.toast('Đã nhập từ mã QR: ' + r.films + ' phim có tiến độ, ' + r.favs + ' phim trong danh sách');
+          if (w.Screens.current && w.Screens.current().refresh) w.Screens.current().refresh();
+        }, function (e3) {
+          w.UI.toast(e3 && e3.nokey ? 'Cần nhập API key YouTube trong Cài đặt rồi quét lại mã QR' : 'Mã QR không đúng hoặc không nhập được');
+        });
+      }
+    } catch (e1) { /* bỏ qua */ }
     if (!w.Api.hasKey()) w.UI.toast('Chế độ demo: chưa có YouTube API key. Vào Cài đặt → YouTube API key để nhập.');
   }
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', start);

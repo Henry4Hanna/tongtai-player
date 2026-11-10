@@ -97,6 +97,11 @@
     if (o.rank) { t.classList.add('ranked'); t.appendChild(el('div', 'rank', String(o.rank))); }
     var dur = item.kind === 'anime' ? (item.eps ? item.eps + ' tập' : '') : (item.dur ? fmtDur(item.dur) : '');
     if (dur) t.appendChild(el('div', 'badge dur', dur));
+    // Phim đã xem hết: dấu "✓ Đã xem", ảnh mờ đi một chút
+    if (o.progress == null && item.kind !== 'anime' && w.Store && w.Store.isWatched && w.Store.isWatched(item.id)) {
+      c.classList.add('seen');
+      t.appendChild(el('div', 'badge seenb', '✓ Đã xem'));
+    }
     var cats = w.Api ? w.Api.catsOf(item) : [];
     if (cats.length) t.appendChild(el('div', 'badge cat', cats[0]));
     if (o.progress != null) {
@@ -351,13 +356,21 @@
     (w.Api ? w.Api.catsOf(item) : []).forEach(function (n) { box.appendChild(el('span', 'chip cat', n)); });
   }
 
+  // Giờ:phút theo kiểu đã chọn trong Cài đặt: 24 giờ (14:05) hoặc 12 giờ (2:05 PM)
   function hhmm(t) {
-    var n = new Date(t), h = n.getHours(), m = n.getMinutes();
-    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+    var n = new Date(t), h = n.getHours(), m = n.getMinutes(), mm = (m < 10 ? '0' : '') + m;
+    if (w.APP_CONFIG && w.APP_CONFIG.CLOCK_12) return (h % 12 || 12) + ':' + mm + ' ' + (h < 12 ? 'AM' : 'PM');
+    return (h < 10 ? '0' : '') + h + ':' + mm;
+  }
+
+  // Một mốc giờ (0–23): "20h" hoặc "8 PM"
+  function hr(h) {
+    h = ((h % 24) + 24) % 24;
+    return w.APP_CONFIG && w.APP_CONFIG.CLOCK_12 ? (h % 12 || 12) + ' ' + (h < 12 ? 'AM' : 'PM') : h + 'h';
   }
 
   w.UI = {
-    hhmm: hhmm, catChips: catChips, fit: fit, grad: grad, isMobile: isMobile,
+    hhmm: hhmm, hr: hr, catChips: catChips, fit: fit, grad: grad, isMobile: isMobile,
     el: el, grad: grad, thumb: thumb, card: card, row: row, view: view, button: button, toast: toast,
     fmtDur: fmtDur, fmtLong: fmtLong, fmtShort: fmtShort, fmtViews: fmtViews, fmtAgo: fmtAgo,
     ICON_PLAY: ICON_PLAY, ICON_PLUS: ICON_PLUS, ICON_CHECK: ICON_CHECK

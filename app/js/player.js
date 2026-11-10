@@ -332,8 +332,11 @@
     btns.push({ id: 'play', label: playing ? 'Tạm dừng' : 'Phát', svg: playing ? '<rect x="6" y="4" width="4.2" height="16" rx="1" fill="currentColor"/><rect x="13.8" y="4" width="4.2" height="16" rx="1" fill="currentColor"/>' : '<path d="M6 3l15 9-15 9z" fill="currentColor"/>' });
     btns.push({ id: 'fwd', label: '+10s', svg: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>' });
     if (multi) btns.push({ id: 'next', label: 'Tập sau', svg: '<path d="M18 5v14"/><path d="M5 5l10 7-10 7z" fill="currentColor"/>' });
+    var favOn = w.Store.isFav(q.series || cur());
+    btns.push({ id: 'fav', label: favOn ? 'Đã lưu' : 'Danh sách', on: favOn, svg: favOn ? '<path d="M5 12.5l4.5 4.5L19 7.5"/>' : '<path d="M12 5v14M5 12h14"/>' });
     btns.push({ id: 'skip', label: 'Bỏ phim', svg: '<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>' });
     btns.push({ id: 'cc', wide: true, label: ccOn() ? (ccInfo === 'dich' ? 'Phụ đề: Việt (dịch)' : 'Phụ đề: Tiếng Việt') : 'Phụ đề: Tắt', on: ccOn(), svg: '<rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 10.2a2.4 2.4 0 1 0 0 3.6M17 10.2a2.4 2.4 0 1 0 0 3.6"/>' });
+    btns.push({ id: 'sleep', wide: true, label: sleepLabel(), on: sleep.mode !== 'off', svg: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/>' });
     var nowQ = qNow();
     btns.push({ id: 'quality', wide: true, label: 'Chất lượng: ' + (qPref() === 'auto' && nowQ ? 'Tự động (' + nowQ + ')' : qLabel(qPref())), svg: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>' });
     var pi = 0;
@@ -342,7 +345,7 @@
     btns.forEach(function (b, i) {
       var e = d.createElement('div');
       e._idx = i;
-      e.className = 'plb' + (b.id === 'play' ? ' big' : '') + (b.wide ? ' wide' : '') + (b.on ? ' on' : '') +
+      e.className = 'plb' + (b.id === 'play' ? ' big' : '') + (b.id === 'sleep' ? ' sleepb' : '') + (b.wide ? ' wide' : '') + (b.on ? ' on' : '') +
         ((mode === 'btn' || mode === 'menu') && i === btnIdx ? ' focus' : '');
       e.innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + b.svg + '</svg>';
       var l = d.createElement('span');
@@ -374,6 +377,7 @@
   }
 
   function play(i) {
+    hideUp();
     q.index = i;
     var it = cur();
     clearTimeout(errT);
@@ -401,9 +405,14 @@
     msg('Đang tải video…');
     var s = startPos(it);
     if (s > 0) w.UI.toast('Tiếp tục từ ' + w.UI.fmtDur(s));
+    if (!adTold) { adTold = true; setTimeout(function () { if (isOpen) w.UI.toast('Có quảng cáo? Chờ nút “Bỏ qua” của YouTube hiện rồi bấm OK'); }, s > 0 ? 3500 : 800); }
     loadApi(function (ok) {
       if (!isOpen || cur() !== it) return;
-      if (!ok) { msg('Không tải được trình phát YouTube. Kiểm tra mạng của TV.'); errT = setTimeout(close, 4000); return; }
+      if (!ok) {
+        msg('Không tải được trình phát YouTube.\nKiểm tra mạng (Wi-Fi hoặc dây mạng) rồi mở lại phim.');
+        if (w.Log) w.Log.err('Không tải được trình phát YouTube (mạng?)');
+        errT = setTimeout(close, 5000); return;
+      }
       if (yt && yt.loadVideoById) {
         var lv = { videoId: it.id, startSeconds: s };
         if (qPref() !== 'auto') lv.suggestedQuality = qPref();
@@ -446,7 +455,7 @@
       playing = false;
       var it = cur(), dur = yt.getDuration() || it.dur || 0;
       w.Store.setProgress(it.id, dur, dur);
-      if (q.index < q.items.length - 1) play(q.index + 1); else close();
+      ended();
     }
   }
 
@@ -456,6 +465,7 @@
     // Lỗi 153 do môi trường TV (không phải do phim) -> không ẩn phim
     if (c === 100 || c === 101 || c === 150) w.Store.block(it.id);
     if ((c === 153 || c === 'host') && !isWeb) {
+      if (w.Log) w.Log.err(c === 'host' ? 'Không mở được trang phát PLAYER_HOST: ' + hostUrl() : 'Lỗi 153 khi phát ' + it.id + (useHost() ? ' qua ' + hostUrl() : ' (chưa có PLAYER_HOST)'));
       msg(c === 'host'
         ? 'Không mở được trang phát video: ' + hostUrl() + ' — kiểm tra địa chỉ PLAYER_HOST và GitHub Pages.'
         : useHost()
@@ -465,16 +475,37 @@
       errT = setTimeout(close, 8000);
       return;
     }
-    var txt = c === 101 || c === 150 ? 'Chủ video không cho phát ngoài YouTube.' :
+    var txt = c === 101 || c === 150 ? 'Chủ video không cho phát ngoài YouTube nên app đã ẩn phim này.' :
       c === 153 ? 'YouTube từ chối nhúng video này (lỗi 153).' :
-      c === 100 ? 'Video đã bị xóa hoặc ẩn.' : 'Không phát được video (mã ' + c + ').';
+      c === 100 ? 'Video đã bị xóa hoặc chuyển sang riêng tư nên app đã ẩn phim này.' :
+      c === 5 ? 'Trình phát của thiết bị không chạy được video này (lỗi 5).' :
+      c === 2 ? 'Mã video không hợp lệ (lỗi 2).' : 'Không phát được video (mã ' + c + '). Thử lại sau.';
+    if (w.Log) w.Log.err('Phát phim “' + (it.title || it.id) + '” (' + it.id + '): ' + txt);
     var hasNext = q.index < q.items.length - 1;
     msg(txt + (hasNext ? ' Chuyển sang tập sau…' : ' Quay lại sau vài giây…'));
     clearTimeout(errT);
     errT = setTimeout(function () { if (hasNext) play(q.index + 1); else close(); }, 3000);
   }
 
+  /* Thống kê xem: cộng thời gian ĐANG PHÁT thật (không tính lúc tạm dừng, tải, quảng cáo chưa chạy) */
+  var watchAcc = 0, watchAt = 0, watchFlushAt = 0;
+  function countWatch() {
+    var now = Date.now();
+    if (playing && watchAt && !sleepHold && !up) watchAcc += Math.min(2, (now - watchAt) / 1000);
+    watchAt = now;
+    if (watchAcc >= 15 || (watchAcc > 0 && now - watchFlushAt > 30000)) flushWatch();
+  }
+  function flushWatch() {
+    watchFlushAt = Date.now();
+    if (watchAcc <= 0 || !q) { watchAcc = 0; return; }
+    var s = q.series || cur();
+    w.Store.addWatch(watchAcc, s.ch || (cur() && cur().ch) || '');
+    watchAcc = 0;
+  }
+
   function tick() {
+    checkSleep();
+    countWatch();
     if (!yt || !yt.getCurrentTime || !isOpen) return;
     var c = 0, du = 0;
     try { c = yt.getCurrentTime() || 0; du = yt.getDuration() || 0; } catch (x) { return; }
@@ -522,8 +553,145 @@
     showUi();
   }
 
+  /* ---------- Hẹn giờ tắt: 30 / 60 / 90 phút hoặc hết phim này ----------
+     Hẹn giờ tính cho cả lượt xem (kể cả khi tự phát phim tiếp theo), không lưu khi tắt app. */
+  var sleep = { mode: 'off', at: 0, warned: false }, sleepHold = false, sleepCloseT = 0;
+  var SLEEP_STEPS = ['off', 30, 60, 90, 'end'];
+  function sleepLabel() {
+    if (sleep.mode === 'end') return 'Hẹn giờ: Hết phim';
+    if (sleep.mode === 't') return 'Hẹn giờ: ' + Math.max(1, Math.ceil((sleep.at - Date.now()) / 60000)) + ' phút';
+    return 'Hẹn giờ: Tắt';
+  }
+  function setSleep(v) {
+    sleep.warned = false;
+    if (v === 'off') { sleep.mode = 'off'; sleep.at = 0; }
+    else if (v === 'end') { sleep.mode = 'end'; sleep.at = 0; }
+    else { sleep.mode = 't'; sleep.at = Date.now() + v * 60000; sleep.mins = v; }
+  }
+  function cycleSleep() {
+    var curV = sleep.mode === 'end' ? 'end' : sleep.mode === 't' ? sleep.mins : 'off';
+    var i = SLEEP_STEPS.indexOf(curV), nx = SLEEP_STEPS[(i + 1) % SLEEP_STEPS.length];
+    setSleep(nx);
+    w.UI.toast(nx === 'off' ? 'Đã tắt hẹn giờ' : nx === 'end' ? 'Sẽ dừng khi hết phim này' : 'Sẽ tạm dừng phim sau ' + nx + ' phút');
+  }
+  function checkSleep() {
+    if (sleep.mode !== 't') return;
+    var left = sleep.at - Date.now();
+    if (!isOpen) { if (left <= 0) setSleep('off'); return; }
+    if (left <= 60000 && left > 0 && !sleep.warned) { sleep.warned = true; w.UI.toast('Còn 1 phút nữa phim sẽ tạm dừng (hẹn giờ)'); }
+    if (left > 0) { if (mode === 'btn' && $('pl-ui').classList.contains('show')) { var b = d.querySelector('.plb.sleepb span'); if (b) b.textContent = sleepLabel(); } return; }
+    setSleep('off');
+    hideUp();
+    try { if (yt && yt.pauseVideo) yt.pauseVideo(); } catch (x) { /* bỏ qua */ }
+    saveNow();
+    sleepHold = true;
+    msg('Đã hết giờ hẹn, phim đã tạm dừng.\nBấm OK để xem tiếp, Back để thoát.');
+    if (w.Log) w.Log.info('Hẹn giờ: đã tạm dừng phim');
+    clearTimeout(sleepCloseT);
+    // 15 phút không ai bấm: đóng hẳn trình phát cho TV được nghỉ
+    sleepCloseT = setTimeout(function () { if (sleepHold && isOpen) { sleepHold = false; close(); } }, 15 * 60e3);
+  }
+
+  /* ---------- Hết phim: đếm ngược 30 giây rồi tự phát phim/tập tiếp theo ---------- */
+  var UP_SECS = 30, up = null;   // up = { t: đích, left, idx (0 Phát ngay, 1 Hủy), timer }
+  function nextTarget() {
+    if (q.index < q.items.length - 1) return Promise.resolve({ ep: true, index: q.index + 1, item: q.items[q.index + 1] });
+    if (!q.next) return Promise.resolve(null);
+    return Promise.resolve().then(function () { return q.next(q.series || cur()); }).then(function (it) { return it ? { item: it } : null; }, function () { return null; });
+  }
+  function ended() {
+    if (sleep.mode === 'end') {   // hẹn giờ "Hết phim này": dừng lại, không phát phim tiếp
+      setSleep('off');
+      close();
+      w.UI.toast('Đã dừng theo hẹn giờ. Chúc ngủ ngon!');
+      if (w.Log) w.Log.info('Hẹn giờ: dừng khi hết phim');
+      return;
+    }
+    if (!w.APP_CONFIG || w.APP_CONFIG.AUTO_NEXT === false) {   // tắt tự phát: như bản cũ
+      if (q.index < q.items.length - 1) play(q.index + 1); else close();
+      return;
+    }
+    var me = q;
+    nextTarget().then(function (t) {
+      if (!isOpen || q !== me) return;
+      if (!t) { close(); return; }
+      showUpNext(t);
+    });
+  }
+  function upBox() {
+    var b = $('pl-next');
+    if (!b) { b = d.createElement('div'); b.id = 'pl-next'; b.className = 'hidden'; $('player').appendChild(b); }
+    return b;
+  }
+  function paintUp() {
+    if (!up) return;
+    var b = upBox(), it = up.t.item;
+    b.innerHTML = '';
+    var card = d.createElement('div'); card.className = 'upn';
+    var th = w.UI.thumb(it, true); th.className = 'thumb upn-th';
+    card.appendChild(th);
+    var tx = d.createElement('div'); tx.className = 'upn-tx';
+    var h = d.createElement('div'); h.className = 'upn-h';
+    h.textContent = up.t.ep ? 'Tập tiếp theo' : 'Phim tiếp theo';
+    var tt = d.createElement('div'); tt.className = 'upn-t';
+    tt.textContent = up.t.ep ? 'Tập ' + (it.ep || (up.t.index + 1)) + (it.title ? ' · ' + it.title : '') : it.title;
+    var sb = d.createElement('div'); sb.className = 'upn-s';
+    sb.textContent = up.t.ep ? (q.heading || '') : [it.ch, it.dur ? w.UI.fmtLong(it.dur) : ''].filter(Boolean).join(' · ');
+    var cd = d.createElement('div'); cd.className = 'upn-cd';
+    cd.textContent = 'Tự phát sau ' + up.left + ' giây';
+    var bar = d.createElement('div'); bar.className = 'upn-bar';
+    var fill = d.createElement('div'); fill.className = 'upn-fill';
+    fill.style.width = Math.round((UP_SECS - up.left) / UP_SECS * 100) + '%';
+    bar.appendChild(fill);
+    var bx = d.createElement('div'); bx.className = 'upn-btns';
+    [['play', 'Phát ngay'], ['cancel', 'Hủy']].forEach(function (x, i) {
+      var e = d.createElement('div');
+      e.className = 'upbtn' + (i === 0 ? ' gold' : '') + (i === up.idx ? ' focus' : '');
+      e.setAttribute('data-act', x[0]);
+      e.textContent = x[1];
+      bx.appendChild(e);
+    });
+    [h, tt, sb, cd, bar, bx].forEach(function (x) { tx.appendChild(x); });
+    card.appendChild(tx);
+    b.appendChild(card);
+    b.classList.remove('hidden');
+  }
+  function showUpNext(t) {
+    hideUp();
+    up = { t: t, left: UP_SECS, idx: 0 };
+    msg('');
+    $('pl-ui').classList.remove('show');
+    paintUp();
+    up.timer = setInterval(function () {
+      if (!up) return;
+      up.left -= 1;
+      if (up.left <= 0) { upGo(); return; }
+      paintUp();
+    }, 1000);
+  }
+  function hideUp() {
+    if (up && up.timer) clearInterval(up.timer);
+    up = null;
+    var b = $('pl-next');
+    if (b) { b.classList.add('hidden'); b.innerHTML = ''; }
+  }
+  function upGo() {
+    if (!up) return;
+    flushWatch();
+    var t = up.t;
+    hideUp();
+    if (t.ep) { play(t.index); return; }
+    // phim lẻ tiếp theo: thay hàng đợi bằng phim mới, vẫn giữ cách chọn phim kế tiếp
+    q.items = [t.item]; q.index = 0; q.series = t.item; q.heading = t.item.title; q.key = 'v:' + t.item.id; q.fromStart = false;
+    play(0);
+  }
+  function upAct(a) { if (a === 'play') upGo(); else { hideUp(); close(); } }
+
   function close() {
     if (!isOpen) return;
+    flushWatch(); watchAt = 0;
+    hideUp();
+    sleepHold = false; clearTimeout(sleepCloseT);
     saveNow();
     isOpen = false;
     demoHint = false;
@@ -547,6 +715,12 @@
     else if (id === 'quality') { openMenu(); }
     else if (id === 'rotate') { setRot((rotOf() + 90) % 360); }
     else if (id === 'skip') { skipVideo(); }
+    else if (id === 'sleep') { cycleSleep(); }
+    else if (id === 'fav') {
+      var fi = slim(q.series || cur()), fon = w.Store.toggleFav(fi);
+      w.UI.toast(fon ? 'Đã thêm vào Danh sách của tôi' : 'Đã bỏ khỏi Danh sách của tôi');
+      renderBtns();
+    }
   }
 
   /* Trả về true nếu đã xử lý phím */
@@ -556,6 +730,18 @@
       demoHint = false;
       close();
       if (w.Screens && w.Screens.goTab) w.Screens.goTab('settings');
+      return true;
+    }
+    if (sleepHold) {   // đã dừng vì hẹn giờ: OK = xem tiếp, Back = thoát
+      if (k === 13 || k === 415 || k === 10252) { sleepHold = false; msg(''); try { yt.playVideo(); } catch (x) { /* bỏ qua */ } w.UI.toast('Xem tiếp. Hẹn giờ đã tắt'); }
+      else if (k === 10009 || k === 27 || k === 8 || k === 413) { sleepHold = false; close(); }
+      return true;
+    }
+    if (up) {
+      if (k === 37 || k === 39) { up.idx = k === 39 ? 1 : 0; paintUp(); }
+      else if (k === 13) upAct(up.idx === 0 ? 'play' : 'cancel');
+      else if (k === 10009 || k === 27 || k === 8 || k === 413) upAct('cancel');
+      else if (k === 415 || k === 10252 || k === 417) upAct('play');
       return true;
     }
     var ui = $('pl-ui').classList.contains('show');
@@ -611,11 +797,13 @@
     return true;   // nuốt mọi phím khác khi đang xem
   }
 
+  var adTold = false;
   function open(opts) {
     q = {
       items: opts.items, index: opts.index || 0, heading: opts.heading, key: opts.key,
-      series: opts.series, onClose: opts.onClose, fromStart: !!opts.fromStart
+      series: opts.series, onClose: opts.onClose, fromStart: !!opts.fromStart, next: opts.next || null
     };
+    hideUp();
     isOpen = true;
     lastSave = 0;
     btnIdx = -1;
@@ -669,7 +857,9 @@
   })();
 
   w.Player = {
-    inMenu: function () { return mode === 'menu'; },
+    inMenu: function () { return mode === 'menu' || !!up || sleepHold; },
+    sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },
+    upClick: function (a) { if (up) upAct(a); },
     clickBtn: function (i) { if (!btns[i]) return; mode = 'btn'; btnIdx = i; press(btns[i].id); if (mode === 'btn') renderBtns(); showUi(); },
     playMode: function () { return srcMode() === 'host' ? 'Qua ' + hostUrl() : srcMode() === 'direct' ? 'Trực tiếp (chưa có PLAYER_HOST)' : 'Trực tiếp'; }, open: open, key: key, isOpen: function () { return isOpen; }, close: close };
 })(window);

@@ -252,22 +252,33 @@
   function snapshot() {
     var R = w.Store.raw, keep = R('keep', {}), ch = {};
     Object.keys(keep).forEach(function (k) { if (k.indexOf('ch:') === 0) ch[k] = keep[k]; });
+    // Hồ sơ người xem khác Guest: lịch sử, tiến độ, danh sách riêng
+    var pf = {};
+    ((R('prefs', {}).profiles) || []).forEach(function (x) {
+      if (!x || !x.id || x.id === 'guest') return;
+      pf[x.id] = { stamps: R('stamps@' + x.id, {}), prog: R('prog@' + x.id, {}), recent: R('recent@' + x.id, []), favs: R('favs@' + x.id, []) };
+    });
     return {
       v: 1, at: Date.now(), stamps: R('stamps', {}),
-      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch
+      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch, pf: pf
     };
   }
+  function wrapPf(x) { x = x || {}; return { v: 1, stamps: x.stamps || {}, prog: x.prog || {}, recent: x.recent || [], favs: x.favs || [], blocked: {}, prefs: {} }; }
   function merge(a, b) {
     if (!b || !b.v) return a;
     var sa = a.stamps || {}, sb = b.stamps || {}, out = { v: 1, at: Date.now(), stamps: {} };
     var clr = Math.max(sa.histClr || 0, sb.histClr || 0);
     if (clr) out.stamps.histClr = clr;
+    // dấu "đã xóa 1 phim": gộp hai bên, bỏ dấu quá 60 ngày
+    var rm = {}, old = Date.now() - 60 * 86400e3;
+    [sb.rm || {}, sa.rm || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { if (m[k] > old && m[k] > (rm[k] || 0)) rm[k] = m[k]; }); });
+    out.stamps.rm = rm;
     // tiến độ xem: lấy bản mới hơn của từng phim
     var prog = {};
     [b.prog || {}, a.prog || {}].forEach(function (m) {
       Object.keys(m).forEach(function (id) {
         var x = m[id];
-        if (!x || (x.t || 0) < clr) return;
+        if (!x || (x.t || 0) < Math.max(clr, rm['p:' + id] || 0)) return;
         if (!prog[id] || (x.t || 0) > (prog[id].t || 0)) prog[id] = x;
       });
     });
@@ -277,7 +288,7 @@
     // vừa xem: gộp, mới nhất trước
     var rec = {}, list = [];
     (b.recent || []).concat(a.recent || []).forEach(function (r) {
-      if (!r || !r.key || (r.t || 0) < clr) return;
+      if (!r || !r.key || (r.t || 0) < Math.max(clr, rm['r:' + r.key] || 0)) return;
       if (!rec[r.key] || (r.t || 0) > (rec[r.key].t || 0)) rec[r.key] = r;
     });
     Object.keys(rec).forEach(function (k) { list.push(rec[k]); });
@@ -293,6 +304,18 @@
     // mã kênh đã tìm: gộp (máy này đã tìm thì máy kia khỏi tốn hạn mức)
     out.ch = {};
     [b.ch || {}, a.ch || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { out.ch[k] = m[k]; }); });
+    // từng hồ sơ: gộp như dữ liệu chính
+    if (!a.isPf) {
+      out.pf = {};
+      var ids = {};
+      [a.pf || {}, b.pf || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { ids[k] = 1; }); });
+      Object.keys(ids).forEach(function (id) {
+        var pa = wrapPf((a.pf || {})[id]), pb = (b.pf || {})[id] ? wrapPf(b.pf[id]) : null;
+        pa.isPf = true;
+        var mm = merge(pa, pb);
+        out.pf[id] = { stamps: mm.stamps, prog: mm.prog, recent: mm.recent, favs: mm.favs };
+      });
+    }
     return out;
   }
   function apply(m) {
@@ -307,6 +330,17 @@
       if (JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) { A(k, m[k]); changed = true; }
     });
     A('stamps', m.stamps);
+    // hồ sơ người xem: chỉ ghi cho hồ sơ còn trong danh sách
+    var live = {};
+    ((R('prefs', {}).profiles) || []).forEach(function (x) { if (x && x.id) live[x.id] = 1; });
+    Object.keys(m.pf || {}).forEach(function (id) {
+      if (!live[id]) return;
+      var x = m.pf[id];
+      ['prog', 'recent', 'favs'].forEach(function (k) {
+        if (x[k] && JSON.stringify(R(k + '@' + id, null)) !== JSON.stringify(x[k])) { A(k + '@' + id, x[k]); changed = true; }
+      });
+      if (x.stamps) A('stamps@' + id, x.stamps);
+    });
     var keep = R('keep', {});
     Object.keys(m.ch || {}).forEach(function (k) { if (!keep[k]) { keep[k] = m.ch[k]; } });
     A('keep', keep);
@@ -362,13 +396,23 @@
         e && e.net ? 'Mất mạng, sẽ thử lại' :
         e && e.status === 401 && ghToken() ? 'Token GitHub sai hoặc hết hạn' :
         e && e.status === 403 && ghToken() ? 'GitHub từ chối: token cần quyền gist' :
-        e && e.status === 403 ? 'Chưa bật Google Drive API' :
+        e && e.status === 403 ? driveWhy(e) :
         e && e.data && e.data.error === 'invalid_grant' ? 'Hết hạn đăng nhập, hãy đăng nhập lại' : 'Lỗi đồng bộ';
       w.Store.applyRaw('syncErr', msg);
+      if (w.Log) w.Log.err('Đồng bộ: ' + msg + (e && e.status ? ' (mã ' + e.status + ')' : ''));
       notify();
       return false;
     });
     return busy;
+  }
+  function driveWhy(e) {
+    var d = e && e.data && e.data.error, r = '';
+    if (d) r = (d.errors && d.errors[0] && d.errors[0].reason) || d.status || '';
+    var m = String((d && d.message) || '');
+    if (r === 'accessNotConfigured' || /has not been used|is disabled|SERVICE_DISABLED/i.test(m) || r === 'SERVICE_DISABLED') return 'Chưa bật Google Drive API trong Google Cloud (Library → Google Drive API → Enable)';
+    if (r === 'insufficientPermissions' || r === 'PERMISSION_DENIED' && /scope/i.test(m)) return 'Thiếu quyền Drive: đăng xuất rồi đăng nhập lại và tick cho phép lưu dữ liệu app';
+    if (r === 'rateLimitExceeded' || r === 'userRateLimitExceeded' || r === 'quotaExceeded') return 'Google tạm giới hạn lượt gọi, sẽ thử lại';
+    return 'Google từ chối (403' + (r ? ': ' + r : '') + ')';
   }
   function dirty() {
     if (!status().loggedIn) return;
@@ -391,9 +435,123 @@
     });
   }
 
+  /* ---------- Sao lưu tự động hằng tuần ----------
+     Google Drive: mỗi tuần một file tongtai-backup-NĂM-THÁNG-NGÀY.json trong thư mục ẩn của app, giữ 4 bản gần nhất.
+     GitHub: file tongtai-backup.json trong Gist tongtai-sync (GitHub tự giữ mọi bản cũ trong Revisions). */
+  var WEEK = 7 * 86400e3, BKP = 'tongtai-backup', bkBusy = null;
+  function ymd(t) { var x = new Date(t), m = x.getMonth() + 1, dd = x.getDate(); return x.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd; }
+  function backupData() { var m = snapshot(); m.kind = 'backup'; m.app = C.VERSION; return m; }
+  function driveBackups() {
+    return drive('GET', 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=100&fields=files(id,name,modifiedTime)&q=' +
+      encodeURIComponent("name contains '" + BKP + "-'")).then(function (r) {
+      return ((r && r.files) || []).sort(function (x, y) { return String(y.name).localeCompare(String(x.name)); });
+    });
+  }
+  function driveBackup(data) {
+    var name = BKP + '-' + ymd(Date.now()) + '.json', json = JSON.stringify(data);
+    return driveBackups().then(function (list) {
+      var same = list.filter(function (f) { return f.name === name; })[0];
+      var put;
+      if (same) put = drive('PATCH', 'https://www.googleapis.com/upload/drive/v3/files/' + same.id + '?uploadType=media', json, 'application/json');
+      else {
+        var b = 'ttbk' + Date.now();
+        var body = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: name, parents: ['appDataFolder'] }) +
+          '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + json + '\r\n--' + b + '--';
+        put = drive('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', body, 'multipart/related; boundary=' + b);
+        list = [{ name: name }].concat(list);
+      }
+      return put.then(function () {
+        // giữ 4 bản gần nhất
+        return Promise.all(list.slice(4).filter(function (f) { return f.id; }).map(function (f) {
+          return drive('DELETE', 'https://www.googleapis.com/drive/v3/files/' + f.id).catch(function () { /* bỏ qua */ });
+        }));
+      });
+    });
+  }
+  function gistBackup(data) {
+    return gistFind().then(function (id) {
+      var files = {}; files[BKP + '.json'] = { content: JSON.stringify(data) };
+      if (!id) { files[FILE] = { content: JSON.stringify(snapshot()) }; return gh('POST', '/gists', { description: GIST_DESC, public: false, files: files }).then(function (r) { if (r && r.id) w.Store.applyRaw('ghGist', r.id); }); }
+      return gh('PATCH', '/gists/' + id, { files: files });
+    });
+  }
+  function backupStatus() {
+    var at = w.Store.raw('backupAt', 0), st = status();
+    return {
+      on: C.AUTO_BACKUP !== false, can: st.loggedIn, at: at, where: w.Store.raw('backupWhere', ''),
+      error: w.Store.raw('backupErr', ''), next: at ? at + WEEK : 0
+    };
+  }
+  function backupWhy(e) {
+    if (e && e.needTap) return 'Cần chạm “Đồng bộ ngay” để đăng nhập Google lại';
+    if (e && e.net) return 'Mất mạng, sẽ thử lại';
+    if (e && e.status === 401) return ghToken() ? 'Token GitHub sai hoặc hết hạn' : 'Hết hạn đăng nhập Google, hãy đăng nhập lại';
+    if (e && e.status === 403) return ghToken() ? 'GitHub từ chối: token cần quyền gist' : driveWhy(e);
+    return 'Lỗi sao lưu' + (e && e.status ? ' (mã ' + e.status + ')' : '');
+  }
+  function backupNow(why) {
+    if (bkBusy) return bkBusy;
+    if (!status().loggedIn) return Promise.reject({ nologin: true });
+    var data = backupData(), where = [];
+    var jobs = [];
+    if (DRIVE.on()) jobs.push(function () { return driveBackup(data).then(function () { where.push('Google Drive'); }); });
+    if (GIST.on()) jobs.push(function () { return gistBackup(data).then(function () { where.push('GitHub Gist'); }); });
+    bkBusy = jobs.reduce(function (p, j) { return p.then(j); }, Promise.resolve()).then(function () {
+      var now = Date.now();
+      w.Store.applyRaw('backupAt', now);
+      w.Store.applyRaw('backupWhere', where.join(' + '));
+      w.Store.applyRaw('backupErr', '');
+      bkBusy = null;
+      if (w.Log) w.Log.info('Đã sao lưu ' + (why === 'auto' ? 'tự động ' : '') + 'vào ' + where.join(' + '));
+      notify();
+      return { at: now, where: where.join(' + ') };
+    }, function (e) {
+      bkBusy = null;
+      var msg = backupWhy(e);
+      w.Store.applyRaw('backupErr', msg);
+      if (w.Log) w.Log.err('Sao lưu thất bại: ' + msg);
+      notify();
+      throw e;
+    });
+    return bkBusy;
+  }
+  // Lấy bản sao lưu mới nhất về và GỘP với dữ liệu trên máy này (không xóa gì)
+  function restoreLatest() {
+    if (!status().loggedIn) return Promise.reject({ nologin: true });
+    var p = DRIVE.on()
+      ? driveBackups().then(function (l) { return l[0] ? drive('GET', 'https://www.googleapis.com/drive/v3/files/' + l[0].id + '?alt=media') : null; })
+      : gistFind().then(function (id) {
+        if (!id) return null;
+        return gh('GET', '/gists/' + id).then(function (g) {
+          var f = g && g.files && g.files[BKP + '.json'];
+          if (!f) return null;
+          var t = f.truncated && f.raw_url ? http('GET', f.raw_url, {}) : Promise.resolve(f.content);
+          return t.then(function (x) { try { return typeof x === 'string' ? JSON.parse(x) : x; } catch (e) { return null; } });
+        });
+      });
+    return p.then(function (data) {
+      if (!data || !data.v) { var e = new Error('none'); e.none = true; throw e; }
+      var r = mergeIn(data);
+      r.at = data.at || 0;
+      if (w.Log) w.Log.info('Đã khôi phục bản sao lưu ngày ' + ymd(r.at || Date.now()));
+      return r;
+    });
+  }
+  function autoBackup() {
+    var b = backupStatus();
+    if (!b.on || !b.can || d.hidden || bkBusy) return;
+    if (Date.now() - b.at < WEEK) return;
+    if (b.error && Date.now() - (w.Store.raw('backupTry', 0)) < 3600e3) return;   // lỗi: 1 giờ sau mới thử lại
+    w.Store.applyRaw('backupTry', Date.now());
+    backupNow('auto').then(function (r) {
+      if (w.UI) w.UI.toast('Đã sao lưu lúc ' + w.UI.hhmm(r.at) + ' vào ' + r.where);
+    }, function () { /* đã ghi nhật ký */ });
+  }
+
   function init() {
     if (status().loggedIn) setTimeout(function () { sync('start'); }, 4000);
-    setInterval(function () { if (!d.hidden) sync('timer'); }, 10 * 60e3);
+    setTimeout(autoBackup, 60e3);
+    setInterval(function () { if (!d.hidden) { sync('timer'); setTimeout(autoBackup, 20e3); } }, 10 * 60e3);
   }
 
   /* ---------- Mã sao lưu (không cần tài khoản) ----------
@@ -492,6 +650,8 @@
   /** Nhận cả mã đầy đủ (TTBK1) và mã gọn (TTQR1), luôn trả về Promise. */
   function importAny(str) {
     var t = String(str || '').replace(/\s+/g, '');
+    var mm = /TT(?:QR|BK)1:[A-Za-z0-9+\/=_-]+/.exec(t);   // cho phép dán cả đường link có chứa mã
+    if (mm) t = mm[0];
     if (t.indexOf(QK) === 0) return importLite(t);
     try { return Promise.resolve(importCode(t)); } catch (e) { return Promise.reject(e); }
   }
@@ -499,6 +659,7 @@
   w.Sync = {
     exportCode: exportCode, importCode: importCode, exportLite: exportLite, importAny: importAny,
     status: status, sync: sync, dirty: dirty, logout: logout, init: init,
+    backupNow: backupNow, backupStatus: backupStatus, restoreLatest: restoreLatest,
     startDevice: startDevice, webLogin: webLoginTap, connectGithub: connectGithub, disconnectGithub: disconnectGithub, onChange: function (f) { listeners.push(f); },
     _merge: merge
   };

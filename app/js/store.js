@@ -11,52 +11,100 @@
   }
   // Dữ liệu được đồng bộ qua tài khoản Google (nếu đăng nhập)
   var SYNC_KEYS = { prog: 1, recent: 1, favs: 1, blocked: 1, prefs: 1 };
+  // Dữ liệu RIÊNG của từng hồ sơ người xem. Hồ sơ "guest" dùng khóa gốc (dữ liệu cũ thuộc về Guest).
+  var PER_PROFILE = { prog: 1, recent: 1, favs: 1, sq: 1, stats: 1 };
+  var prof = 'guest';
+  try { prof = w.localStorage.getItem(P + 'profile') || 'guest'; } catch (e) { /* bỏ qua */ }
+  function pk(k) { return PER_PROFILE[k] && prof !== 'guest' ? k + '@' + prof : k; }
+  function stampsKey(suffix) { return suffix ? 'stamps@' + suffix : 'stamps'; }
   var applying = false;
   function set(k, v) {
     try { w.localStorage.setItem(P + k, JSON.stringify(v)); } catch (e) { /* đầy bộ nhớ: bỏ qua */ }
-    if (SYNC_KEYS[k] && !applying) {
-      var st = get('stamps', {});
-      st[k] = Date.now();
-      try { w.localStorage.setItem(P + 'stamps', JSON.stringify(st)); } catch (e) { /* bỏ qua */ }
+    var at = k.indexOf('@'), base = at > 0 ? k.slice(0, at) : k, suffix = at > 0 ? k.slice(at + 1) : '';
+    if (SYNC_KEYS[base] && !applying) {
+      var sk = stampsKey(suffix), st = get(sk, {});
+      st[base] = Date.now();
+      try { w.localStorage.setItem(P + sk, JSON.stringify(st)); } catch (e) { /* bỏ qua */ }
       if (w.Sync && w.Sync.dirty) w.Sync.dirty(k);
     }
   }
+  // Đọc/ghi dữ liệu của hồ sơ đang xem
+  function pget(k, d) { return get(pk(k), d); }
+  function pset(k, v) { set(pk(k), v); }
+  function curStamps() { return stampsKey(prof === 'guest' ? '' : prof); }
 
   var Store = {
     getProgress: function (id) {
-      var m = get('prog', {});
+      var m = pget('prog', {});
       return m[id] || null;
     },
     setProgress: function (id, p, d) {
-      var m = get('prog', {});
+      var m = pget('prog', {});
       m[id] = { p: Math.floor(p || 0), d: Math.floor(d || 0), t: Date.now() };
       var keys = Object.keys(m);
       if (keys.length > 300) {
         keys.sort(function (a, b) { return m[a].t - m[b].t; });
         keys.slice(0, keys.length - 300).forEach(function (k) { delete m[k]; });
       }
-      set('prog', m);
+      pset('prog', m);
     },
 
-    recent: function () { return get('recent', []); },
+    // Đã xem hết: xem tới 92% hoặc còn dưới 90 giây
+    isWatched: function (id) {
+      var p = pget('prog', {})[id];
+      return !!(p && p.d > 0 && (p.p >= p.d - 90 || p.p / p.d >= 0.92));
+    },
+    // Đánh dấu / bỏ đánh dấu "Đã xem" bằng tay
+    setWatched: function (item, on) {
+      var m = pget('prog', {});
+      if (on) {
+        var d = item.dur || (m[item.id] && m[item.id].d) || 1;
+        m[item.id] = { p: d, d: d, t: Date.now() };
+      } else {
+        delete m[item.id];
+        var sk = curStamps(), st = get(sk, {}), rm = st.rm || {};
+        rm['p:' + item.id] = Date.now(); st.rm = rm; set(sk, st);   // đồng bộ không đưa nó trở lại
+      }
+      pset('prog', m);
+    },
+
+    recent: function () { return pget('recent', []); },
     touchRecent: function (rec) {
-      var a = get('recent', []).filter(function (r) { return r.key !== rec.key; });
+      var a = pget('recent', []).filter(function (r) { return r.key !== rec.key; });
       rec.t = Date.now();
       a.unshift(rec);
-      set('recent', a.slice(0, 40));
+      pset('recent', a.slice(0, 40));
     },
     clearHistory: function () {
-      var st = get('stamps', {}); st.histClr = Date.now(); set('stamps', st);
-      set('recent', []);
-      set('prog', {});
+      var sk = curStamps(), st = get(sk, {}); st.histClr = Date.now(); set(sk, st);
+      pset('recent', []);
+      pset('prog', {});
     },
 
-    favs: function () { return get('favs', []); },
+    // Xóa MỘT phim khỏi "Đã xem gần đây" (kèm tiến độ). Ghi dấu xóa để đồng bộ không làm nó hiện lại.
+    removeRecent: function (key) {
+      var a = pget('recent', []), r = null;
+      a.forEach(function (x) { if (x.key === key) r = x; });
+      var sk = curStamps(), st = get(sk, {}), rm = st.rm || {}, now = Date.now();
+      rm['r:' + key] = now;
+      if (r && r.vid) rm['p:' + r.vid] = now;
+      var ks = Object.keys(rm);
+      if (ks.length > 150) { ks.sort(function (x, y) { return rm[y] - rm[x]; }).slice(150).forEach(function (k) { delete rm[k]; }); }
+      st.rm = rm; set(sk, st);
+      pset('recent', a.filter(function (x) { return x.key !== key; }));
+      if (r && r.vid) { var p = pget('prog', {}); if (p[r.vid]) { delete p[r.vid]; pset('prog', p); } }
+    },
+    // Xóa MỘT phim khỏi "Danh sách của tôi"
+    removeFav: function (id) {
+      pset('favs', pget('favs', []).filter(function (f) { return f.id !== id; }));
+    },
+
+    favs: function () { return pget('favs', []); },
     isFav: function (item) {
-      return get('favs', []).some(function (f) { return f.id === item.id; });
+      return pget('favs', []).some(function (f) { return f.id === item.id; });
     },
     toggleFav: function (item) {
-      var a = get('favs', []);
+      var a = pget('favs', []);
       var has = a.some(function (f) { return f.id === item.id; });
       if (has) {
         a = a.filter(function (f) { return f.id !== item.id; });
@@ -66,9 +114,96 @@
         c.desc = (item.desc || '').slice(0, 300);
         a.unshift(c);
       }
-      set('favs', a.slice(0, 60));
+      pset('favs', a.slice(0, 60));
       return !has;
     },
+
+    /* ---------- Hồ sơ người xem ---------- */
+    profile: function () { return prof; },
+    profiles: function () {
+      var pr = get('prefs', {}), list = pr.profiles || [];
+      var out = [{ id: 'guest', name: 'Guest', c: 0, av: pr.guestAv }];
+      list.forEach(function (x) { if (x && x.id && x.id !== 'guest') out.push(x); });
+      return out;
+    },
+    profileName: function () {
+      var me = Store.profiles().filter(function (x) { return x.id === prof; })[0];
+      return me ? me.name : 'Guest';
+    },
+    setProfile: function (id) {
+      if (!Store.profiles().some(function (x) { return x.id === id; })) id = 'guest';
+      prof = id;
+      try { w.localStorage.setItem(P + 'profile', id); } catch (e) { /* bỏ qua */ }
+    },
+    // Đổi hình con thú của một hồ sơ (Guest cũng đổi được)
+    setAvatar: function (id, av) {
+      var m = get('prefs', {});
+      if (id === 'guest') m.guestAv = av;
+      else (m.profiles || []).forEach(function (x) { if (x.id === id) x.av = av; });
+      set('prefs', m);
+    },
+    addProfile: function (name, av) {
+      name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 20);
+      if (!name) return null;
+      var m = get('prefs', {}), list = (m.profiles || []).slice();
+      var lower = name.toLowerCase();
+      if (lower === 'guest' || list.some(function (x) { return String(x.name).toLowerCase() === lower; })) return 'exists';
+      var id = 'p' + Date.now().toString(36);
+      var pf = { id: id, name: name, c: (list.length + 1) % 6 };
+      if (av != null) pf.av = av;
+      list.push(pf);
+      m.profiles = list;
+      set('prefs', m);
+      return id;
+    },
+    // Xóa hồ sơ (không xóa được Guest): xóa luôn lịch sử, tiến độ, danh sách của hồ sơ đó
+    removeProfile: function (id) {
+      if (!id || id === 'guest') return false;
+      var m = get('prefs', {});
+      m.profiles = (m.profiles || []).filter(function (x) { return x.id !== id; });
+      set('prefs', m);
+      ['prog', 'recent', 'favs', 'sq', 'stamps'].forEach(function (k) { try { w.localStorage.removeItem(P + k + '@' + id); } catch (e) { /* bỏ qua */ } });
+      if (prof === id) Store.setProfile('guest');
+      return true;
+    },
+
+    /* ---------- Thống kê xem: số giây xem mỗi ngày và theo kênh (giữ 35 ngày, riêng từng hồ sơ) ---------- */
+    dayKey: function (t) {
+      var x = new Date(t || Date.now()), m = x.getMonth() + 1, dd = x.getDate();
+      return x.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd;
+    },
+    addWatch: function (secs, ch) {
+      if (!(secs > 0)) return;
+      var st = pget('stats', {}), k = Store.dayKey(), day = st[k] || { s: 0, ch: {} };
+      day.s = Math.round((day.s + secs) * 10) / 10;
+      ch = String(ch || 'Khác').slice(0, 60);
+      day.ch[ch] = Math.round(((day.ch[ch] || 0) + secs) * 10) / 10;
+      // theo giờ trong ngày (0–23) để biết khung giờ hay xem
+      var hr = new Date().getHours();
+      if (!day.h || day.h.length !== 24) day.h = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      day.h[hr] = Math.round((day.h[hr] + secs) * 10) / 10;
+      st[k] = day;
+      var keys = Object.keys(st).sort();
+      keys.slice(0, Math.max(0, keys.length - 35)).forEach(function (x) { delete st[x]; });
+      pset('stats', st);
+    },
+    // id = hồ sơ (bỏ trống = hồ sơ đang xem)
+    stats: function (id) {
+      if (!id || id === prof) return pget('stats', {});
+      return get(id === 'guest' ? 'stats' : 'stats@' + id, {});
+    },
+    clearStats: function () { pset('stats', {}); },
+
+    /* ---------- Lịch sử tìm kiếm: 5 từ khóa gần nhất (riêng từng hồ sơ) ---------- */
+    searches: function () { return pget('sq', []); },
+    addSearch: function (q) {
+      q = String(q || '').replace(/\s+/g, ' ').trim();
+      if (!q) return;
+      var a = pget('sq', []).filter(function (x) { return x.toLowerCase() !== q.toLowerCase(); });
+      a.unshift(q);
+      pset('sq', a.slice(0, 5));
+    },
+    clearSearches: function () { pset('sq', []); },
 
     // Dùng cho đồng bộ: đọc/ghi thô, không đánh dấu thay đổi
     raw: function (k, d) { return get(k, d); },

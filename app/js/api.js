@@ -104,7 +104,11 @@
   }
 
   function call(path, params) {
-    return callRaw(path, params).then(function (d) { quotaLog(path); return d; }, function (e) { quotaLog(path, e); throw e; });
+    return callRaw(path, params).then(function (d) { quotaLog(path); return d; }, function (e) {
+      quotaLog(path, e);
+      if (w.Log) w.Log.err('YouTube API (' + path + '): ' + explain(e) + (e && e.reason ? ' [' + e.reason + ']' : ''));
+      throw e;
+    });
   }
 
   function callRaw(path, params) {
@@ -121,27 +125,50 @@
         var d = null;
         try { d = JSON.parse(x.responseText); } catch (e) { d = null; }
         if (x.status >= 200 && x.status < 300 && d) { resolve(d); return; }
+        if (x.status === 0) { reject({ message: 'Không có kết nối mạng', net: true }); return; }
         var err = d && d.error ? d.error : {};
         var reason = err.errors && err.errors[0] ? err.errors[0].reason : '';
+        var det = (err.details || []).map(function (x2) { return x2 && x2.reason; }).join(' ');
+        var msg = String(err.message || '');
         reject({
-          message: err.message || ('Lỗi ' + x.status),
+          message: msg || ('Lỗi ' + x.status), status: x.status, reason: reason || det,
           quota: reason === 'quotaExceeded' || reason === 'dailyLimitExceeded' || reason === 'rateLimitExceeded',
-          badKey: reason === 'keyInvalid' || reason === 'API_KEY_INVALID' || /API key not valid/i.test(err.message || '')
+          badKey: reason === 'keyInvalid' || /API_KEY_INVALID/.test(det) || /API key not valid|API key expired/i.test(msg),
+          apiOff: reason === 'accessNotConfigured' || /SERVICE_DISABLED/.test(det) || /has not been used|is disabled/i.test(msg),
+          keyLimited: reason === 'ipRefererBlocked' || /API_KEY_(HTTP_REFERRER|IP_ADDRESS|ANDROID_APP|IOS_APP|SERVICE)_BLOCKED/.test(det) || /referer|blocked/i.test(msg) && x.status === 403
         });
       };
       x.onerror = function () { reject({ message: 'Không có kết nối mạng', net: true }); };
-      x.ontimeout = function () { reject({ message: 'Mạng quá chậm', net: true }); };
+      x.ontimeout = function () { reject({ message: 'Mạng quá chậm', net: true, slow: true }); };
       x.send();
     });
   }
 
+  // Lỗi dễ hiểu bằng tiếng Việt: chuyện gì xảy ra + cách xử lý
+  function hm(ms) {
+    var m = Math.max(1, Math.round(ms / 60000));
+    return (m >= 60 ? Math.floor(m / 60) + ' giờ ' : '') + (m % 60 ? (m % 60) + ' phút' : '');
+  }
   function explain(e) {
-    if (!e) return 'Có lỗi xảy ra.';
+    if (!e) return 'Có lỗi xảy ra. Thử lại sau ít phút; nếu vẫn lỗi, vào Cài đặt → Nhật ký lỗi → “Sao chép để gửi”.';
     if (e.disabled) return 'Phim này đã tắt bình luận.';
-    if (e.quota) return 'Hôm nay đã dùng hết hạn mức YouTube API. Mai thử lại nhé.';
-    if (e.badKey) return 'API key không hợp lệ. Kiểm tra lại trong Cài đặt → YouTube API key.';
-    if (e.net) return e.message + '. Kiểm tra mạng của TV.';
-    return 'Không tải được: ' + e.message;
+    if (e.nokey) return 'Chưa có YouTube API key. Vào Cài đặt → Kết nối → “YouTube API key” để nhập key.';
+    if (w.navigator.onLine === false || (e.net && !e.slow)) return 'Mất mạng: ' + ((w.tizen || w.AndroidApp) ? 'TV' : 'máy') + ' không kết nối được Internet. Kiểm tra Wi-Fi hoặc dây mạng, tắt/bật lại modem rồi mở lại trang này.';
+    if (e.slow) return 'Mạng quá chậm nên YouTube chưa trả lời kịp. Đợi một chút rồi thử lại, hoặc khởi động lại modem.';
+    if (e.quota) {
+      var at = quotaResetAt();
+      return 'Hết hạn mức YouTube hôm nay (10.000 đơn vị/ngày). Hạn mức tự làm mới lúc ' + hhmm(at) + ' (còn ' + hm(at - Date.now()) +
+        '). Trong lúc chờ: xem phim đã có vẫn được; muốn tiết kiệm thì Cài đặt → “Cập nhật mỗi” chọn thưa hơn.';
+    }
+    if (e.badKey) return 'API key sai hoặc đã bị xóa. Vào Cài đặt → Kết nối → “YouTube API key”, nhập lại đủ 39 ký tự (bắt đầu bằng AIza), chú ý chữ hoa/thường.';
+    if (e.apiOff) return 'API key chưa bật “YouTube Data API v3”. Vào console.cloud.google.com → APIs & Services → Library → YouTube Data API v3 → Enable.';
+    if (e.keyLimited) return 'API key đang bị giới hạn (chỉ cho trang web/ứng dụng khác dùng). Vào console.cloud.google.com → Credentials → chọn key → Application restrictions: chọn “None”.';
+    if (e.status >= 500) return 'Máy chủ YouTube đang trục trặc (lỗi ' + e.status + '). Không phải lỗi của TV, thử lại sau vài phút.';
+    return 'Không tải được: ' + e.message + '. Thử lại sau; nếu lặp lại, vào Cài đặt → Nhật ký lỗi → “Sao chép để gửi”.';
+  }
+  function hhmm(t) {
+    if (w.UI && w.UI.hhmm) return w.UI.hhmm(t);
+    var n = new Date(t), h = n.getHours(), m = n.getMinutes(); return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
   }
 
   function parseDur(iso) {
@@ -188,7 +215,7 @@
   function stale(ck, e) {
     var old = Store.cacheGetAny(ck);
     if (!old) throw e;
-    if (e && e.quota && !staleWarned && w.UI) { staleWarned = true; w.UI.toast('Hết hạn mức YouTube hôm nay: đang hiện danh sách cũ'); }
+    if (e && (e.quota || e.net) && !staleWarned && w.UI) { staleWarned = true; w.UI.toast(e.quota ? 'Hết hạn mức YouTube hôm nay, tự làm mới lúc ' + hhmm(quotaResetAt()) + '. Đang hiện danh sách phim đã lưu.' : 'Mất mạng: đang hiện danh sách phim đã lưu. Kiểm tra Wi-Fi của TV.'); }
     old = notBlocked(old);
     addPool(old);
     return old;
@@ -455,11 +482,11 @@
     var missing = [];
     return Promise.all(list.map(function (x) {
       return resolveChannel(x.c).then(function (ch) {
-        if (!ch) { missing.push({ name: x.c.name, anime: x.type === 'anime', movie: x.type === 'movie', why: 'notfound' }); return null; }
+        if (!ch) { markCh('miss:' + x.c.name); missing.push({ name: x.c.name, anime: x.type === 'anime', movie: x.type === 'movie', why: 'notfound' }); return null; }
         var o = {}; for (var k in ch) o[k] = ch[k];
         o.anime = x.type === 'anime'; o.movie = x.type === 'movie'; o.type = x.type; o.tag = x.c.tag || '';
         return o;
-      }).catch(function (e) { missing.push({ name: x.c.name, anime: x.type === 'anime', movie: x.type === 'movie', why: e && e.quota ? 'quota' : 'error' }); return null; });
+      }).catch(function (e) { markCh('miss:' + x.c.name); missing.push({ name: x.c.name, anime: x.type === 'anime', movie: x.type === 'movie', why: e && e.quota ? 'quota' : 'error' }); return null; });
     })).then(function (l) { lastMissing = missing; return l.filter(Boolean); });
   }
   var lastMissing = [];
@@ -474,7 +501,34 @@
   }
 
   // Video mới nhất của 1 kênh: đọc danh sách tải lên (1 đơn vị hạn mức thay vì 100)
+  function channelWhy(ch) {
+    var ck = (ch.anime ? 'ca2:' : ch.movie ? 'cm:' : 'cv:') + ch.id, y = Store.keep('why:' + ck);
+    if (!y) return '';
+    if (!y.got) return 'YouTube không trả về video nào của kênh này.';
+    var p = [];
+    if (y.noEmbed) p.push(y.noEmbed + ' video bị kênh tắt cho phép nhúng (không phát được trong app)');
+    if (y.short) p.push(y.short + ' video ngắn hơn ' + y.min + ' phút');
+    if (y.notPublic) p.push(y.notPublic + ' video không công khai');
+    if (y.live) p.push(y.live + ' video đang/sắp phát trực tiếp');
+    return p.length ? 'Đã đọc ' + y.read + ' video, đều bị bỏ: ' + p.join(', ') + '.' : '';
+  }
+  /* ---------- Tiến độ tải kênh (màn hình khởi động: "Đang lấy phim mới… 3/38 kênh") ---------- */
+  var progDone = {}, progN = 0, progFns = [];
+  function totalChannels() { return (C.CHANNELS || []).length + (C.ANIME_CHANNELS || []).length + (C.MOVIE_CHANNELS || []).length; }
+  function markCh(k) {
+    if (progDone[k]) return;
+    progDone[k] = 1; progN++;
+    var tot = Math.max(progN, totalChannels());
+    progFns.forEach(function (f) { try { f(progN, tot); } catch (e) { /* bỏ qua */ } });
+  }
+
   function channelFilms(ch) {
+    var ck0 = (ch.anime ? 'ca2:' : ch.movie ? 'cm:' : 'cv:') + ch.id;
+    var p = channelFilms0(ch);
+    p.then(function () { markCh(ck0); }, function () { markCh(ck0); });
+    return p;
+  }
+  function channelFilms0(ch) {
     if (!hasKey()) return Promise.resolve(demoFilms('date').map(function (f) { var x = {}; for (var k in f) x[k] = f[k]; x.ch = ch.title; return x; }));
     var ck = (ch.anime ? 'ca2:' : ch.movie ? 'cm:' : 'cv:') + ch.id;
     var hit = Store.cacheGet(ck, C.CHANNEL_HOURS);
@@ -511,7 +565,7 @@
     // Tiết kiệm: mỗi giờ chỉ đọc danh sách tải lên (1 đơn vị) và lấy chi tiết video MỚI;
     // lượt xem của video cũ được làm mới mỗi C.FULL_REFRESH_HOURS giờ
     var meta = Store.keep('m:' + ck) || null, old = Store.cacheGetAny(ck);
-    var incremental = meta && old && Array.isArray(old) && Date.now() - (meta.full || 0) < (C.FULL_REFRESH_HOURS || 6) * 3600e3;
+    var incremental = meta && old && Array.isArray(old) && old.length > 0 && Date.now() - (meta.full || 0) < (C.FULL_REFRESH_HOURS || 6) * 3600e3;
     var ids = [];
     // Đọc 50 video gần nhất (vẫn 1 đơn vị). Lấy hết video MỚI, phần còn lại chọn ngẫu nhiên
     // từ video cũ hơn của kênh (đổi mỗi ngày) cho đủ CHANNEL_VIDEOS.
@@ -521,6 +575,15 @@
         var need = incremental ? ids.filter(function (id) { return meta.seen.indexOf(id) < 0; }) : ids;
         return need.length ? videoDetails(need) : [];
       }).then(function (vs) {
+        var why = { got: ids.length, read: vs.length, noEmbed: 0, notPublic: 0, live: 0, short: 0, min: ch.anime ? (C.MIN_ANIME_MINUTES || 5) : (C.MIN_FILM_MINUTES || 20) };
+        vs.forEach(function (v) {
+          var sn = v.snippet || {}, st = v.status || {}, cd = v.contentDetails || {};
+          if (st.embeddable === false) why.noEmbed++;
+          else if (st.privacyStatus !== 'public') why.notPublic++;
+          else if (sn.liveBroadcastContent && sn.liveBroadcastContent !== 'none') why.live++;
+          else if (parseDur(cd.duration) < why.min * 60) why.short++;
+        });
+        Store.keep('why:' + ck, why);
         var fresh = ch.anime
           ? vs.filter(okAnimeVideo).map(function (v) { var f = toFilm(v, ''); f.chId = ch.id; f.anime = true; f.tag = animeTag(v, ch.tag); return f; })
           : vs.filter(okFilm).map(function (v) { var f = toFilm(v, ''); f.chId = ch.id; if (ch.movie) f.movie = true; return f; });
@@ -720,12 +783,67 @@
     });
   }
 
+  /* ---------- Kiểm tra bản mới: đọc version.json (đặt cùng bản web trên GitHub Pages) ---------- */
+  // Các nơi có thể có version.json, thử lần lượt: UPDATE_URL; bản web cạnh trang; thư mục app/ cạnh hoặc trên PLAYER_HOST
+  function updateUrls() {
+    if (C.UPDATE_URL) return [C.UPDATE_URL];
+    if (/^https?:/.test(w.location.protocol) && !w.AndroidApp && !w.tizen) return ['version.json'];
+    var host = String(C.PLAYER_HOST || '').trim(), out = [];
+    if (!host) return out;
+    if (host.slice(-1) !== '/') host += '/';
+    ['app/version.json', '../app/version.json', 'version.json'].forEach(function (rel) {
+      var u = host + rel;
+      try { u = new w.URL(rel, host).href; } catch (e) { /* TV cũ: giữ nguyên */ }
+      if (out.indexOf(u) < 0) out.push(u);
+    });
+    return out;
+  }
+  function updateUrl() { return updateUrls()[0] || ''; }
+  function fetchVersion(url) {
+    return new Promise(function (resolve, reject) {
+      var x = new XMLHttpRequest();
+      x.open('GET', url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now());
+      x.timeout = 12000;
+      x.onload = function () {
+        var d = null;
+        try { d = JSON.parse(x.responseText); } catch (e) { d = null; }
+        if (x.status !== 200 || !d || !d.version) { reject({ notfound: true, status: x.status, url: url }); return; }
+        resolve(d);
+      };
+      x.onerror = x.ontimeout = function () { reject({ net: true, url: url }); };
+      x.send();
+    });
+  }
+  function checkUpdate() {
+    var urls = updateUrls();
+    if (!urls.length) return Promise.reject({ nourl: true });
+    var i = 0, lastErr = null;
+    function next() {
+      if (i >= urls.length) return Promise.reject(lastErr || { notfound: true, url: urls[0] });
+      var u = urls[i++];
+      return fetchVersion(u).catch(function (e) { lastErr = lastErr && lastErr.notfound ? lastErr : e; if (lastErr && lastErr.notfound) lastErr.url = urls[0]; return next(); });
+    }
+    return next().then(function (d) {
+      var newer = (+d.build || 0) > (+C.BUILD || 0) || ((+d.build || 0) === 0 && String(d.version) !== String(C.VERSION));
+      return { version: String(d.version), build: +d.build || 0, notes: String(d.notes || ''), updated: String(d.updated || ''), url: String(d.url || ''), newer: newer };
+    });
+  }
+
+  /* ---------- Lọc phim theo lứa tuổi: áp dụng ở mọi danh sách trả ra ngoài ---------- */
+  function fl(list) {
+    if (!Array.isArray(list) || !w.Settings || !w.Settings.hides) return list;
+    return list.filter(function (x) { return !w.Settings.hides(x); });
+  }
+  function fP(fn) { return function () { return fn.apply(null, arguments).then(fl); }; }
+
   w.Api = {
     details: function (ids) { return videoDetails(ids); },
-    comments: comments, hasKey: hasKey, films: films, anime: anime, animeAll: animeAll, episodes: episodes,
-    explain: explain, pool: function () { return pool; }, catsOf: catsOf,
-    channels: channels, channelFilms: channelFilms, groupEpisodes: groupEpisodes, movieFilms: movieFilms,
-    cachedFilms: function (q) { return (q && Store.cacheGetAny('f6:' + q + ':relevance')) || []; },
-    missingChannels: function () { return lastMissing; }, quotaToday: quotaToday, followedFilms: followedFilms, catFilms: catFilms, animeSearchLocal: animeSearchLocal
+    comments: comments, hasKey: hasKey, films: fP(films), anime: fP(anime), animeAll: fP(animeAll), episodes: fP(episodes),
+    explain: explain, pool: function () { return fl(pool); }, catsOf: catsOf,
+    channels: channels, channelFilms: fP(channelFilms), channelWhy: channelWhy, groupEpisodes: groupEpisodes, movieFilms: fP(movieFilms),
+    cachedFilms: function (q) { return fl((q && Store.cacheGetAny('f6:' + q + ':relevance')) || []); },
+    missingChannels: function () { return lastMissing; }, quotaToday: quotaToday, followedFilms: fP(followedFilms), catFilms: fP(catFilms), animeSearchLocal: fP(animeSearchLocal),
+    onProgress: function (f) { progFns.push(f); }, progress: function () { return { n: progN, total: Math.max(progN, totalChannels()) }; },
+    checkUpdate: checkUpdate, updateUrl: updateUrl, filter: fl
   };
 })(window);

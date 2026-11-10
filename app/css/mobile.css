@@ -201,3 +201,5 @@ html.mobile, html.mobile body { overflow: hidden; height: 100%; }
 .mobile .bkqr-img { width: 100%; max-width: 300px; height: auto; margin: 0 auto 12px; }
 .mobile .bkqr-h { font-size: 17px; }
 .mobile .bkqr-p { font-size: 13px; text-align: left; }
+
+.mobile .histhint { padding: 0 14px 6px; font-size: 12px; }

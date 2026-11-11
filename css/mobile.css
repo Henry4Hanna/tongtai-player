@@ -1,0 +1,205 @@
+/* Giao diện điện thoại (bản trình duyệt). Chỉ áp dụng khi <html class="mobile">. */
+.minput { display: none; }
+html.mobile, html.mobile body { overflow: hidden; height: 100%; }
+.mobile #app { position: fixed; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; transform: none; }
+.mobile #rotatehint { display: none !important; }
+
+/* Thanh trên: logo + tab cuộn ngang */
+.mobile #topbar { position: fixed; left: 0; right: 0; top: 0; width: auto; height: auto; padding: calc(8px + env(safe-area-inset-top)) 0 8px; display: block; background: var(--c-0b0d12); z-index: 20; border-bottom: 1px solid var(--c-1d2230); }
+.mobile .brand { font-size: 18px; gap: 8px; padding: 0 14px 8px; }
+.mobile .brand svg { width: 26px; height: 26px; }
+.mobile #tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 14px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.mobile #tabs::-webkit-scrollbar { display: none; }
+.mobile .tab { flex: none; font-size: 14px; padding: 6px 12px; }
+.mobile .tab.focus { outline: 0; }
+.mobile #clock { display: none; }
+.mobile #views { position: fixed; left: 0; right: 0; top: calc(86px + env(safe-area-inset-top)); bottom: 0; width: auto; height: auto; }
+.mobile .view { position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: auto; height: auto; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 90px; }
+
+/* Bỏ hiệu ứng chọn của remote */
+.mobile .card.focus, .mobile .catcard.focus, .mobile .btn.focus, .mobile .chcard.focus, .mobile .setrow.focus, .mobile .gcard.focus, .mobile .ipanel.f.focus { transform: none; outline: 0; }
+.mobile .card.focus .thumb { outline: 0; box-shadow: none; }
+.mobile .btn.focus { outline: 0; }
+
+/* Hàng phim cuộn ngang bằng tay */
+.mobile .rowwrap { margin-bottom: 6px; }
+.mobile .rowhead { padding: 0 14px; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.mobile .rt { font-size: 18px; }
+.mobile .rh { font-size: 12px; }
+.mobile .track { width: 100%; overflow-x: auto; overflow-y: hidden; gap: 10px; padding: 8px 14px 14px; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scroll-padding: 0 14px; scrollbar-width: none; }
+.mobile .track::-webkit-scrollbar { display: none; }
+.mobile .card { width: 152px; scroll-snap-align: start; }
+.mobile .thumb { height: 86px; border-radius: 10px; }
+.mobile .ctitle { margin-top: 6px; font-size: 13px; }
+.mobile .csub { font-size: 11px; }
+.mobile .badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+.mobile .badge.tag { right: 6px; top: 6px; }
+.mobile .badge.new, .mobile .badge.multi { left: 6px; top: 6px; }
+.mobile .badge.multi.shift { left: 46px; }
+.mobile .badge.dur { right: 6px; bottom: 6px; }
+.mobile .badge.cat { left: 6px; bottom: 6px; font-size: 10px; }
+.mobile .rank { font-size: 46px; left: 8px; }
+.mobile .pbar { height: 3px; }
+.mobile .rowmsg { font-size: 13px; padding: 10px 0; }
+.mobile .sk-l1 { height: 12px; } .mobile .sk-l2 { height: 10px; }
+
+/* Ảnh lớn đầu trang */
+.mobile .hero { position: relative; height: 330px; }
+.mobile .hero-img { left: 0; width: 100%; height: 100%; }
+.mobile .hero-shade { width: 100%; height: 100%; background: linear-gradient(0deg, var(--c-0b0d12) 8%, rgba(var(--bg-rgb),.55) 50%, rgba(var(--bg-rgb),.1) 100%); }
+.mobile .hero-box { left: 0; right: 0; top: auto; bottom: 0; width: auto; padding: 12px 14px; gap: 6px; overflow: visible; }
+.mobile .hero-title { font-size: 22px; }
+.mobile .hero-meta { font-size: 12px; }
+.mobile .hero-desc { display: none; }
+.mobile .hero-box .btns { margin-top: 4px; }
+.mobile .hero-load { padding: 120px 14px; font-size: 14px; }
+.mobile .chips { gap: 6px; flex-wrap: wrap; }
+.mobile .chip { font-size: 11px; padding: 3px 9px; }
+.mobile .rh.cdown { display: block; width: 100%; }
+
+/* Nút */
+.mobile .btns { gap: 8px; flex-wrap: wrap; }
+.mobile .btn { height: 40px; padding: 0 16px; font-size: 14px; border-radius: 20px; gap: 6px; }
+.mobile .btn.gold { padding: 0 18px; }
+.mobile .btn.small { height: 34px; font-size: 12px; padding: 0 12px; }
+.mobile .btn .bico svg { width: 16px; height: 16px; }
+
+/* Tiêu đề trang */
+.mobile .pagehead { font-size: 24px; padding: 14px 14px 0; gap: 8px; flex-wrap: wrap; }
+.mobile .pagehead .rh { font-size: 12px; width: 100%; }
+.mobile .pagehead.small { font-size: 18px; padding: 4px 0 10px; }
+
+/* Danh mục, lưới phim, kênh */
+.mobile .catgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 14px; }
+.mobile .catcard { height: 96px; border-radius: 12px; }
+.mobile .cattext { left: 12px; right: 12px; bottom: 10px; padding-right: 0; }
+.mobile .catname { font-size: 17px; }
+.mobile .catsub { font-size: 11px; margin-top: 2px; }
+.mobile .caticon { width: 44px; height: 44px; margin-top: -30px; right: 8px; }
+.mobile .caticon svg { width: 44px; height: 44px; }
+.mobile .gridwrap { padding: 10px 14px 30px; }
+.mobile .grid4, .mobile .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; padding: 0; }
+.mobile .chgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 12px 14px 40px; }
+.mobile .chcard { padding: 10px 4px; border-radius: 12px; gap: 4px; }
+.mobile .chav { width: 64px; height: 64px; }
+.mobile .chini { font-size: 26px; }
+.mobile .chname { font-size: 12px; height: 30px; }
+.mobile .chsub { font-size: 10px; height: 14px; }
+
+/* Chi tiết phim */
+.mobile .dtop { flex-direction: column; gap: 12px; padding: 14px 14px 0; }
+.mobile .poster { width: 100%; height: 52vw; border-radius: 12px; }
+.mobile .dinfo { gap: 8px; }
+.mobile .dtitle { font-size: 20px; }
+.mobile .dmeta { font-size: 12px; }
+.mobile .ddesc { font-size: 13px; }
+.mobile .dsrc { font-size: 11px; }
+.mobile .dpbar { width: 100%; height: 6px; }
+.mobile .dptxt { font-size: 12px; }
+
+/* Tìm kiếm và ô nhập: dùng bàn phím của điện thoại */
+.mobile .search .sleft, .mobile .sleft.tedit { position: static; width: auto; padding: 14px; }
+.mobile .sbox { height: 48px; padding: 0 12px; border-radius: 12px; margin-bottom: 12px; }
+.mobile .sbox .sq, .mobile .sbox .caret { display: none; }
+.mobile .minput { display: block; flex: 1; width: 100%; height: 44px; border: 0; outline: 0; background: transparent; color: var(--c-f4f1ec); font-size: 16px; font-family: inherit; }
+.mobile .kb .key:not(.gold) { display: none; }
+.mobile .kb { display: flex; flex-direction: column; gap: 8px; }
+.mobile .key.gold { height: 44px; font-size: 15px; border-radius: 22px; }
+.mobile .shint { font-size: 12px; margin-top: 10px; }
+.mobile .spane { position: static; width: auto; height: auto; padding: 0 14px 40px; overflow: visible; }
+.mobile .sugs { gap: 8px; }
+.mobile .sug { font-size: 13px; padding: 8px 14px; }
+
+/* Thông tin */
+.mobile .info { padding-top: 0; }
+.mobile .info .ipanel.wide { margin: 12px 14px; padding: 14px; border-radius: 14px; }
+.mobile .qgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mobile .qkv { padding: 8px 10px; border-radius: 10px; }
+.mobile .qkv .k { font-size: 10px; } .mobile .qkv .val { font-size: 13px; }
+.mobile .qnote { font-size: 11px; }
+.mobile .igrid { grid-template-columns: 1fr; gap: 12px; padding: 0 14px 30px; }
+.mobile .ipanel, .mobile .info .igrid .ipanel { height: auto; min-height: 0; padding: 14px; border-radius: 14px; }
+.mobile .ititle { font-size: 17px; margin-bottom: 8px; }
+.mobile .iline { gap: 8px; margin-bottom: 6px; }
+.mobile .dot { width: 6px; height: 6px; margin-top: 7px; }
+.mobile .itxt { font-size: 13px; }
+.mobile .kv { font-size: 12px; }
+
+/* Cài đặt */
+.mobile .setwrap { padding: 0 14px 60px; }
+.mobile .setsec { font-size: 15px; margin: 16px 0 8px; }
+.mobile .setrow { padding: 10px 12px; border-radius: 12px; gap: 10px; margin-bottom: 6px; }
+.mobile .setrow .sl { font-size: 14px; }
+.mobile .setrow .sd { font-size: 11px; }
+.mobile .setrow .sv { font-size: 12px; padding: 4px 10px; }
+.mobile .setinfo { font-size: 12px; padding: 10px 12px; }
+.mobile .setbtns { flex-wrap: wrap; gap: 8px; }
+
+/* Hướng dẫn */
+.mobile .gcard { flex-direction: column; align-items: stretch; gap: 10px; margin: 0 14px 14px; padding: 12px; border-radius: 14px; }
+.mobile .gpic { width: 100%; height: 52vw; border-radius: 10px; }
+.mobile .gpic img, .mobile .gpic svg { width: 100%; height: 100%; }
+.mobile .gtitle { font-size: 18px; margin-bottom: 8px; }
+.mobile .gtext .iline { margin-bottom: 6px; }
+.mobile .gtext .itxt { font-size: 13px; }
+
+/* Trình phát */
+.mobile #player { position: fixed; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 50; }
+.mobile #yt-host, .mobile #yt-host iframe, .mobile #yt-host > div { width: 100% !important; height: 100% !important; }
+.mobile #pl-ui { width: 100%; height: 100%; }
+.mobile #pl-ui::before { width: 100%; height: 120px; }
+.mobile #pl-ui::after { width: 100%; height: 240px; }
+.mobile .pl-top { left: 14px; right: 14px; top: calc(14px + env(safe-area-inset-top)); }
+.mobile #pl-title { font-size: 15px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mobile #pl-sub { font-size: 11px; }
+.mobile .pl-bot { left: 12px; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+.mobile .pl-bar { font-size: 11px; gap: 8px; }
+.mobile #pl-cur, .mobile #pl-dur { width: 50px; }
+.mobile .pl-track, .mobile #pl-fill { height: 4px; }
+.mobile #pl-knob { width: 14px; height: 14px; top: -5px; margin-left: -7px; box-shadow: 0 0 0 3px rgba(232,176,75,.4); }
+.mobile #pl-btns { gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.mobile .plb { width: 56px; height: 50px; border-radius: 12px; font-size: 9px; }
+.mobile .plb svg { width: 18px; height: 18px; }
+.mobile .plb.big { width: 66px; height: 54px; }
+.mobile .plb.wide { min-width: 0; width: auto; padding: 0 10px; }
+.mobile .plb.focus { outline: 0; }
+.mobile #pl-menu { right: 12px; bottom: 150px; width: 190px; padding: 8px; border-radius: 14px; }
+.mobile .pmh { font-size: 11px; padding: 2px 8px 6px; }
+.mobile .pmi { font-size: 14px; padding: 8px 8px 8px 30px; border-radius: 8px; }
+.mobile .pmi.on::before { left: 10px; }
+.mobile #pl-msg { left: 16px; right: 16px; top: 38%; font-size: 15px; padding: 14px; border-radius: 14px; }
+
+/* Thông báo, nút quay lại */
+.mobile #toast { bottom: calc(70px + env(safe-area-inset-bottom)); font-size: 13px; padding: 10px 18px; max-width: 90%; white-space: normal; text-align: center; }
+.mobile #webback { position: fixed; left: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); font-size: 13px; padding: 8px 14px; }
+.mobile #boot { font-size: 18px; } .mobile #boot b { font-size: 30px; }
+.mobile #webback.inplayer { top: calc(12px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; z-index: 10000; }
+.mobile .pl-top { right: 96px; }
+
+.mobile .chtop { padding: 10px 14px 0; }
+.mobile .chtop-h { font-size: 20px; }
+.mobile .chtop-s { font-size: 12px; margin-bottom: 10px; }
+.mobile .chtop-cols { display: block; }
+.mobile .tcol { margin: 0 0 12px; padding: 12px 12px 4px; border-radius: 16px; }
+.mobile .tcol-h { font-size: 16px; margin-bottom: 8px; }
+.mobile .trow { padding: 8px 10px; margin-bottom: 8px; border-radius: 12px; }
+.mobile .tmedal { width: 30px; height: 30px; line-height: 30px; font-size: 16px; margin-right: 10px; }
+.mobile .tav { width: 46px; height: 46px; margin-right: 10px; }
+.mobile .tav .chini { font-size: 20px; }
+.mobile .tname { font-size: 14px; max-height: 36px; }
+.mobile .tnum { font-size: 12px; }
+.mobile .tempty { font-size: 13px; padding: 10px 4px 16px; }
+
+.mobile .bkwrap { padding: 10px 14px 40px; }
+.mobile .bkhint { font-size: 14px; margin-bottom: 12px; }
+.mobile .bkbox { height: 160px; font-size: 12px; padding: 10px 12px; border-radius: 12px; }
+.mobile .bkinfo { font-size: 12px; margin: 6px 2px 12px; }
+.mobile .bkwrap .btns { flex-wrap: wrap; }
+.mobile .bkwrap .btn { height: 44px; font-size: 16px; padding: 0 22px; margin: 0 10px 10px 0; }
+
+.mobile .bkqr { display: block; padding: 12px; text-align: center; }
+.mobile .bkqr-img { width: 100%; max-width: 300px; height: auto; margin: 0 auto 12px; }
+.mobile .bkqr-h { font-size: 17px; }
+.mobile .bkqr-p { font-size: 13px; text-align: left; }
+
+.mobile .histhint { padding: 0 14px 6px; font-size: 12px; }

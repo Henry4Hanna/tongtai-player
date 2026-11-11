@@ -2,76 +2,178 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Tổng Tài TV – trình phát</title>
-<!--
-  Trang trung gian phát YouTube cho app Tổng Tài TV trên Samsung TV.
-  App Samsung chạy từ file nội bộ nên YouTube báo lỗi 153; trang này nằm trên https
-  (GitHub Pages) nên YouTube cho phát. App điều khiển trang qua postMessage.
-  Trang KHÔNG chứa API key hay thông tin cá nhân.
--->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0B0D12">
+<title>Tổng Tài TV</title>
 <style>
-  html, body, #p { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-  iframe { width: 100%; height: 100%; border: 0; }
+  /* Màn hình khởi động (logo + tiến độ tải kênh) hiện ngay, kể cả khi file CSS/JS tải chậm hoặc lỗi */
+  html, body { margin: 0; background: #0B0D12; color: #F4F1EC; font-family: sans-serif; }
+  /* Màn hình khởi động phong cách "tổng tài": nền đen ánh vàng, vương miện rơi xuống, ánh kim lướt qua logo */
+  html #boot { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100000; overflow: hidden;
+    background: #07080C !important; color: #F4F1EC !important; font-size: 30px; transition: opacity .5s, transform .5s; }
+  #boot.out { opacity: 0; transform: scale(1.06); }
+  #boot .bglow { position: absolute; left: 50%; top: 42%; width: 1300px; height: 1300px; margin: -650px 0 0 -650px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,176,75,.30) 0%, rgba(196,128,38,.12) 30%, rgba(7,8,12,0) 62%); animation: bglow 4s ease-in-out infinite; }
+  #boot .blines { position: absolute; left: 0; right: 0; top: 0; bottom: 0; opacity: .5;
+    background: repeating-linear-gradient(115deg, rgba(232,176,75,0) 0 160px, rgba(232,176,75,.05) 160px 162px); }
+  #boot .bsp { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #FAD680; box-shadow: 0 0 12px 3px rgba(250,214,128,.7); opacity: 0; animation: bspark 4.2s ease-in-out infinite; }
+  #boot .bstage { position: relative; width: 240px; height: 240px; margin-bottom: 26px; display: flex; align-items: center; justify-content: center; }
+  #boot .bring { position: absolute; left: -26px; top: -26px; right: -26px; bottom: -26px; border-radius: 50%; border: 3px dashed rgba(232,176,75,.55); animation: bspin 14s linear infinite, bfade 1.2s ease-out both; }
+  #boot .bring2 { position: absolute; left: -10px; top: -10px; right: -10px; bottom: -10px; border-radius: 50%; border: 2px solid rgba(250,214,128,.25); border-top-color: #FAD680; animation: bspin 2.4s linear infinite reverse, bfade 1.2s ease-out both; }
+  #boot .blogo { position: relative; width: 170px; height: 170px; border-radius: 40px; overflow: hidden; box-shadow: 0 0 0 2px rgba(255,236,190,.35), 0 24px 80px rgba(232,176,75,.45);
+    animation: bpop .9s cubic-bezier(.2,1.5,.4,1) both, bfloat 3.6s ease-in-out 1s infinite; }
+  #boot .blogo svg { display: block; width: 100%; height: 100%; }
+  #boot .bcrown { transform-box: fill-box; transform-origin: 50% 100%; animation: bdrop .8s cubic-bezier(.3,1.6,.5,1) .45s both; }
+  #boot .bplay { transform-box: fill-box; transform-origin: 40% 50%; animation: bplay .6s cubic-bezier(.3,1.8,.5,1) .95s both; }
+  #boot .bshine { position: absolute; top: -40%; left: -80%; width: 50%; height: 180%; transform: rotate(25deg);
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); animation: bshine 3.2s ease-in-out 1.3s infinite; }
+  #boot .btitle { position: relative; font-size: 78px; font-weight: 800; letter-spacing: 2px; margin: 6px 0 4px; color: #F0C36A;
+    white-space: nowrap; animation: btitle 1s ease-out .6s both; }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    #boot .btitle { background: linear-gradient(100deg, #C48026 0%, #FAD680 25%, #FFF4D2 40%, #E8B04B 55%, #C48026 75%, #FAD680 100%); background-size: 250% 100%;
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: btitle 1s ease-out .6s both, bgold 4s linear 1.6s infinite; }
+  }
+  #boot .btag { font-size: 24px; letter-spacing: 6px; text-transform: uppercase; color: #C9A86A; margin-bottom: 40px; animation: bup .8s ease-out 1.1s both; }
+  #boot .btag i { display: inline-block; width: 60px; height: 1px; vertical-align: middle; margin: 0 18px; background: linear-gradient(90deg, rgba(232,176,75,0), #E8B04B); }
+  #boot .btag i + span + i { background: linear-gradient(90deg, #E8B04B, rgba(232,176,75,0)); }
+  /* Dòng lời chúc (Mùa thu lá vàng…): từng chữ hiện lên, rồi có làn sáng vàng chạy qua */
+  #boot { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  html #boot .btag.fx { font-size: 30px; font-weight: 700; letter-spacing: 7px; color: #F6DC9A; text-shadow: 0 0 18px rgba(232,176,75,.55), 0 2px 6px rgba(0,0,0,.6); animation: none; opacity: 1; max-width: 92vw; line-height: 1.5; text-align: center; }
+  #boot .btag .bw { white-space: nowrap; display: inline-block; }
+  #boot .btag.fx i { width: 0; height: 2px; animation: bline 1s ease-out .9s forwards; }
+  #boot .btag.fx em { display: inline-block; font-weight: inherit; font-style: normal; font-size: 1em; opacity: 0; transform: translateY(18px) scale(.6); filter: blur(4px);
+    animation: bletter .6s cubic-bezier(.2,1.4,.4,1) forwards, bshim 2.8s ease-in-out infinite; }
+  #boot .btag .bico { display: inline-block; width: 34px; height: 34px; vertical-align: middle; margin: 0 4px; opacity: 0; animation: bico .8s ease-out 1.6s forwards, bsway 3s ease-in-out 2.4s infinite; }
+  #boot .btag .bico svg { width: 100%; height: 100%; }
+  @keyframes bletter { to { opacity: 1; transform: none; filter: none; } }
+  @keyframes bshim { 0%, 70%, 100% { color: #F6DC9A; text-shadow: 0 0 18px rgba(232,176,75,.55), 0 2px 6px rgba(0,0,0,.6); }
+                     80% { color: #FFFBEA; text-shadow: 0 0 22px rgba(255,236,170,1), 0 0 42px rgba(232,176,75,.9); } }
+  @keyframes bline { to { width: 70px; } }
+  @keyframes bico { from { opacity: 0; transform: scale(.3) rotate(-90deg); } to { opacity: 1; transform: none; } }
+  @keyframes bsway { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
+  #boot .btag .bdot { color: #E8B04B; }
+  @media (max-width: 760px) {
+    html #boot .btag.fx { font-size: 17px; letter-spacing: 3px; line-height: 1.7; }
+    #boot .btag.fx i { display: none; }
+    #boot .btag .bdot { display: block; height: 0; overflow: hidden; }
+    #boot .btag .bico { width: 20px; height: 20px; margin: 0 6px; }
+  }
+  #bootmsg { min-height: 40px; font-weight: 600; font-size: 28px; color: #F4F1EC; animation: bup .6s ease-out 1.3s both; }
+  #bootbar { position: relative; width: 560px; max-width: 70vw; height: 8px; margin-top: 20px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(232,176,75,.25); animation: bup .6s ease-out 1.3s both; }
+  #bootfill { position: relative; display: block; width: 4%; height: 100%; border-radius: 99px; overflow: hidden; background: linear-gradient(90deg, #8A5A1C, #E8B04B, #FAD680); box-shadow: 0 0 14px rgba(250,214,128,.8); transition: width .4s; }
+  #bootfill:after { content: ''; position: absolute; top: 0; bottom: 0; width: 80px; left: -80px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.8), rgba(255,255,255,0)); animation: bbar 1.4s linear infinite; }
+  #boot small { margin-top: 22px; font-size: 19px; color: #7C7566; letter-spacing: 1px; }
+  #boothint { margin-top: 10px; font-size: 19px; color: #C9A86A; min-height: 26px; }
+  @keyframes bglow { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.08); opacity: 1; } }
+  @keyframes bspark { 0% { opacity: 0; transform: translateY(20px) scale(.3); } 40% { opacity: 1; transform: translateY(-10px) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(.2); } }
+  @keyframes bspin { to { transform: rotate(360deg); } }
+  @keyframes bfade { from { opacity: 0; transform: scale(.7); } }
+  @keyframes bpop { from { opacity: 0; transform: scale(.4) rotate(-12deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+  @keyframes bfloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes bdrop { from { opacity: 0; transform: translateY(-60%) scale(1.3); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes bplay { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+  @keyframes bshine { 0% { left: -80%; } 45%, 100% { left: 140%; } }
+  @keyframes btitle { from { opacity: 0; letter-spacing: 24px; transform: translateY(14px); } to { opacity: 1; letter-spacing: 2px; transform: none; } }
+  @keyframes bgold { from { background-position: 0% 0; } to { background-position: 250% 0; } }
+  @keyframes bup { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes bbar { to { left: 110%; } }
+  .mobile #boot { font-size: 16px; }
+  .mobile #boot .bstage { width: 120px; height: 120px; margin-bottom: 14px; }
+  .mobile #boot .blogo { width: 96px; height: 96px; border-radius: 24px; }
+  .mobile #boot .bring { left: -14px; top: -14px; right: -14px; bottom: -14px; }
+  .mobile #boot .btitle { font-size: 38px; }
+  .mobile #boot .btag { font-size: 11px; letter-spacing: 3px; margin-bottom: 24px; }
+  .mobile #boot .btag i { width: 24px; margin: 0 8px; }
+  .mobile #bootmsg { font-size: 15px; } .mobile #boot small, .mobile #boothint { font-size: 12px; }
+  .mobile #boot .bglow { width: 700px; height: 700px; margin: -350px 0 0 -350px; }
+  #booterr { position: fixed; left: 24px; right: 24px; bottom: 24px; z-index: 100001; padding: 18px 24px; border-radius: 14px; background: #7A1F1F; color: #fff; font: 20px/1.4 sans-serif; white-space: pre-wrap; display: none; }
 </style>
+<script>
+  // TV Android (Hisense...): để WebView tự phóng khung 1920 px lên màn hình, thay vì dùng transform (gây cắt video)
+  try {
+    if (window.AndroidApp) {
+      var mv = document.querySelector('meta[name=viewport]');
+      if (mv) mv.setAttribute('content', 'width=1920');
+    }
+  } catch (e) {}
+</script>
+<script>
+  // Lỗi JavaScript hiện thẳng lên màn hình để chụp ảnh gửi lại
+  window.onerror = function (msg, src, line, col) {
+    var b = document.getElementById('booterr');
+    if (!b) return;
+    b.style.display = 'block';
+    b.textContent += 'Lỗi: ' + msg + '\n' + String(src || '').split('/').pop() + ' dòng ' + line + ':' + col + '\n';
+    try { if (window.Log) window.Log.err('Lỗi chương trình: ' + msg + ' (' + String(src || '').split('/').pop() + ':' + line + ')'); } catch (e) {}
+  };
+</script>
+<script>
+  // Giao diện Sáng/Tối: áp dụng ngay từ đầu để không bị chớp màu
+  try { if (localStorage.getItem('tt.themeFast') === 'light') document.documentElement.className += ' light'; } catch (e) {}
+</script>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="Tổng Tài TV">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/mobile.css">
+<link rel="stylesheet" href="css/mobile2.css">
+<!-- Font tải sau, không chặn màn hình (TV không vào được Google Fonts vẫn chạy) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 </head>
 <body>
-<div id="p"></div>
-<script>
-(function () {
-  var yt = null, apiReady = false, pending = null, calls = [];
+<div id="boot"><div class="bglow"></div><div class="blines"></div><i class="bsp" style="left:49%;top:29%;animation-delay:1.6s;animation-duration:3.3s"></i><i class="bsp" style="left:76%;top:22%;animation-delay:1.5s;animation-duration:3.3s"></i><i class="bsp" style="left:72%;top:37%;animation-delay:0.1s;animation-duration:4.2s"></i><i class="bsp" style="left:16%;top:40%;animation-delay:0.4s;animation-duration:4.2s"></i><i class="bsp" style="left:80%;top:25%;animation-delay:3.8s;animation-duration:4.7s"></i><i class="bsp" style="left:82%;top:17%;animation-delay:2.3s;animation-duration:4.1s"></i><i class="bsp" style="left:36%;top:15%;animation-delay:2.2s;animation-duration:3.5s"></i><i class="bsp" style="left:61%;top:28%;animation-delay:2.2s;animation-duration:4.5s"></i><i class="bsp" style="left:79%;top:33%;animation-delay:0.4s;animation-duration:4.5s"></i><i class="bsp" style="left:32%;top:57%;animation-delay:0.4s;animation-duration:4.8s"></i><i class="bsp" style="left:80%;top:17%;animation-delay:2.5s;animation-duration:4.3s"></i><i class="bsp" style="left:76%;top:64%;animation-delay:3.1s;animation-duration:4.3s"></i><i class="bsp" style="left:66%;top:56%;animation-delay:1.2s;animation-duration:5.0s"></i><i class="bsp" style="left:39%;top:20%;animation-delay:2.3s;animation-duration:4.4s"></i><i class="bsp" style="left:51%;top:67%;animation-delay:1.2s;animation-duration:5.5s"></i><i class="bsp" style="left:23%;top:75%;animation-delay:1.7s;animation-duration:4.9s"></i><i class="bsp" style="left:27%;top:72%;animation-delay:1.7s;animation-duration:5.4s"></i><i class="bsp" style="left:17%;top:81%;animation-delay:2.3s;animation-duration:5.2s"></i><div class="bstage"><div class="bring"></div><div class="bring2"></div><div class="blogo"><svg viewBox="0 0 48 48"><defs><linearGradient id="bgboot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE7A6"/><stop offset=".55" stop-color="#E8B04B"/><stop offset="1" stop-color="#A9661C"/></linearGradient></defs><rect width="48" height="48" rx="11" fill="url(#bgboot)"/><g class="bcrown"><path d="M13 18v-6l5.5 3L24 8l5.5 7 5.5-3v6z" fill="#221206"/><rect x="13" y="19" width="22" height="2" fill="#221206"/><circle cx="24" cy="7.6" r="1.3" fill="#221206"/></g><path class="bplay" d="M18 24v15l13-7.5z" fill="#221206"/></svg><div class="bshine"></div></div></div><b class="btitle">Tổng Tài TV</b><div class="btag"><i></i><span>Phim ngắn · Ngọt sủng · Báo thù</span><i></i></div><div id="bootmsg">Đang mở ứng dụng…</div><div id="bootbar"><i id="bootfill"></i></div><small>phiên bản 2.21.1 · Ryan Nguyen</small><div id="boothint"></div></div>
+<div id="booterr"></div>
+<div id="rotatehint">Xoay ngang điện thoại để xem rõ hơn</div>
+<div id="app">
+  <div id="topbar">
+    <div class="brand" id="brand" title="Về Trang chủ" onclick="if(window.Screens)Screens.goTab('home')">
+      <svg width="48" height="48" viewBox="0 0 48 48"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FAD680"/><stop offset="1" stop-color="#C48026"/></linearGradient></defs><rect width="48" height="48" rx="11" fill="url(#bg)"/><path d="M13 18v-6l5.5 3L24 8l5.5 7 5.5-3v6z" fill="#221206"/><rect x="13" y="19" width="22" height="2" fill="#221206"/><path d="M18 24v15l13-7.5z" fill="#221206"/></svg>
+      <span>Tổng Tài <b>TV</b></span>
+    </div>
+    <div id="tabs"></div>
+    <div id="clock"></div>
+  </div>
 
-  function send(m) { try { parent.postMessage(JSON.stringify(m), '*'); } catch (e) {} }
+  <div id="views"></div>
 
-  function snap() {
-    if (!yt || !yt.getCurrentTime) return;
-    var tracks = [];
-    try { tracks = (yt.getOption && yt.getOption('captions', 'tracklist')) || []; } catch (e) {}
-    send({
-      type: 'snap',
-      t: yt.getCurrentTime() || 0, d: yt.getDuration() || 0, s: yt.getPlayerState(),
-      q: yt.getPlaybackQuality ? yt.getPlaybackQuality() : '',
-      tracks: tracks.map(function (t) { return { languageCode: t.languageCode, displayName: t.displayName, kind: t.kind }; })
-    });
-  }
+  <div id="player" class="hidden">
+    <div id="yt-host"><div id="yt"></div></div>
+    <div id="pl-ui">
+      <div class="pl-top"><div id="pl-title"></div><div id="pl-sub"></div></div>
+      <div class="pl-bot">
+        <div class="pl-bar">
+          <span id="pl-cur">00:00</span>
+          <div class="pl-track"><div id="pl-fill"></div><div id="pl-knob"></div></div>
+          <span id="pl-dur">00:00</span>
+        </div>
+        <div id="pl-btns"></div>
+      </div>
+      <div id="pl-menu" class="hidden"></div>
+    </div>
+    <div id="pl-msg" class="hidden"></div>
+  </div>
 
-  function create(m) {
-    var vars = m.vars || {};
-    vars.origin = location.origin;
-    vars.widget_referrer = location.href;
-    yt = new YT.Player('p', {
-      width: '100%', height: '100%', videoId: m.videoId, playerVars: vars,
-      events: {
-        onReady: function () { send({ type: 'ready' }); calls.splice(0).forEach(run); },
-        onStateChange: function (e) { send({ type: 'state', data: e.data }); snap(); },
-        onError: function (e) { send({ type: 'error', data: e.data }); }
-      }
-    });
-  }
+  <div id="toast" class="hidden"></div>
+</div>
 
-  function run(m) {
-    if (!yt || typeof yt[m.fn] !== 'function') { calls.push(m); return; }
-    try { yt[m.fn].apply(yt, m.args || []); } catch (e) {}
-  }
-
-  window.addEventListener('message', function (e) {
-    if (e.source !== parent) return;
-    var m;
-    try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
-    if (!m || !m.cmd) return;
-    if (m.cmd === 'create') { if (apiReady) create(m); else pending = m; }
-    else if (m.cmd === 'call') run(m);
-  });
-
-  window.onYouTubeIframeAPIReady = function () {
-    apiReady = true;
-    if (pending) { create(pending); pending = null; }
-  };
-
-  setInterval(snap, 500);
-  send({ type: 'hello' });
-})();
-</script>
-<script src="https://www.youtube.com/iframe_api"></script>
+<script src="$WEBAPIS/webapis/webapis.js" onerror="this.remove()"></script>
+<script src="js/config.js"></script>
+<script src="js/log.js"></script>
+<script src="js/store.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/qr.js"></script>
+<script src="js/api.js"></script>
+<script src="js/caticons.js"></script>
+<script src="js/avatars.js"></script>
+<script src="js/season.js"></script>
+<script src="js/music.js"></script>
+<script src="js/saver.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/player.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

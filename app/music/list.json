@@ -1,0 +1,105 @@
+{
+ "note": "Danh sách Nhạc của tôi. Thêm bài: chép file mp3 vào thư mục music/ rồi thêm một dòng { \"title\": \"Tên bài\", \"file\": \"ten-file.mp3\", \"dur\": số giây } vào đây.",
+ "songs": [
+  {
+   "title": "Chủ Tịch Giả Nghèo",
+   "file": "chu-tich-gia-ngheo.mp3",
+   "dur": 237
+  },
+  {
+   "title": "Đêm Mưa Trên Mái Nhà Hào Môn",
+   "file": "dem-mua-tren-mai-nha-hao-mon.mp3",
+   "dur": 248
+  },
+  {
+   "title": "Một Mái Nhà Có Em",
+   "file": "mot-mai-nha-co-em.mp3",
+   "dur": 240
+  },
+  {
+   "title": "Hợp Đồng Hôn Nhân Trăm Tỷ",
+   "file": "hop-dong-hon-nhan-tram-ty.mp3",
+   "dur": 252
+  },
+  {
+   "title": "Tổng Tài Lạnh Lùng",
+   "file": "tong-tai-lanh-lung.mp3",
+   "dur": 230
+  },
+  {
+   "title": "Chỉ Cần Em Ở Lại",
+   "file": "chi-can-em-o-lai.mp3",
+   "dur": 227
+  },
+  {
+   "title": "Cưng Chiều Vợ Nhỏ",
+   "file": "cung-chieu-vo-nho.mp3",
+   "dur": 252
+  },
+  {
+   "title": "Ly Hôn Rồi Mới Biết",
+   "file": "ly-hon-roi-moi-biet.mp3",
+   "dur": 275
+  },
+  {
+   "title": "Thiên Kim Thật Trở Về",
+   "file": "thien-kim-that-tro-ve.mp3",
+   "dur": 268
+  },
+  {
+   "title": "Tổng Tài Cũng Biết Đau",
+   "file": "tong-tai-cung-biet-dau.mp3",
+   "dur": 227
+  },
+  {
+   "title": "Gặp Lại Sau Năm Năm",
+   "file": "gap-lai-sau-nam-nam.mp3",
+   "dur": 247
+  },
+  {
+   "title": "Báo Thù Kiêu Hãnh",
+   "file": "bao-thu-kieu-hanh.mp3",
+   "dur": 244
+  },
+  {
+   "title": "Tim Em Vẫn Chọn Anh",
+   "file": "tim-em-van-chon-anh.mp3",
+   "dur": 277
+  },
+  {
+   "title": "Trùng Sinh Giữa Hào Môn",
+   "file": "trung-sinh-giua-hao-mon.mp3",
+   "dur": 212
+  },
+  {
+   "title": "Vợ Yêu Đừng Chạy",
+   "file": "vo-yeu-dung-chay.mp3",
+   "dur": 302
+  },
+  {
+   "title": "Thư Ký Nhỏ Của Tổng Tài",
+   "file": "thu-ky-nho-cua-tong-tai.mp3",
+   "dur": 235
+  },
+  {
+   "title": "Tổng Tài Ở Rể",
+   "file": "tong-tai-o-re.mp3",
+   "dur": 226
+  },
+  {
+   "title": "Tổng Tài Bá Đạo Yêu Em",
+   "file": "tong-tai-ba-dao-yeu-em.mp3",
+   "dur": 238
+  },
+  {
+   "title": "Tổng Tài Yếu Lòng Vì Em",
+   "file": "tong-tai-yeu-long-vi-em.mp3",
+   "dur": 237
+  },
+  {
+   "title": "Vợ Cũ Kiêu Hãnh",
+   "file": "vo-cu-kieu-hanh.mp3",
+   "dur": 237
+  }
+ ]
+}

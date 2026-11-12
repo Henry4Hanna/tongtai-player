@@ -12,7 +12,8 @@
   function minutes() { var m = Number(C().SCREENSAVER); return isFinite(m) && m > 0 ? m : 0; }
   function busy() {
     if (d.getElementById('boot')) return true;
-    if (w.Player && w.Player.isPlaying && w.Player.isPlaying()) return true;   // đang chiếu phim thì không hiện
+    if (w.Player && w.Player.isPlaying && w.Player.isPlaying()) return true;
+    if (w.Music && w.Music.onPage && w.Music.onPage()) return true;   // trang Nhạc: không hiện màn hình chờ   // đang chiếu phim thì không hiện
     return d.hidden;
   }
 
@@ -39,6 +40,10 @@
     box.appendChild(el('div', 'svshade'));
     var info = el('div', 'svinfo');
     info.appendChild(el('div', 'svbrand', 'Tổng Tài TV'));
+    var q = el('div', 'svquote');   // câu thoại tổng tài hôm nay
+    q.appendChild(el('div', 'svqk', 'CÂU THOẠI TỔNG TÀI'));
+    q.appendChild(el('div', 'svqt', ''));
+    info.appendChild(q);
     info.appendChild(el('div', 'svtag', 'Phim mới'));
     info.appendChild(el('div', 'svtitle', ''));
     info.appendChild(el('div', 'svch', ''));
@@ -89,6 +94,13 @@
     on = true; shownAt = Date.now(); mx = my = -1;
     items = pickItems(); idx = 0;
     box.classList.toggle('noimg', !items.length);
+    var useQ = !!(w.Quotes && (!w.Settings || w.Settings.get('SAVER_QUOTE') !== false));
+    box.classList.toggle('withq', useQ);
+    if (useQ) {   // mỗi lần màn hình chờ hiện: một câu thoại mới
+      var qq = w.Quotes.next ? w.Quotes.next() : { text: w.Quotes.today(), cat: '' };
+      box.querySelector('.svqk').textContent = 'CÂU THOẠI TỔNG TÀI' + (qq.cat ? ' · ' + qq.cat.toUpperCase() : '') + (qq.n ? ' · #' + qq.n : '');
+      box.querySelector('.svqt').textContent = '“' + qq.text + '”';
+    }
     paintClock();
     d.documentElement.classList.add('ssaver');
     box.classList.add('on');

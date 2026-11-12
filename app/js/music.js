@@ -186,18 +186,26 @@
 
   /* ---------- Điều khiển phát ---------- */
   var ctx = null, net = null, playing = -1, mel = null, step = 0, t0 = 0, timer = 0, unlocked = false, loops = 0, autoIdx = -1;
-  var VOL = { low: 0.18, mid: 0.32, high: 0.5 };
+  var VOL = { min: 0.07, low: 0.18, mid: 0.32, high: 0.5 };   // min = Ngưỡng: nghe rất nhỏ, vừa đủ nghe
   function cfg() { return w.APP_CONFIG || {}; }
   function vol() { return VOL[cfg().MUSIC_VOL] || VOL.low; }
   function songsMode() { var m = cfg().MUSIC; return (m === 'songs' || m === 'songsx' || m == null) && Songs.ok(); }
   function wanted() {
     var m = cfg().MUSIC;
-    if (m === 'off' || songsMode()) return -1;
+    if (m === 'off' || songsMode() || onMusicPage()) return -1;
     if (m === 'songs' || m === 'songsx') m = 'auto';   // chưa tải được nhạc của tôi: tạm dùng bản hòa tấu
     if (m === 'auto' || m == null) { if (autoIdx < 0) autoIdx = Math.floor(Math.random() * TRACKS.length); return autoIdx; }
     var i = +m; return i >= 0 && i < TRACKS.length ? i : 0;
   }
+  function onMusicPage() {
+    try {
+      if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;
+      var c = w.Screens && w.Screens.current && w.Screens.current();
+      return !!c && (c.name === 'music' || c.name === 'lrcsync');
+    } catch (e) { return false; }
+  }
   function onHome() {
+    if (onMusicPage()) return true;   // trang Nhạc: luôn phát nhạc của tôi
     try {
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;   // màn hình chờ: im lặng
       var c = w.Screens && w.Screens.current && w.Screens.current();
@@ -283,7 +291,7 @@
      Rời Trang chủ thì tạm dừng, quay lại phát tiếp đúng chỗ. Hết bài tự sang bài kế. */
   var Songs = (function () {
     var list = null, base = '', src = '', loading = null, failedAt = 0, au = null, idx = -1, order = [], pos = 0, fadeT = 0, fading = false, want = false, lastUrl = '';
-    var SVOL = { low: 0.35, mid: 0.6, high: 0.9 };
+    var SVOL = { min: 0.12, low: 0.35, mid: 0.6, high: 0.9 };
     function svol() { return SVOL[cfg().MUSIC_VOL] || SVOL.low; }
     function urls() {
       var out = [], c = cfg();
@@ -372,9 +380,12 @@
       if (a.paused) { var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); }
       fade(svol(), 1200);
     }
-    var lastMode = '';
+    var lastMode = '', userPaused = false, wasPage = false;
     function tick() {
-      var m = cfg().MUSIC, mode = (m === 'songs' || m === 'songsx' || m == null);
+      var m = cfg().MUSIC, page = onMusicPage(), mode = (m === 'songs' || m === 'songsx' || m == null) || page;
+      if (wasPage && !page) userPaused = false;   // rời trang Nhạc: Trang chủ phát lại như thường
+      wasPage = page;
+      if (userPaused) { if (au && !au.paused && !fading) pause(); return; }
       if (mode && list === null) { load(); return; }
       if (mode && list && !list.length && Date.now() - failedAt > 600000) { loading = null; list = null; return; }   // thử lại sau 10 phút
       if (m !== lastMode) { lastMode = m; if (list && list.length) shuffle(); }
@@ -388,12 +399,32 @@
       ok: function () { return !!(list && list.length) || list === null; },
       list: function () { return (list || []).map(function (x) { return { title: x.title, dur: x.dur || 0 }; }); },
       index: function () { return idx; },
-      title: function () { var m = cfg().MUSIC; return (m === 'songs' || m === 'songsx' || m == null) && list && idx >= 0 && list[idx] ? list[idx].title : ''; },
+      title: function () { var m = cfg().MUSIC; return ((m === 'songs' || m === 'songsx' || m == null) || onMusicPage()) && list && idx >= 0 && list[idx] ? list[idx].title : ''; },
+      song: function (i) { return list && list[i == null ? idx : i] || null; },
+      all: function () { return list || []; },
+      time: function () { return au ? au.currentTime || 0 : 0; },
+      duration: function () { return au && isFinite(au.duration) ? au.duration : (list && list[idx] ? list[idx].dur || 0 : 0); },
+      isPlaying: function () { return !!au && !au.paused && want; },
+      userPaused: function () { return userPaused; },
+      toggle: function () {
+        if (!list || !list.length) return;
+        if (idx < 0) { userPaused = false; play(order[0] || 0); return; }
+        if (userPaused || !au || au.paused) { userPaused = false; resume(); } else { userPaused = true; pause(); }
+      },
+      prev: function () {
+        if (!list || !list.length) return;
+        if (au && au.currentTime > 4) { au.currentTime = 0; return; }
+        pos = (pos - 1 + order.length) % order.length; userPaused = false; play(order[pos]);
+      },
+      seek: function (sec) { if (au && isFinite(au.duration)) { au.currentTime = Math.max(0, Math.min(au.duration - 0.5, sec)); } },
+      reshuffle: function () { shuffle(); },
+      order: function () { return order.slice(); },
+      url: function (i) { return list && list[i] ? base + encodeURI(list[i].file).replace(/#/g, '%23') : ''; },
       paused: function () { return !au || au.paused; },
       source: function () { return src; },
       // iPhone: lần phát đầu bị chặn nếu không nằm trong một lần chạm; chạm lần sau thì phát tiếp
       retry: function () { if (au && want && au.paused) { var pr = au.play(); if (pr && pr.catch) pr.catch(function () {}); } },
-      play: play, next: next, tick: tick, load: function (f) { if (f) { loading = null; list = null; } return load(true); }
+      play: function (i) { userPaused = false; play(i); }, next: function () { userPaused = false; next(); }, tick: tick, load: function (f) { if (f) { loading = null; list = null; } return load(true); }
     };
   })();
 
@@ -401,7 +432,7 @@
   function paintPill() {
     var p = d.getElementById('musicpill');
     var sname = Songs.title();
-    var show = (playing >= 0 || !!sname) && onHome();
+    var show = (playing >= 0 || !!sname) && onHome() && !onMusicPage();
     if (!show) { if (p) p.classList.add('hidden'); return; }
     if (!p) {
       p = d.createElement('div'); p.id = 'musicpill';
@@ -421,6 +452,8 @@
     songs: function () { return Songs.list(); },
     songIndex: function () { return Songs.index(); },
     playSong: function (i) { Songs.play(i); },
+    S: Songs,   // trang Nhạc dùng trực tiếp: song, all, time, duration, toggle, prev, next, seek…
+    onPage: onMusicPage,
     reloadSongs: function () { return Songs.load(true); },
     songsSource: function () { return Songs.source(); },
     next: function () {

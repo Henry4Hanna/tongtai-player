@@ -190,6 +190,7 @@
       history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
       chans: '<circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M15 14.5c3.2 0 6 1.9 6 5"/>',
       cats: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>',
+      music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
       guide: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><path d="M12 17.5h.01"/>',
       settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
     };
@@ -203,9 +204,10 @@
     mh.appendChild(logo);
     var quick = d.createElement('div');
     quick.className = 'mquick';
-    [['history', 'Lịch sử'], ['chans', 'Kênh'], ['cats', 'Thể loại'], ['guide', 'Hướng dẫn'], ['settings', 'Cài đặt']].forEach(function (q) {
+    [['history', 'Lịch sử'], ['chans', 'Kênh'], ['cats', 'Thể loại'], ['music', 'Nhạc'], ['guide', 'Hướng dẫn'], ['settings', 'Cài đặt']].forEach(function (q) {
       var b = d.createElement('div');
       b.className = 'mq';
+      b.setAttribute('data-q', q[0]);
       b.innerHTML = svgI(ICON[q[0]]) + '<span>' + q[1] + '</span>';
       b.onclick = function (e) { e.stopPropagation(); w.Screens.goTab(q[0]); };
       quick.appendChild(b);
@@ -327,7 +329,15 @@
   }
   function afterBoot() {
     if (w.Season) setTimeout(w.Season.greetOnce, 600);
+    if (w.__sendItem) {   // vừa quét mã "Gửi sang điện thoại"
+      var it = w.__sendItem; w.__sendItem = null;
+      if (w.Screens.paintWho) w.Screens.paintWho();
+      w.UI.toast('Xem tiếp từ TV · hồ sơ ' + w.Store.profileName());
+      w.Player.open({ items: [it], index: 0, heading: it.title, key: 'v:' + it.id, series: it });
+      return;
+    }
     if (w.APP_CONFIG.ASK_PROFILE !== false && w.Screens.who && !w.Player.isOpen()) w.Screens.who(true);
+    else if (w.Screens.afterBoot) w.Screens.afterBoot();   // không hỏi hồ sơ: chúc sinh nhật (nếu hôm nay)
   }
 
   // Mất mạng / có mạng lại: báo ngay bằng câu dễ hiểu
@@ -368,6 +378,20 @@
         });
       }
     } catch (e1) { /* bỏ qua */ }
+    // Mở từ mã QR "Gửi sang điện thoại": .../#send=... -> đúng hồ sơ, đúng phim, đúng chỗ
+    try {
+      var sm = /^#send=([^&]+)/.exec(w.location.hash || '');
+      if (sm) {
+        try { w.history.replaceState(null, '', w.location.pathname + w.location.search); } catch (e4) { /* bỏ qua */ }
+        var pay = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(sm[1])))));
+        if (pay && pay.v) {
+          var pid = pay.p ? w.Store.ensureProfile(pay.p.id, pay.p.n, pay.p.a) : w.Store.profile();
+          w.Store.setProfile(pid); if (w.Settings && w.Settings.apply) w.Settings.apply();
+          if (pay.t > 15) w.Store.setProgress(pay.v, pay.t, pay.t + 600);
+          w.__sendItem = { id: pay.v, kind: 'film', title: pay.ti || 'Phim từ TV', ch: pay.c || '', thumb: 'https://i.ytimg.com/vi/' + pay.v + '/hqdefault.jpg', hero: 'https://i.ytimg.com/vi/' + pay.v + '/maxresdefault.jpg' };
+        }
+      }
+    } catch (e5) { /* mã hỏng: bỏ qua */ }
     if (!w.Api.hasKey()) w.UI.toast('Chế độ demo: chưa có YouTube API key. Vào Cài đặt → YouTube API key để nhập.');
   }
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', start);

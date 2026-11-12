@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Tổng Tài TV · Quản trị</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#1B1F2A; --mute:#5B6272; --line:#E6E8EE; --bg:#F5F6FA; --gold:#C98A12; --card:#fff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Be Vietnam Pro', Inter, system-ui, sans-serif; font-size: 15px; }
+button, input { font-family: inherit; font-size: inherit; }
+a { color: #2F6FDE; }
+.logo { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,#FBE3A4,#E8B04B 45%,#A8691F); display: flex; align-items: center; justify-content: center; flex: none; }
+.logo svg { width: 62%; height: 62%; }
+.btn { min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { background: #F0F2F7; }
+.btn.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.warn { background: #C2410C; color: #fff; border-color: #C2410C; }
+.btn.sm { min-height: 34px; padding: 0 12px; font-size: 13px; }
+/* đăng nhập */
+#login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(160deg,#FFF4DC 0%,#F5F6FA 55%); }
+.lcard { width: 100%; max-width: 460px; background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 36px 32px; box-shadow: 0 30px 60px rgba(27,31,42,.10); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.lcard h1 { margin: 0; font-size: 26px; }
+.lcard p { margin: 0; color: var(--mute); line-height: 1.6; }
+.lnote { width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 13px; color: var(--mute); text-align: left; }
+.lerr { color: #B42318; font-weight: 600; }
+.field { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--mute); }
+.field input { min-height: 44px; border: 1px solid #D7DAE2; border-radius: 10px; padding: 0 12px; }
+/* khung chính */
+#app { display: none; min-height: 100vh; flex-wrap: wrap; }
+nav.side { flex: 1 1 220px; max-width: 250px; background: #fff; border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 6px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px 16px; }
+.brand b { display: block; font-size: 16px; } .brand small { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--gold); }
+.nav { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; color: #4A5163; text-decoration: none; font-weight: 500; cursor: pointer; border: 0; background: none; text-align: left; width: 100%; }
+.nav.on { background: #FFF4DC; color: var(--ink); font-weight: 700; }
+.nav svg { width: 19px; height: 19px; }
+.me { margin-top: auto; padding: 14px 8px 0; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.me img { width: 32px; height: 32px; border-radius: 50%; }
+main { flex: 999 1 560px; min-width: 0; padding: 26px 30px 40px; display: flex; flex-direction: column; gap: 18px; max-width: 1260px; }
+header.top { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: space-between; }
+header.top h1 { margin: 0; font-size: 26px; }
+header.top .sub { color: var(--mute); margin-top: 4px; font-size: 14px; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-weight: 600; cursor: pointer; }
+.pill.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; min-width: 0; }
+.card h2 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.card h2 span { font-size: 13px; font-weight: 400; color: var(--mute); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.kpi .t { font-size: 13px; color: var(--mute); font-weight: 600; } .kpi .v { font-size: 28px; font-weight: 800; margin-top: 6px; } .kpi .s { font-size: 13px; color: var(--mute); margin-top: 4px; }
+.row2 { display: flex; flex-wrap: wrap; gap: 14px; } .row2 > * { flex: 1 1 380px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; font-size: 13px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.chart { position: relative; margin: 0 0 28px 46px; }
+.chart .grid { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); }
+.chart .grid span { position: absolute; left: -46px; top: -9px; font-size: 11px; color: var(--mute); width: 40px; text-align: right; }
+.bars { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 4px; }
+.bar { position: relative; flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+.bar .stack { display: flex; flex-direction: column; border-radius: 4px 4px 0 0; overflow: hidden; }
+.bar .stack div { border-top: 2px solid #fff; }
+.bar .lab { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--mute); white-space: nowrap; }
+.tip { position: fixed; z-index: 10; background: var(--ink); color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; display: none; line-height: 1.5; }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--mute); padding: 8px; font-weight: 600; }
+td { padding: 11px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+.av.pic { overflow: hidden; background: none; } .av.pic svg { display: block; width: 100%; height: 100%; }
+.av { width: 32px; height: 32px; border-radius: 50%; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+.who { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.mono { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.muted { color: var(--mute); font-size: 13px; }
+.live { color: #2B8A3E; font-weight: 700; } .live::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2B8A3E; margin-right: 6px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+.tag.new { background: #FFE8D6; color: #A63F00; } .tag.block { background: #FDE2E1; color: #B42318; } .tag.ok { background: #E3F4E8; color: #1E6B33; }
+.alert { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; background: #FFF4EC; border: 1px solid #FFC9A3; border-radius: 16px; padding: 16px 20px; }
+.ubar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); }
+.ubar div { border-right: 2px solid #fff; }
+.hbars { display: flex; flex-direction: column; gap: 10px; }
+.hbar { display: grid; grid-template-columns: 170px 1fr 52px; gap: 12px; align-items: center; font-size: 14px; }
+.hbar .tr { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; } .hbar .tr div { height: 100%; border-radius: 6px; }
+.heat { display: flex; gap: 3px; } .heat div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; color: var(--mute); } .heat i { display: block; width: 100%; height: 44px; border-radius: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; } .chips span { padding: 5px 11px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 13px; }
+.empty { padding: 26px; text-align: center; color: var(--mute); }
+.plist { display: flex; gap: 8px; flex-wrap: wrap; }
+.plist button { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; }
+.plist button.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.prog { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; width: 120px; } .prog div { height: 100%; }
+.menu { position: relative; }
+/* báo cáo PDF */
+.rbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; background: #FFF8E8; border-color: #F3D7A0; }
+.rbar > div { flex: 1 1 320px; }
+.report { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; gap: 22px; }
+.rhead { display: flex; gap: 14px; align-items: center; padding-bottom: 16px; border-bottom: 3px solid var(--gold); font-size: 13px; }
+.rk { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: var(--gold); }
+.rt { font-size: 24px; font-weight: 800; margin-top: 2px; }
+.rkpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.rkpis > div { background: var(--bg); border-radius: 12px; padding: 12px 14px; }
+.rkpis .t { font-size: 12px; color: var(--mute); font-weight: 600; } .rkpis .v { font-size: 22px; font-weight: 800; margin-top: 4px; } .rkpis .s { font-size: 12px; color: var(--mute); margin-top: 2px; }
+.rkpis.sm .v { font-size: 16px; }
+.rsec h3 { margin: 0 0 12px; font-size: 18px; } .rsec h4 { margin: 14px 0 8px; font-size: 14px; }
+.rsec td { padding: 8px; font-size: 13px; } .rsec th { padding: 6px 8px; font-size: 11px; }
+.rprof { border-top: 1px solid var(--line); padding-top: 20px; }
+.rcols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.rl { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.rl span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@page { size: A4; margin: 12mm; }
+@media print {
+  body { background: #fff; font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  nav.side, header.top, .rbar, .tip { display: none !important; }
+  #app { display: block !important; } main { padding: 0; max-width: none; }
+  .report { border: 0; padding: 0; border-radius: 0; }
+  .rprof, .rbreak { break-before: page; border-top: 0; padding-top: 0; }
+  .rsec, tr, .rkpis { break-inside: avoid; }
+  .rkpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } .rcols { grid-template-columns: 1fr 1fr !important; }
+  .rsec td { padding: 5px 8px; } .rsec h4 { margin: 10px 0 6px; } .chips span { padding: 3px 8px; font-size: 11px; }
+}
+@media (max-width: 760px) { .rhead { flex-wrap: wrap; } .rhead > .muted { text-align: left !important; flex-basis: 100%; } .rt { font-size: 20px; } .rkpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rcols { grid-template-columns: 1fr; } .report { padding: 18px 16px; } }
+@media (max-width: 760px) {
+  nav.side { max-width: none; flex-basis: 100%; flex-direction: row; overflow-x: auto; padding: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .brand, .me { display: none; }
+  .nav { width: auto; white-space: nowrap; }
+  main { padding: 18px 14px 30px; }
+  .hbar { grid-template-columns: 110px 1fr 44px; }
+}
+</style>
+</head>
+<body>
+<section id="login">
+  <div class="lcard">
+    <div class="logo" style="width:64px;height:64px;border-radius:16px"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 13l6 5 6-9 6 9 6-5-2 10H10z" fill="#1A1206"/><rect x="10" y="25" width="20" height="2.6" rx="1.3" fill="#1A1206"/><path d="M16 28l9 4.8-9 4.8z" fill="#1A1206"/></svg></div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:.16em;color:var(--gold)">TỔNG TÀI TV</div>
+    <h1>Trang quản trị</h1>
+    <p>Đăng nhập bằng tài khoản Google được phép để xem thiết bị, hồ sơ và thời gian xem của cả nhà.</p>
+    <div id="setup" style="display:none;width:100%;flex-direction:column;gap:12px">
+      <div class="field"><label for="f-url">Địa chỉ máy chủ thống kê (Cloudflare Worker)</label><input id="f-url" placeholder="https://tongtai-stats.ten.workers.dev"></div>
+      <div class="field"><label for="f-cid">Google Client ID (loại Web application)</label><input id="f-cid" placeholder="123…apps.googleusercontent.com"></div>
+      <button class="btn dark" id="f-save" style="justify-content:center">Lưu</button>
+    </div>
+    <div id="gbtn" style="min-height:44px"></div>
+    <div id="lmsg" class="lerr"></div>
+    <div class="lnote">Chỉ email trong danh sách quản trị (đặt trên máy chủ) mới vào được. Không có nút nào trong app dẫn tới trang này.</div>
+    <button class="btn sm" id="f-show" style="border:0;color:var(--mute)">Đổi máy chủ / Client ID</button>
+  </div>
+</section>
+<div id="app">
+  <nav class="side" aria-label="Menu quản trị">
+    <div class="brand"><div class="logo"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 13l6 5 6-9 6 9 6-5-2 10H10z" fill="#1A1206"/><rect x="10" y="25" width="20" height="2.6" rx="1.3" fill="#1A1206"/><path d="M16 28l9 4.8-9 4.8z" fill="#1A1206"/></svg></div><div><b>Tổng Tài TV</b><small>QUẢN TRỊ</small></div></div>
+    <button class="nav" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Tổng quan</button>
+    <button class="nav" data-v="devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg>Thiết bị và IP</button>
+    <button class="nav" data-v="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Hồ sơ</button>
+    <button class="nav" data-v="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Báo cáo PDF</button>
+    <div class="me"><img id="me-pic" alt=""><div style="min-width:0"><b id="me-name"></b><div class="muted" id="me-mail" style="overflow:hidden;text-overflow:ellipsis"></div><button class="btn sm" id="logout" style="margin-top:6px">Đăng xuất</button></div></div>
+  </nav>
+  <main>
+    <header class="top">
+      <div><h1 id="title">Tổng quan</h1><div class="sub" id="subtitle"></div></div>
+      <div class="pills" id="range">
+        <button class="pill" data-d="1">Hôm nay</button><button class="pill" data-d="7">7 ngày</button><button class="pill on" data-d="30">30 ngày</button><button class="pill" data-d="90">90 ngày</button>
+        <button class="pill" id="pdf">Xuất PDF</button><button class="pill" id="csv">Xuất CSV</button>
+      </div>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="tip" id="tip"></div>
+<script src="js/config.js"></script>
+<script src="js/avatars.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

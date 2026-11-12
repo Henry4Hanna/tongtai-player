@@ -240,7 +240,7 @@
       }
     }
     w.addEventListener('message', onMsg);
-    ['playVideo', 'pauseVideo', 'stopVideo', 'seekTo', 'loadVideoById', 'loadModule', 'unloadModule', 'setOption', 'setPlaybackQuality']
+    ['playVideo', 'pauseVideo', 'stopVideo', 'seekTo', 'loadVideoById', 'loadModule', 'unloadModule', 'setOption', 'setPlaybackQuality', 'setVolume']
       .forEach(function (fn) {
         self[fn] = function () {
           var a = Array.prototype.slice.call(arguments);
@@ -336,6 +336,7 @@
     btns.push({ id: 'fav', label: favOn ? 'Đã lưu' : 'Danh sách', on: favOn, svg: favOn ? '<path d="M5 12.5l4.5 4.5L19 7.5"/>' : '<path d="M12 5v14M5 12h14"/>' });
     btns.push({ id: 'skip', label: 'Bỏ phim', svg: '<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>' });
     btns.push({ id: 'cc', wide: true, label: ccOn() ? (ccInfo === 'dich' ? 'Phụ đề: Việt (dịch)' : 'Phụ đề: Tiếng Việt') : 'Phụ đề: Tắt', on: ccOn(), svg: '<rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 10.2a2.4 2.4 0 1 0 0 3.6M17 10.2a2.4 2.4 0 1 0 0 3.6"/>' });
+    if (w.QR && sendUrl()) btns.push({ id: 'send', wide: true, label: 'Gửi sang điện thoại', svg: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>' });
     btns.push({ id: 'sleep', wide: true, label: sleepLabel(), on: sleep.mode !== 'off', svg: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/>' });
     var nowQ = qNow();
     btns.push({ id: 'quality', wide: true, label: 'Chất lượng: ' + (qPref() === 'auto' && nowQ ? 'Tự động (' + nowQ + ')' : qLabel(qPref())), svg: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>' });
@@ -500,6 +501,11 @@
     if (watchAcc <= 0 || !q) { watchAcc = 0; return; }
     var s = q.series || cur();
     w.Store.addWatch(watchAcc, s.ch || (cur() && cur().ch) || '');
+    if (w.Tele) {   // trang quản trị: phim đang xem, thời gian xem, đã xem tới đâu
+      var e = cur() || {}, pos = 0, du = 0;
+      try { pos = yt && yt.getCurrentTime ? yt.getCurrentTime() || 0 : 0; du = yt && yt.getDuration ? yt.getDuration() || 0 : 0; } catch (x) { /* bỏ qua */ }
+      w.Tele.watch(watchAcc, { id: e.id || s.id, title: s.title || e.title, ch: s.ch || e.ch }, pos, du);
+    }
     watchAcc = 0;
   }
 
@@ -646,19 +652,38 @@
     var bx = d.createElement('div'); bx.className = 'upn-btns';
     [['play', 'Phát ngay'], ['cancel', 'Hủy']].forEach(function (x, i) {
       var e = d.createElement('div');
-      e.className = 'upbtn' + (i === 0 ? ' gold' : '') + (i === up.idx ? ' focus' : '');
+      e.className = 'upbtn' + (i === 0 ? ' gold' : '') + (up.row === 1 && i === up.idx ? ' focus' : '');
       e.setAttribute('data-act', x[0]);
       e.textContent = x[1];
       bx.appendChild(e);
     });
     [h, tt, sb, cd, bar, bx].forEach(function (x) { tx.appendChild(x); });
     card.appendChild(tx);
+    if (up.prev) {   // đánh giá phim vừa xem xong
+      var rt = d.createElement('div'); rt.className = 'uprate';
+      var rl = d.createElement('div'); rl.className = 'uprl';
+      var cr = w.Rates ? w.Rates.get(up.prev.id) : null;
+      rl.textContent = cr != null ? 'Đã lưu: ' + w.Rates.label(cr) + ' · ' + (up.prev.title || '') : 'Bạn thấy “' + (up.prev.title || 'phim vừa xem') + '” thế nào?';
+      rt.appendChild(rl);
+      var rb = d.createElement('div'); rb.className = 'uprb';
+      [['like', '❤ Thích'], ['meh', '😐 Bình thường'], ['dislike', '👎 Không thích']].forEach(function (x, i) {
+        var e = d.createElement('div');
+        var val = x[0] === 'like' ? 1 : x[0] === 'dislike' ? -1 : 0;
+        e.className = 'upbtn rate' + (cr === val ? ' on' : '') + (up.row === 0 && i === up.ridx ? ' focus' : '');
+        e.setAttribute('data-act', x[0]);
+        e.textContent = x[1];
+        rb.appendChild(e);
+      });
+      rt.appendChild(rb);
+      b.appendChild(rt);
+    }
     b.appendChild(card);
     b.classList.remove('hidden');
   }
   function showUpNext(t) {
     hideUp();
-    up = { t: t, left: UP_SECS, idx: 0 };
+    var pv = cur();
+    up = { t: t, left: UP_SECS, idx: 0, row: 1, ridx: 0, prev: pv && pv.kind !== 'ep' && w.Rates ? slim(q.series || pv) : null };
     msg('');
     $('pl-ui').classList.remove('show');
     paintUp();
@@ -685,12 +710,18 @@
     q.items = [t.item]; q.index = 0; q.series = t.item; q.heading = t.item.title; q.key = 'v:' + t.item.id; q.fromStart = false;
     play(0);
   }
-  function upAct(a) { if (a === 'play') upGo(); else { hideUp(); close(); } }
+  function upAct(a) {
+    if (a === 'like' || a === 'meh' || a === 'dislike') {
+      if (up && up.prev && w.Rates) { var v = a === 'like' ? 1 : a === 'dislike' ? -1 : 0; w.Rates.set(up.prev, v); w.UI.toast('Đã lưu: ' + w.Rates.label(v)); up.row = 1; up.idx = 0; paintUp(); }
+      return;
+    }
+    if (a === 'play') upGo(); else { hideUp(); close(); }
+  }
 
   function close() {
     if (!isOpen) return;
     flushWatch(); watchAt = 0;
-    hideUp();
+    hideUp(); hideSend();
     sleepHold = false; clearTimeout(sleepCloseT);
     saveNow();
     isOpen = false;
@@ -716,6 +747,7 @@
     else if (id === 'rotate') { setRot((rotOf() + 90) % 360); }
     else if (id === 'skip') { skipVideo(); }
     else if (id === 'sleep') { cycleSleep(); }
+    else if (id === 'send') { showSend(); }
     else if (id === 'fav') {
       var fi = slim(q.series || cur()), fon = w.Store.toggleFav(fi);
       w.UI.toast(fon ? 'Đã thêm vào Danh sách của tôi' : 'Đã bỏ khỏi Danh sách của tôi');
@@ -723,9 +755,39 @@
     }
   }
 
+  /* ---------- Gửi phim sang điện thoại: mã QR mở đúng phim, đúng chỗ, đúng hồ sơ (không cần đăng nhập) ---------- */
+  var sendOn = false;
+  function sendUrl() {
+    var base = '';
+    if (/^https?:/.test(w.location.protocol) && !w.AndroidApp && !w.tizen) base = w.location.href.replace(/[?#].*$/, '').replace(/[^\/]*$/, '');
+    else { var a = String((w.APP_CONFIG || {}).ADMIN_PAGE || ''); if (a) base = a.replace(/[^\/]*$/, ''); }
+    return base;
+  }
+  function showSend() {
+    var it = cur(); if (!it) return;
+    var t = 0; try { t = Math.floor(yt.getCurrentTime() || 0); } catch (x) { /* bỏ qua */ }
+    try { if (yt && yt.pauseVideo) yt.pauseVideo(); } catch (x) { /* bỏ qua */ }
+    var me = (w.Store.profiles().filter(function (p) { return p.id === w.Store.profile(); })[0]) || { id: 'guest', name: 'Guest' };
+    var pay = { v: it.id, t: t, ti: String(it.title || '').slice(0, 80), c: String(it.ch || '').slice(0, 40), p: { id: me.id, n: me.name, a: me.av } };
+    var url = sendUrl() + '#send=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(pay)))));
+    var b = $('pl-send'); if (!b) { b = d.createElement('div'); b.id = 'pl-send'; $('player').appendChild(b); }
+    var yurl = 'https://youtu.be/' + encodeURIComponent(it.id) + (t > 5 ? '?t=' + t : '');   // xem trên YouTube, đúng chỗ đang xem
+    var svg = w.QR.svg(url, 300) || '', ysvg = w.QR.svg(yurl, 300) || '';
+    var mm = Math.floor(t / 60), ss = ('0' + (t % 60)).slice(-2), nm = me.name.replace(/</g, '');
+    b.innerHTML = '<div class="psend"><div class="pst top"><div class="psk">GỬI PHIM SANG ĐIỆN THOẠI</div><div class="psn"></div><div class="pss">Đang xem tới ' + mm + ':' + ss + ' · hồ sơ ' + nm + ' · phim đang tạm dừng trên TV</div></div>' +
+      '<div class="psqs"><div class="psc"><div class="psq">' + svg + '</div><div class="pslb"><b>Tổng Tài TV</b>Mở đúng chỗ ' + mm + ':' + ss + ', cùng hồ sơ ' + nm + '. Không cần đăng nhập.</div></div>' +
+      '<div class="psc yt"><div class="psq">' + ysvg + '</div><div class="pslb"><b><span class="ytlogo">▶</span> YouTube</b>Mở bằng ứng dụng YouTube, đúng chỗ ' + mm + ':' + ss + '. Thích, bình luận, đăng ký kênh ngay trên YouTube.</div></div></div>' +
+      '<div class="psh">Mở camera điện thoại, quét một trong hai mã · bấm phím bất kỳ để đóng</div></div>';
+    b.querySelector('.psn').textContent = it.title || '';
+    b.classList.remove('hidden'); sendOn = true;
+    $('pl-ui').classList.remove('show');
+  }
+  function hideSend() { var b = $('pl-send'); if (b) b.classList.add('hidden'); sendOn = false; }
+
   /* Trả về true nếu đã xử lý phím */
   function key(k) {
     if (!isOpen) return false;
+    if (sendOn) { hideSend(); showUi(); return true; }
     if (demoHint && k === 13) {       // chưa có API key: đi thẳng tới Cài đặt để nhập
       demoHint = false;
       close();
@@ -738,8 +800,14 @@
       return true;
     }
     if (up) {
-      if (k === 37 || k === 39) { up.idx = k === 39 ? 1 : 0; paintUp(); }
-      else if (k === 13) upAct(up.idx === 0 ? 'play' : 'cancel');
+      if (k === 38 && up.prev) { up.row = 0; paintUp(); }
+      else if (k === 40) { up.row = 1; paintUp(); }
+      else if (k === 37 || k === 39) {
+        if (up.row === 0) up.ridx = Math.max(0, Math.min(2, up.ridx + (k === 39 ? 1 : -1)));
+        else up.idx = k === 39 ? 1 : 0;
+        paintUp();
+      }
+      else if (k === 13) upAct(up.row === 0 ? ['like', 'meh', 'dislike'][up.ridx] : up.idx === 0 ? 'play' : 'cancel');
       else if (k === 10009 || k === 27 || k === 8 || k === 413) upAct('cancel');
       else if (k === 415 || k === 10252 || k === 417) upAct('play');
       return true;
@@ -860,6 +928,9 @@
     inMenu: function () { return mode === 'menu' || !!up || sleepHold; },
     sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },
     upClick: function (a) { if (up) upAct(a); },
+    sendClose: function () { if (sendOn) hideSend(); },
+    sleepEnd: function () { if (sleep.mode !== 'end') { setSleep('end'); if (isOpen && mode === 'btn') renderBtns(); } },
+    setVolume: function (v) { try { if (yt && yt.setVolume) yt.setVolume(v); } catch (x) { /* bỏ qua */ } },
     clickBtn: function (i) { if (!btns[i]) return; mode = 'btn'; btnIdx = i; press(btns[i].id); if (mode === 'btn') renderBtns(); showUi(); },
     playMode: function () { return srcMode() === 'host' ? 'Qua ' + hostUrl() : srcMode() === 'direct' ? 'Trực tiếp (chưa có PLAYER_HOST)' : 'Trực tiếp'; }, open: open, key: key, isOpen: function () { return isOpen; }, isPlaying: function () { return isOpen && playing; }, close: close };
 })(window);

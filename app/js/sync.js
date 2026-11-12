@@ -72,7 +72,7 @@
               http('POST', 'https://oauth2.googleapis.com/token', { 'Content-Type': 'application/x-www-form-urlencoded' },
                 form({ client_id: tvId(), client_secret: tvSecret(), device_code: r.device_code, grant_type: 'urn:ietf:params:oauth:grant-type:device_code' }))
                 .then(function (t) {
-                  var acc = { kind: 'device', access: t.access_token, exp: Date.now() + (t.expires_in - 60) * 1000, refresh: t.refresh_token, email: emailFromIdToken(t.id_token || '') };
+                  var acc = { kind: 'device', access: t.access_token, exp: Date.now() + (t.expires_in - 60) * 1000, refresh: t.refresh_token, email: emailFromIdToken(t.id_token || '') }; if (t.id_token) { acc.idt = t.id_token; acc.idtExp = Date.now() + 3300e3; }
                   save(acc);
                   resolve(acc);
                 }, function (e) {
@@ -136,6 +136,7 @@
         .then(function (t) {
           a.access = t.access_token;
           a.exp = Date.now() + (t.expires_in - 60) * 1000;
+          if (t.id_token) { a.idt = t.id_token; a.idtExp = Date.now() + 3300e3; }
           save(a);
           return a.access;
         }, function (e) {
@@ -147,6 +148,15 @@
     a.needTap = true;
     save(a);
     return Promise.reject({ needTap: true });
+  }
+
+  // mã xác minh danh tính Google (ID token) cho màn hình Quản trị trên TV; trình duyệt dùng trang admin.html
+  function idToken(force) {
+    var a = S();
+    if (!a || a.kind !== 'device' || !a.refresh) return Promise.reject({ nologin: true });
+    if (!force && a.idt && a.idtExp > Date.now()) return Promise.resolve(a.idt);
+    a.exp = 0; save(a);   // làm mới để Google trả kèm ID token mới
+    return token().then(function () { var b = S(); if (b && b.idt) return b.idt; throw { noid: true }; });
   }
 
   /* ---------- Google Drive: 1 file JSON trong thư mục ẩn của app ---------- */
@@ -699,6 +709,7 @@
     status: status, sync: sync, dirty: dirty, logout: logout, init: init,
     backupNow: backupNow, backupStatus: backupStatus, restoreLatest: restoreLatest,
     startDevice: startDevice, webLogin: webLoginTap, connectGithub: connectGithub, disconnectGithub: disconnectGithub, onChange: function (f) { listeners.push(f); },
+    idToken: idToken,
     _merge: merge
   };
 })(window);

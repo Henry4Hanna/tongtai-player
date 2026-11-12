@@ -91,6 +91,7 @@
     if (err && err.quota) { q.errAt = Date.now(); }
     else if (!err || !err.net) {
       if (path === 'search') q.search += 1; else q.other += 1;
+      if (w.Tele) w.Tele.units(path);   // trang quản trị: đơn vị YouTube theo hồ sơ
       q.calls += 1;
     }
     Store.keep('quota', q);

@@ -6,7 +6,7 @@
   var el = UI.el;
 
   var TABS = [
-    { id: 'home', name: 'Trang chủ' }, { id: 'chans', name: 'Kênh' }, { id: 'cats', name: 'Danh mục' }, { id: 'search', name: 'Tìm kiếm' },
+    { id: 'home', name: 'Trang chủ' }, { id: 'chans', name: 'Kênh' }, { id: 'cats', name: 'Danh mục' }, { id: 'music', name: 'Nhạc' }, { id: 'search', name: 'Tìm kiếm' },
     { id: 'history', name: 'Lịch sử' }, { id: 'guide', name: 'Hướng dẫn' }, { id: 'info', name: 'Thông tin' }, { id: 'settings', name: 'Cài đặt' }
   ];
 
@@ -41,7 +41,7 @@
     if (Nav.cur) Nav.cur.classList.remove('focus');
     Nav.cur = null;
     setActiveTab(id);
-    var b = { home: Home, chans: Chans, cats: Cats, search: Search, history: History, guide: Guide, info: Info, settings: SettingsScreen }[id];
+    var b = { home: Home, chans: Chans, cats: Cats, music: function () { return w.MusicPage.open(); }, search: Search, history: History, guide: Guide, info: Info, settings: SettingsScreen }[id];
     mount(b());
   }
 
@@ -89,6 +89,7 @@
   function back() {
     var top = current();
     if (top && top.name === 'who' && top.startup) return;   // lúc mở app: phải chọn hồ sơ
+    if (top && top.onBeforeBack) { try { if (top.onBeforeBack() === false) return; } catch (e) { /* bỏ qua */ } }   // màn hình muốn hỏi trước khi rời (ví dụ chưa lưu)
     setTimeout(updateLock, 0);
     if (S.stack.length > 1) {
       var v = S.stack.pop();
@@ -161,12 +162,16 @@
   function canResume(p) { return !!(p && p.p > 15 && p.p < p.d - 20); }
 
   // Thứ tự các hàng Trang chủ của hồ sơ đang xem (đủ 8 hàng, bỏ mã lạ)
-  var ROW_IDS = ['cont', 'favch', 'fresh', 'hot', 'rec', 'top', 'movie', 'anime'];
-  var ROW_NAMES = { cont: 'Tiếp tục xem', favch: 'Từ kênh yêu thích', fresh: 'Phim mới cập nhật', hot: 'Đang hot', rec: 'Đề xuất theo hồ sơ', top: 'Top 10 phim trong tuần', movie: 'Phim lẻ hay', anime: 'Hoạt hình' };
-  var ROW_KEYS = { cont: 'SHOW_CONT', favch: 'SHOW_FAVCH', fresh: 'SHOW_FRESH', hot: 'SHOW_HOT', rec: 'SHOW_REC', top: 'SHOW_TOP10', movie: 'SHOW_MOVIE', anime: 'SHOW_ANIME' };
+  var ROW_IDS = ['cont', 'neweps', 'quiz', 'favch', 'fresh', 'hot', 'rec', 'top', 'movie', 'anime'];
+  var ROW_NAMES = { cont: 'Tiếp tục xem', neweps: 'Có tập mới', quiz: '🎯 Câu đố tổng tài', favch: 'Từ kênh yêu thích', fresh: 'Phim mới cập nhật', hot: 'Đang hot', rec: 'Đề xuất theo hồ sơ', top: 'Top 10 phim trong tuần', movie: 'Phim lẻ hay', anime: 'Hoạt hình' };
+  var ROW_KEYS = { cont: 'SHOW_CONT', neweps: 'SHOW_NEWEPS', quiz: 'SHOW_QUIZ', favch: 'SHOW_FAVCH', fresh: 'SHOW_FRESH', hot: 'SHOW_HOT', rec: 'SHOW_REC', top: 'SHOW_TOP10', movie: 'SHOW_MOVIE', anime: 'SHOW_ANIME' };
   function homeOrder() {
     var o = (Settings.get('HOME_ORDER') || []).filter(function (k) { return ROW_IDS.indexOf(k) >= 0; });
-    ROW_IDS.forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); });
+    ROW_IDS.forEach(function (k, i) {   // hàng mới: chen ngay sau hàng đứng trước nó trong thứ tự mặc định
+      if (o.indexOf(k) >= 0) return;
+      var at = -1; for (var j = i - 1; j >= 0 && at < 0; j--) at = o.indexOf(ROW_IDS[j]);
+      o.splice(at + 1, 0, k);
+    });
     return o;
   }
   function rowOn(k) { var v = Settings.get(ROW_KEYS[k]); return k === 'favch' ? v === true : v !== false; }
@@ -174,8 +179,13 @@
   function profileCats(filmCats) {
     var score = {};
     function addIt(it, wgt) { if (!it) return; Api.catsOf(it).forEach(function (c) { score[c] = (score[c] || 0) + wgt; }); }
-    Store.recent().slice(0, 40).forEach(function (r, i) { addIt(r.item, (Store.isWatched(r.vid) ? 3 : 1.5) * (1 - i / 60)); });
-    Store.favs().forEach(function (it) { addIt(it, 2); });
+    function one() {
+      Store.recent().slice(0, 40).forEach(function (r, i) { addIt(r.item, (Store.isWatched(r.vid) ? 3 : 1.5) * (1 - i / 60)); });
+      Store.favs().forEach(function (it) { addIt(it, 2); });
+      if (w.Rates) { var rm = w.Rates.of(); Object.keys(rm).forEach(function (k) { var x = rm[k]; if (x.r === 1) addIt(x, 4); else if (x.r === -1) addIt(x, -3); }); }   // ❤ / 👎
+    }
+    var tg = Store.together();   // xem chung: cộng sở thích của mọi người
+    if (tg.length) tg.forEach(function (id) { Store.as(id, one); }); else one();
     return filmCats.filter(function (c) { return score[c.name] > 0; }).sort(function (a, b) { return score[b.name] - score[a.name]; }).slice(0, 2);
   }
 
@@ -230,6 +240,8 @@
 
     var rows = {
       cont: UI.row('Tiếp tục xem'),
+      neweps: UI.row('Có tập mới', 'Phim bộ bạn đang theo dõi vừa ra tập mới'),
+      quiz: quizStrip(),
       favch: UI.row('Từ kênh yêu thích', ''),
       fresh: UI.row('Phim mới cập nhật', 'Từ các kênh bạn theo dõi'),
       hot: UI.row('Đang hot', 'Xem nhiều nhất trong 30 ngày'),
@@ -239,6 +251,8 @@
       anime: UI.row('Hoạt hình', 'Từ ' + (C.ANIME_CHANNELS || []).length + ' kênh hoạt hình · AI, 2D, 3D')
     };
     homeOrder().forEach(function (k) { if (k !== 'top') rows[k].wrap.classList.add('row-' + k); v.appendChild(rows[k].wrap); });   // thứ tự hàng theo hồ sơ
+    var wkc = weekCard(); if (wkc) hero.parentNode.insertBefore(wkc, hero.nextSibling);   // báo cáo tuần (hồ sơ người lớn)
+    rows.neweps.hide();
     v.classList.add('homev');
 
     // Điện thoại: nút chuyển "Mới cập nhật | Hoạt hình AI" + thanh thể loại (TV không hiện)
@@ -269,7 +283,7 @@
     function tickCd() { if (!d.body.contains(v) && cdT) { clearInterval(cdT); return; } cd.textContent = '· ' + nextRefresh().text; }
     var cdT = setInterval(tickCd, 30000);
     setTimeout(tickCd, 50);
-    var on = { cont: C.SHOW_CONT !== false, favch: C.SHOW_FAVCH === true, fresh: C.SHOW_FRESH !== false, hot: C.SHOW_HOT !== false, movie: C.SHOW_MOVIE !== false, rec: C.SHOW_REC !== false, anime: C.SHOW_ANIME !== false };
+    var on = { quiz: C.SHOW_QUIZ !== false, cont: C.SHOW_CONT !== false, favch: C.SHOW_FAVCH === true, fresh: C.SHOW_FRESH !== false, hot: C.SHOW_HOT !== false, movie: C.SHOW_MOVIE !== false, rec: C.SHOW_REC !== false, anime: C.SHOW_ANIME !== false };
     Object.keys(on).forEach(function (k) { if (!on[k]) rows[k].hide(); });
 
     function renderCont() {
@@ -289,9 +303,51 @@
       });
     }
     renderCont();
+    if (C.SHOW_NEWEPS !== false) Api.animeAll().then(function (series) {   // phim bộ có tập mới
+      var l = newEpisodes(series);
+      if (!l.length) return;
+      rows.neweps.show();
+      rows.neweps.cards(l.map(function (x) { return x.item; }), function (it) {
+        var n = (l.filter(function (x) { return x.item === it; })[0] || {}).n || 1;
+        var c = UI.card(it, cardOpts({ sub: 'Tập ' + it.eps + ' đã ra' }));
+        var th = c.querySelector('.thumb') || c; th.appendChild(el('span', 'eptag', n > 1 ? n + ' tập mới' : 'Tập ' + it.eps + ' mới'));
+        return c;
+      });
+    }).catch(function () { /* bỏ qua */ });
 
     var heroFav = false;
-    function setHero(item) {
+    // Phim đang xem dở gần nhất (trong 4 ngày): đưa lên banner với nút Xem tiếp
+    function heroResume() {
+      var r = Store.recent().filter(function (x) { return x.item && !Settings.hides(x.item); })[0];
+      if (!r || Date.now() - (r.t || 0) > 4 * 86400e3) return false;
+      var p = progressOf(r.vid); if (!canResume(p)) return false;
+      var item = r.item, anime = item.kind === 'anime';
+      heroFav = true;
+      hero.innerHTML = '';
+      var bg = UI.thumb(item, true); bg.className = 'thumb hero-img'; hero.appendChild(bg);
+      hero.appendChild(el('div', 'hero-shade'));
+      var box = el('div', 'hero-box'), chips = el('div', 'chips');
+      chips.appendChild(el('span', 'chip gold', '▶ Xem tiếp'));
+      if (anime && r.ep) chips.appendChild(el('span', 'chip', 'Tập ' + r.ep + (item.eps ? ' / ' + item.eps : '')));
+      UI.catChips(chips, item);
+      box.appendChild(chips);
+      box.appendChild(el('h1', 'hero-title', item.title));
+      var t = new Date(r.t), now = new Date(), dd = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+      var when = 'lúc ' + UI.hhmm(r.t) + (dd === 0 ? ' hôm nay' : dd === 1 ? ' hôm qua' : ' ngày ' + t.getDate() + '/' + (t.getMonth() + 1));
+      var meta = el('div', 'hero-meta'); meta.appendChild(d.createTextNode('Bạn xem dở ' + when + '  ·  ')); meta.appendChild(el('b', 'hero-left', 'còn ' + UI.fmtLong(p.d - p.p)));
+      box.appendChild(meta);
+      var bar = el('div', 'hero-prog'), fl = el('i'); fl.style.width = Math.round(p.p / p.d * 100) + '%'; bar.appendChild(fl); box.appendChild(bar);
+      var btns = el('div', 'btns');
+      var b1 = UI.button('Xem tiếp', 'gold', function () { if (anime) openItem(item); else playFilm(item); }, UI.ICON_PLAY);
+      btns.appendChild(b1);
+      btns.appendChild(UI.button(anime ? 'Chi tiết' : 'Xem từ đầu', '', function () { if (anime) openItem(item); else playFilm(item, true); }));
+      box.appendChild(btns);
+      hero.appendChild(box);
+      if (Nav.cur && Nav.cur.dataset && Nav.cur.dataset.tab === 'home' && current() && current().el === v) Nav.focus(b1, true);
+      return true;
+    }
+    var heroResumed = heroResume();
+    function setHero(item, week) {
       if (item && Store.isFavCh(item.chId)) heroFav = true;
       hero.innerHTML = '';
       var bg = UI.thumb(item, true);
@@ -300,9 +356,12 @@
       hero.appendChild(el('div', 'hero-shade'));
       var box = el('div', 'hero-box');
       var chips = el('div', 'chips');
-      chips.appendChild(el('span', 'chip gold', 'Mới cập nhật'));
-      if (item.tag) chips.appendChild(el('span', 'chip white', item.tag));
-      chips.appendChild(el('span', 'chip', 'Phim lẻ'));
+      if (week) { chips.appendChild(el('span', 'chip gold', '👑 Tổng tài của tuần')); chips.appendChild(el('span', 'chip', 'Tuần ' + weekNo())); }
+      else {
+        chips.appendChild(el('span', 'chip gold', 'Mới cập nhật'));
+        if (item.tag) chips.appendChild(el('span', 'chip white', item.tag));
+        chips.appendChild(el('span', 'chip', 'Phim lẻ'));
+      }
       UI.catChips(chips, item);
       box.appendChild(chips);
       box.appendChild(el('h1', 'hero-title', item.title));
@@ -311,7 +370,12 @@
       if (item.views) meta.push(UI.fmtViews(item.views));
       if (item.pub) meta.push(UI.fmtAgo(item.pub));
       box.appendChild(el('div', 'hero-meta', meta.join('  ·  ')));
-      box.appendChild(el('div', 'hero-desc', item.desc || ''));
+      if (week && w.Quotes) {
+        var hd = el('div', 'hero-desc');
+        hd.appendChild(el('div', 'hero-quote', '“' + w.Quotes.get((weekNo() * 37) % w.Quotes.count).text + '”'));
+        hd.appendChild(el('div', 'hero-wk', 'Phim cả nhà xem nhiều nhất 7 ngày qua, kèm một câu thoại tổng tài.'));
+        box.appendChild(hd);
+      } else box.appendChild(el('div', 'hero-desc', item.desc || ''));
       var btns = el('div', 'btns');
       var b1 = UI.button('Xem ngay', 'gold', function () { playFilm(item); }, UI.ICON_PLAY);
       var b2 = UI.button('Chi tiết', '', function () { openItem(item); });
@@ -326,9 +390,11 @@
     // Phim mới + đang hot: lấy từ các kênh theo dõi (làm mới mỗi giờ, gần như không tốn hạn mức)
     Api.followedFilms().then(function (all) {
       if (!all.length) throw { message: 'Chưa lấy được phim từ các kênh theo dõi' };
+      paintChBadge(all);
+      preload(all);
       var list = unseen(all);
       rows.fresh.cards(spread(list, 2, 30), function (it, i) { return UI.card(it, cardOpts({ isNew: Date.now() - new Date(it.pub || 0).getTime() < 86400e3 })); });
-      if (!heroFav) setHero(list[0]);
+      if (!heroFav) { var wkItem = weekPick(all); if (wkItem) { setHero(wkItem, true); heroResumed = true; } else setHero(list[0]); }
       var month = Date.now() - 30 * 86400e3;
       var hot = list.filter(function (f) { return new Date(f.pub || 0).getTime() > month; });
       if (hot.length < 10) hot = list.slice();
@@ -356,7 +422,7 @@
     var catA = pref[0] || filmCats[dayN % filmCats.length];
     var catB = pref[1] || filmCats[(dayN * 7 + 5) % filmCats.length];
     if (catB === catA) catB = filmCats[(filmCats.indexOf(catA) + 1) % filmCats.length];
-    rows.rec.wrap.querySelector('.rt').textContent = 'Đề xuất cho ' + Store.profileName();
+    rows.rec.wrap.querySelector('.rt').textContent = 'Đề xuất cho ' + (Store.together().length ? Store.together().map(function (id) { return (profileOf(id) || { name: 'Guest' }).name; }).join(' + ') : Store.profileName());
     rows.rec.wrap.querySelector('.rowhead').appendChild(el('span', 'rh', (byProfile ? 'Theo thể loại hay xem: ' : 'Chưa có lịch sử xem, gợi ý hôm nay: ') + catA.name + ' · ' + catB.name));
     // Kênh yêu thích của hồ sơ đang xem: hàng riêng ngay dưới "Tiếp tục xem", và ảnh lớn đầu trang lấy từ đây
     if (on.favch) {
@@ -376,7 +442,7 @@
           if (!list.length) { rows.favch.msg('Các kênh yêu thích chưa có phim mới. Phim sẽ hiện ở đây khi kênh đăng phim.'); return; }
           rows.favch.cards(list, function (it) { return UI.card(it, cardOpts({ isNew: Date.now() - new Date(it.pub || 0).getTime() < 86400e3 })); });
           var first = list.filter(function (f) { return f.kind === 'film'; })[0];
-          if (first) setHero(first);
+          if (first && !heroResumed) setHero(first);
         });
       }
     }
@@ -392,7 +458,7 @@
         out.forEach(function (f) { has[f.chId || f.ch] = 1; });
         var extra = spread(all.filter(function (f) { return !seen[f.id] && !has[f.chId || f.ch]; })
           .sort(function (a, b) { return (b.views || 0) - (a.views || 0); }), 1, 12);
-        rows.rec.cards(unseen(out.slice(0, 16).concat(extra)), function (it) { return UI.card(it, cardOpts({})); });
+        rows.rec.cards(unseen(out.slice(0, 16).concat(extra)).filter(function (f) { return !(w.Rates && w.Rates.get(f.id) === -1); }), function (it) { return UI.card(it, cardOpts({})); });
       });
     }).catch(function (e) { fail(rows.rec, e); });
 
@@ -458,6 +524,10 @@
         var sub = el('div', 'chsub', '');
         e.appendChild(sub);
         Api.channelFilms(c).then(function (l) {
+          if (Store.isFavCh(c.id)) {   // kênh yêu thích: số phim mới từ lần xem kênh gần nhất
+            var k = chNewCount(c.id, l);
+            if (k) { e.appendChild(el('span', 'chbadge', String(k))); sub.textContent = k + ' phim mới'; sub.classList.add('new'); return; }
+          }
           var day = Date.now() - 86400e3;
           var n = l.filter(function (f) { return new Date(f.pub || 0).getTime() > day; }).length;
           sub.textContent = n ? n + ' phim mới hôm nay' : l.length + ' phim' + (c.anime ? ' · Hoạt hình' : c.movie ? ' · Phim lẻ hay' : '');
@@ -547,6 +617,7 @@
   }
 
   function ChannelList(c) {
+    if (c && c.id && Store.isFavCh(c.id)) { chSeenMark(c.id); setTimeout(function () { paintChBadge(); }, 50); }
     var v = UI.view();
     v.classList.add('scroller');
     var h = el('div', 'pagehead', c.title || c.name);
@@ -678,6 +749,33 @@
     var qtxt = el('span', 'sq', '');
     box.appendChild(qtxt);
     box.appendChild(el('span', 'caret'));
+    var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+    var mic = null, sheet = null;
+    function hideSheet() { if (sheet && sheet.parentNode) sheet.parentNode.removeChild(sheet); sheet = null; if (mic) mic.classList.remove('on'); }
+    function listen() {   // tìm bằng giọng nói
+      hideSheet();
+      sheet = el('div', 'vsheet');
+      var ring = el('div', 'vring'); ring.innerHTML = MIC; sheet.appendChild(ring);
+      sheet.appendChild(el('div', 'vst', 'Đang nghe…'));
+      var said = el('div', 'vsaid', ''); sheet.appendChild(said);
+      sheet.appendChild(el('div', 'vtip', 'Nói tiếng Việt, ví dụ: “phim ngọt sủng mới nhất”'));
+      sheet.onclick = function () { w.Voice.stop(); hideSheet(); };
+      if (!w.Voice.android()) d.body.appendChild(sheet);   // Android TV dùng hộp giọng nói của Google
+      if (mic) mic.classList.add('on');
+      w.Voice.start(function (t) { said.textContent = '“' + t + '”'; }, function (t) {
+        hideSheet();
+        t = String(t || '').replace(/[.!?。]+$/, '').trim();
+        if (!t) return;
+        setQ(t); if (mIn) mIn.value = q; run();
+      }, function (msg) { hideSheet(); if (msg) UI.toast(msg); });
+    }
+    if (w.Voice && w.Voice.available()) {
+      mic = el('div', 'smic f'); mic.innerHTML = MIC; mic.title = 'Tìm bằng giọng nói';
+      mic._ok = listen;
+      mic.onclick = function (e) { e.stopPropagation(); listen(); };
+      box.appendChild(mic);
+      w.__voiceKeyHere = function () { if (current() && current().el === v) { listen(); return true; } return false; };
+    }
     left.appendChild(box);
 
     var q = '';
@@ -854,6 +952,13 @@
         updateButtons();
       }, UI.ICON_CHECK);
       btns.appendChild(bSeen);
+    }
+    if (w.Rates) {   // đánh giá: ❤ Thích / 👎 Không thích (bấm lại để bỏ)
+      var bLike = UI.button('Thích', '', function () { var on = w.Rates.get(item.id) === 1; w.Rates.set(item, on ? null : 1); paintRate(); UI.toast(on ? 'Đã bỏ đánh giá' : 'Đã lưu: ❤ Thích. Gợi ý sẽ có thêm phim giống vậy'); });
+      var bDis = UI.button('Không thích', '', function () { var on = w.Rates.get(item.id) === -1; w.Rates.set(item, on ? null : -1); paintRate(); UI.toast(on ? 'Đã bỏ đánh giá' : 'Đã lưu: 👎 Không thích. Sẽ ít gợi ý phim giống vậy'); });
+      var paintRate = function () { var r0 = w.Rates.get(item.id); bLike.setLabel(r0 === 1 ? '❤ Đã thích' : '♡ Thích'); bDis.setLabel(r0 === -1 ? '👎 Không thích ✓' : '👎 Không thích'); bLike.classList.toggle('on', r0 === 1); bDis.classList.toggle('on', r0 === -1); };
+      paintRate();
+      btns.appendChild(bLike); btns.appendChild(bDis);
     }
     if (!isAnime) {   // danh sách phát hoạt hình (nhiều tập) không có một video để xem bình luận
       btns.appendChild(UI.button('Bình luận', '', function () { push(Comments(item)); },
@@ -1196,6 +1301,10 @@
       { v: 5, t: '5 giây', on: true }, { v: 8, t: '8 giây', on: true }]);
     opt('SCREENSAVER', 'Màn hình chờ', 'Để yên bao lâu thì hiện ảnh bìa phim mới chạy chậm kèm đồng hồ. Đang chiếu phim thì không hiện', [
       { v: 0, t: 'Tắt' }, { v: 5, t: '5 phút', on: true }, { v: 10, t: '10 phút', on: true }, { v: 15, t: '15 phút', on: true }, { v: 30, t: '30 phút', on: true }]);
+    opt('SAVER_QUOTE', 'Câu thoại tổng tài', 'Mỗi lần màn hình chờ hiện là một câu thoại tổng tài mới (250 câu, 5 chủ đề), kèm tên phim', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
+    opt('SLEEP_AT', 'Chế độ ngủ', 'Tới giờ này: màn hình tối dần, âm lượng nhỏ lại, hết phim thì tắt app (có nút xem thêm 15 phút)', [{ v: '', t: 'Tắt' }, { v: '21:00', t: '21:00', on: true }, { v: '21:30', t: '21:30', on: true }, { v: '22:00', t: '22:00', on: true }, { v: '22:30', t: '22:30', on: true }, { v: '23:00', t: '23:00', on: true }]);
+    opt('SLEEP_WHO', 'Chế độ ngủ áp dụng cho', 'Cả nhà, hoặc chỉ khi đang xem bằng hồ sơ có giới hạn giờ xem', [{ v: 'all', t: 'Cả nhà', on: true }, { v: 'lim', t: 'Hồ sơ có giới hạn', on: true }]);
+    opt('PRELOAD', 'Tải sẵn ảnh bìa', 'Lưu sẵn ảnh bìa phim mới khi rảnh để TV mở nhanh, đỡ giật khi mạng yếu (tạm dừng khi đang xem phim)', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
     row('Xem thử màn hình chờ', 'Bấm phím bất kỳ để quay lại', function () { return { t: 'Xem thử' }; }, function () { if (w.Saver) setTimeout(w.Saver.show, 150); });
     opt('CLOCK_12', 'Đồng hồ', 'Kiểu giờ ở góc trên và trong app', [{ v: false, t: '24 giờ (14:05)', on: true }, { v: true, t: '12 giờ (2:05 PM)', on: true }]);
 
@@ -1203,6 +1312,44 @@
     row('Đang xem với hồ sơ', 'Mỗi hồ sơ có lịch sử, phim xem dở, danh sách và từ khóa tìm kiếm riêng', function () {
       return { t: Store.profileName() + ' · Đổi', on: true };
     }, function () { push(Who()); });
+    row('Giới hạn giờ xem', 'Số giờ xem mỗi ngày và khung giờ được xem cho từng hồ sơ. Đổi cần mã PIN người lớn', function () {
+      var n = Object.keys(limAll()).filter(function (k) { return limOf(k); }).length;
+      return { t: n ? n + ' hồ sơ có giới hạn' : 'Chưa đặt', on: !!n };
+    }, function () { withPin('đặt giới hạn giờ xem', function () { setTimeout(function () { push(LimitList()); }, 30); }); });
+    row('Ngày sinh của hồ sơ', 'Hôm đó app chúc mừng sinh nhật, có pháo bông, nhạc và thêm 30 phút xem phim (nếu có giới hạn giờ)', function () {
+      var b = bdayOf(Store.profile()); return { t: b ? Store.profileName() + ' · ' + b : 'Chưa đặt', on: !!b };
+    }, function (paint) {
+      push(TextEdit('Ngày sinh của ' + Store.profileName() + ' (ngày và tháng)', (bdayOf(Store.profile()) || '').replace('/', ''), function (val) {
+        var m = /^(\d{1,2})\D?(\d{1,2})$/.exec(String(val || '').trim()), bd = Store.pref('bdays', {}) || {};
+        if (!String(val || '').trim()) { delete bd[Store.profile()]; Store.setPref('bdays', bd); paint(); UI.toast('Đã xóa ngày sinh'); return; }
+        if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) { UI.toast('Nhập ngày rồi tháng, ví dụ 1411 cho 14/11'); return; }
+        bd[Store.profile()] = ('0' + m[1]).slice(-2) + '/' + ('0' + m[2]).slice(-2); Store.setPref('bdays', bd); paint();
+        UI.toast('Đã lưu sinh nhật ' + Store.profileName() + ': ' + bd[Store.profile()]);
+      }, { hint: 'Gõ ngày rồi tháng, ví dụ 1411 cho ngày 14 tháng 11. Để trống rồi Lưu để xóa.' }));
+    });
+    row('Hồ sơ xem báo cáo tuần', 'Sáng thứ Hai, Trang chủ của các hồ sơ này hiện báo cáo tuần của cả nhà. Đổi cần mã PIN người lớn', function () {
+      var a = (Store.pref('adults', []) || []).map(function (id) { return (profileOf(id) || { name: id === 'guest' ? 'Guest' : '' }).name; }).filter(Boolean);
+      return { t: a.length ? a.join(', ') : 'Chưa chọn', on: !!a.length };
+    }, function (paint) {
+      withPin('chọn hồ sơ xem báo cáo tuần', function () {
+        setTimeout(function () {
+          var v2 = UI.view(); v2.classList.add('scroller');
+          var h2 = el('div', 'pagehead', 'Hồ sơ xem báo cáo tuần'); h2.appendChild(el('span', 'rh', 'OK để bật / tắt')); v2.appendChild(h2);
+          var wr = el('div', 'limwrap'), first = null;
+          [{ id: 'guest', name: 'Guest' }].concat(Store.profiles().filter(function (p) { return p.id !== 'guest'; })).forEach(function (p0) {
+            var pr = profileOf(p0.id) || p0, r = el('div', 'setrow f rowwrap ppr'), l = el('div', 'sleft2'), sl = el('div', 'sl');
+            sl.appendChild(avatar(pr, 'pp')); sl.appendChild(d.createTextNode(pr.name)); l.appendChild(sl); r.appendChild(l);
+            var val = el('div', 'sv'); r.appendChild(val);
+            function pt() { var on = (Store.pref('adults', []) || []).indexOf(pr.id) >= 0; val.textContent = on ? 'Xem báo cáo' : 'Không'; val.classList.toggle('on', on); }
+            r._ok = function () { var a = (Store.pref('adults', []) || []).slice(), i = a.indexOf(pr.id); if (i >= 0) a.splice(i, 1); else a.push(pr.id); Store.setPref('adults', a); pt(); paint(); };
+            pt(); wr.appendChild(r); if (!first) first = r;
+          });
+          v2.appendChild(wr);
+          push({ name: 'adults', el: v2 });
+          setTimeout(function () { Nav.focus(first, true); }, 30);
+        }, 30);
+      });
+    });
     row('Hình đại diện', 'Chọn 1 trong 25 hình thú kawaii cho hồ sơ đang xem', function () {
       var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || {};
       return { t: me.av != null && w.Avatars ? w.Avatars.name(me.av) : 'Chưa chọn' };
@@ -1246,11 +1393,12 @@
     var MOPTS = [{ v: 'songs', t: 'Nhạc của tôi (lần lượt)', on: true }, { v: 'songsx', t: 'Nhạc của tôi (trộn bài)', on: true }, { v: 'auto', t: 'Hòa tấu (lần lượt 5 bài)', on: true }, { v: 'off', t: 'Tắt' }].concat(
       (w.Music ? w.Music.tracks() : []).map(function (n, i) { return { v: i, t: (i + 1) + '. ' + n, on: true }; }));
     opt('MUSIC', 'Nhạc nền', 'Nhạc của tôi (bài hát trong thư mục music/) hoặc 5 bản hòa tấu. Chỉ phát ở Trang chủ, tự dừng khi xem phim, quay lại phát tiếp. Mỗi lần OK đổi một kiểu', MOPTS);
+    opt('MUSIC_VIEW', 'Kiểu trang Nhạc', 'Kiểu A: ảnh + lời + bài tiếp theo. Kiểu B: ảnh phủ toàn màn hình, lời to kiểu karaoke. Đổi nhanh bằng nút trên trang Nhạc', [{ v: 'split', t: 'Kiểu A: chia đôi', on: true }, { v: 'karaoke', t: 'Kiểu B: toàn màn hình', on: true }]);
     row('Chọn bài (Nhạc của tôi)', 'Danh sách bài hát của bạn. OK để nghe bài đó ngay', function () {
       var n = w.Music && w.Music.songs ? w.Music.songs().length : 0;
       return { t: n ? n + ' bài · Mở' : 'Mở', on: n > 0 };
     }, function () { push(SongPick()); });
-    opt('MUSIC_VOL', 'Âm lượng nhạc nền', '', [{ v: 'low', t: 'Nhỏ', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'To', on: true }]);
+    opt('MUSIC_VOL', 'Âm lượng nhạc nền', 'Ngưỡng: rất nhỏ, vừa đủ nghe (nhỏ hơn mức Nhỏ)', [{ v: 'min', t: 'Ngưỡng', on: true }, { v: 'low', t: 'Nhỏ', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'To', on: true }]);
 
     sec('Chủ đề theo mùa và ngày lễ');
     markPP(row('Chủ đề', 'Tự động đổi theo ngày: Tết, Noel, Năm mới, Valentine, 8/3, 20/10, 1/6, Ngày của Mẹ/Cha, Trung thu, Halloween, Lễ Tạ Ơn, hoa anh đào, 4 mùa', function () {
@@ -1404,6 +1552,20 @@
       push(TextEdit('YouTube API key', Settings.get('API_KEY') || '', function (val) {
         Settings.set('API_KEY', val.trim()); paint(); UI.toast('Đã lưu API key');
       }));
+    });
+    row('Máy chủ thống kê (quản trị)', 'Nơi app gửi thiết bị, hồ sơ và thời gian xem cho trang quản trị của phụ huynh. Đổi cần mã PIN người lớn', function () {
+      var h = Settings.get('STATS_URL');
+      return { t: h ? 'Đang bật · ' + h.replace(/^https?:\/\//, '').slice(0, 26) : 'Tắt', on: !!h };
+    }, function (paint) {
+      withPin('đổi máy chủ thống kê', function () {
+        setTimeout(function () {
+          push(TextEdit('Địa chỉ máy chủ thống kê (để trống = tắt)', Settings.get('STATS_URL') || 'https://', function (val) {
+            val = val.trim(); if (val === 'https://') val = '';
+            Settings.set('STATS_URL', val.replace(/\/+$/, '')); paint();
+            UI.toast(val ? 'Đã bật gửi số liệu cho trang quản trị' : 'Đã tắt gửi số liệu');
+          }));
+        }, 30);
+      });
     });
     row('Địa chỉ nhạc (Nhạc của tôi)', 'Trang GitHub Pages có thư mục music/. Để trống: bản web tự lấy cùng chỗ, TV dò theo PLAYER_HOST', function () {
       var h = Settings.get('MUSIC_URL'), src = w.Music && w.Music.songsSource ? w.Music.songsSource() : '';
@@ -1751,6 +1913,16 @@
     if (!b) return;
     var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
     b.innerHTML = '';
+    var tg = Store.together();
+    if (tg.length) {
+      var names = [];
+      b.classList.add('tog');
+      tg.forEach(function (id, i) { var p = profileOf(id) || { id: id, name: 'Guest' }; names.push(p.name); var a2 = avatar(p, 'sm'); if (i) a2.classList.add('stk'); b.appendChild(a2); });
+      b.appendChild(el('span', 'whonames', names.join(' + ')));
+      b.title = 'Đang xem chung: ' + names.join(' + ') + ' (bấm để đổi)';
+      return;
+    }
+    b.classList.remove('tog');
     b.appendChild(avatar(me, 'sm'));
     b.title = 'Đang xem: ' + me.name + ' (bấm để đổi)';
   }
@@ -1775,22 +1947,63 @@
     UI.toast('Xin chào ' + Store.profileName() + '!');
     goTab('home');
     Nav.focus(d.querySelector('.hero .btn') || S.tabEls.home, true);
+    checkBirthday();
   }
 
+  var whoMode = 'one';   // 'one' = một người, 'tog' = xem chung
   function Who(startup) {
     var v = UI.view();
     v.classList.add('who');
     v.appendChild(el('div', 'whot', 'Ai đang xem?'));
-    v.appendChild(el('div', 'whos', 'Mỗi người có lịch sử xem, phim xem dở, danh sách và từ khóa tìm kiếm riêng.'));
+    var sub = el('div', 'whos', '');
+    v.appendChild(sub);
+    var tv = !!(w.tizen || w.AndroidApp);
+    var sel = Store.together().slice();
+    if (!sel.length && whoMode === 'tog') sel = [];
+    // chọn chế độ: Một người / Xem chung
+    var seg = el('div', 'whomode');
+    var sOne = el('div', 'wmb f', 'Một người'), sTog = el('div', 'wmb f', '👥 Xem chung');
+    sOne._ok = function () { if (whoMode !== 'one') { whoMode = 'one'; reWho(); } };
+    sTog._ok = function () { if (whoMode !== 'tog') { whoMode = 'tog'; reWho(); } };
+    seg.appendChild(sOne); seg.appendChild(sTog);
+    v.appendChild(seg);
     var g = el('div', 'whogrid');
     var mine = null;
-    var tv = !!(w.tizen || w.AndroidApp);
+    var go = el('div', 'btn f gold whogo');
+    function paintSel() {
+      sOne.classList.toggle('on', whoMode === 'one'); sTog.classList.toggle('on', whoMode === 'tog');
+      sub.textContent = whoMode === 'tog' ? 'Chọn những ai cùng ngồi xem. Phim, phim xem dở và thời gian xem ghi cho tất cả; gợi ý theo sở thích chung.' : 'Mỗi người có lịch sử xem, phim xem dở, danh sách và từ khóa tìm kiếm riêng.';
+      Array.prototype.forEach.call(g.querySelectorAll('.wtile[data-id]'), function (t) { t.classList.toggle('sel', whoMode === 'tog' && sel.indexOf(t.getAttribute('data-id')) >= 0); });
+      var names = sel.map(function (id) { return (profileOf(id) || { name: id === 'guest' ? 'Guest' : '?' }).name; });
+      go.style.display = whoMode === 'tog' ? '' : 'none';
+      go.innerHTML = '';
+      go.appendChild(el('span', 'blabel', sel.length >= 2 ? '▶ Xem chung: ' + names.join(' + ') : 'Chọn ít nhất 2 người'));
+      go.classList.toggle('dim', sel.length < 2);
+    }
+    go._ok = function () {
+      if (sel.length < 2) { UI.toast('Chọn ít nhất 2 người để xem chung'); return; }
+      Store.setTogether(sel);
+      Settings.apply();
+      paintWho();
+      chainSeen = {};
+      UI.toast('Xem chung: ' + sel.map(function (id) { return (profileOf(id) || { name: 'Guest' }).name; }).join(' + '));
+      goTab('home');
+      Nav.focus(d.querySelector('.hero .btn') || S.tabEls.home, true);
+    };
     Store.profiles().forEach(function (p) {
       var t = el('div', 'wtile f');
+      t.setAttribute('data-id', p.id);
       t.appendChild(avatar(p));
       t.appendChild(el('div', 'wname', (p.pinH ? '🔒 ' : '') + p.name));
-      if (p.id === Store.profile()) { t.classList.add('cur'); t.appendChild(el('div', 'wcur', 'Đang xem')); mine = t; }
-      t._ok = function () { chooseProfile(p.id); };
+      t.appendChild(el('div', 'wchk', '✓'));
+      if (p.id === Store.profile() && whoMode === 'one') { t.classList.add('cur'); t.appendChild(el('div', 'wcur', Store.together().length ? 'Đang xem chung' : 'Đang xem')); mine = t; }
+      t._ok = function () {
+        if (whoMode !== 'tog') { chooseProfile(p.id); return; }
+        var i = sel.indexOf(p.id);
+        if (i >= 0) { sel.splice(i, 1); paintSel(); return; }
+        if (sel.length >= 4) { UI.toast('Xem chung tối đa 4 người'); return; }
+        unlockProfile(p, 'xem chung', function () { setTimeout(function () { sel.push(p.id); paintSel(); }, 30); });
+      };
       t._hold = function () { push(ProfileMenu(p)); };   // giữ lâu: đặt mã PIN, đổi hình, xóa
       g.appendChild(t);
     });
@@ -1813,16 +2026,26 @@
         }, 30);
       }, { space: true, hint: 'Gõ tên (ví dụ: bo, me, be na) rồi chọn Lưu. Bước sau chọn hình con thú. Back để hủy.' }));
     };
+    if (whoMode === 'tog') add.style.display = 'none';
     g.appendChild(add);
     v.appendChild(g);
+    v.appendChild(go);
     if (!startup) {   // mở từ nút hồ sơ: có nút quay lại ngay trong khung
       var bx = el('div', 'btns center');
       bx.appendChild(UI.button('‹ Quay lại', 'small', function () { back(); }));
       v.appendChild(bx);
     }
+    // 3 Không + tác giả
+    var k3 = el('div', 'who3');
+    var stamp = el('div', 'w3stamp'); stamp.appendChild(el('b', '', '3')); stamp.appendChild(el('span', '', 'KHÔNG')); k3.appendChild(stamp);
+    ['Không quảng cáo chèn thêm', 'Không giới hạn giờ xem', 'Không thu phí'].forEach(function (t) {
+      var c = el('div', 'w3chip'); var x = el('i', 'w3x'); x.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>'; c.appendChild(x); c.appendChild(el('span', '', t)); k3.appendChild(c);
+    });
+    v.appendChild(k3);
     v.appendChild(el('div', 'whoh', tv ? 'Giữ lâu nút OK trên một hồ sơ để: đặt mã PIN, đổi hình, xóa. Hồ sơ có 🔒 cần mã PIN riêng.' : 'Giữ lâu trên một hồ sơ để: đặt mã PIN, đổi hình, xóa. Hồ sơ có 🔒 cần mã PIN riêng.'));
     var view = { name: 'who', el: v, startup: !!startup };
-    setTimeout(function () { if (mine && current() === view) Nav.focus(mine); }, 0);
+    paintSel();
+    setTimeout(function () { if (current() === view) Nav.focus(mine || (whoMode === 'tog' ? sTog : null) || g.querySelector('.wtile')); }, 0);
     return view;
   }
 
@@ -2222,24 +2445,47 @@
     head.appendChild(el('span', 'rh', Store.profileName() + ' · ảnh lớn đầu trang luôn ở trên cùng'));
     v.appendChild(head);
     var tv = !!(w.tizen || w.AndroidApp);
-    v.appendChild(el('div', 'setinfo ordinfo', tv ? 'Chọn một hàng rồi nhấn OK để nhấc lên, bấm ▲ ▼ để di chuyển, nhấn OK để đặt xuống.' : 'Bấm ▲ ▼ để đưa hàng lên hoặc xuống. Hàng đang ẩn vẫn giữ chỗ, bật lại trong Cài đặt.'));
+    v.appendChild(el('div', 'setinfo ordinfo', (tv ? 'Chọn một hàng, nhấn OK để nhấc lên, bấm ▲ ▼ để di chuyển, nhấn OK để đặt xuống.' : 'Bấm ▲ ▼ để đưa hàng lên hoặc xuống.') +
+      ' Xong bấm “Xem trước” để xem Trang chủ sẽ trông thế nào, rồi “Lưu”. Hàng đang ẩn vẫn giữ chỗ, bật lại trong Cài đặt.'));
+    var bar = el('div', 'btns ordbar');
+    v.appendChild(bar);
+    var status = el('div', 'ordstatus', '');
+    v.appendChild(status);
     var list = el('div', 'ordlist');
     v.appendChild(list);
-    var order = homeOrder(), moving = -1;
+    var saved = homeOrder(), order = saved.slice(), moving = -1, asking = false;
     var view = { name: 'roworder', el: v };
-    function save() { Settings.set('HOME_ORDER', order.slice()); }
+    function dirty() { return order.join() !== saved.join(); }
+    function save() {
+      Settings.set('HOME_ORDER', order.slice());
+      saved = order.slice(); asking = false;
+      UI.toast('Đã lưu thứ tự các hàng cho ' + Store.profileName());
+      render(null);
+    }
     function move(i, dir) {
       var j = i + dir;
       if (j < 0 || j >= order.length) return i;
       var t = order[i]; order[i] = order[j]; order[j] = t;
-      save();
+      asking = false;
       return j;
     }
+    var bPrev = UI.button('👁 Xem trước', 'gold', function () { moving = -1; push(HomePreview(order.slice(), function () { order = order.slice(); save(); })); });
+    var bSave = UI.button('✓ Lưu', '', function () { if (dirty()) save(); else UI.toast('Thứ tự chưa thay đổi'); });
+    var bUndo = UI.button('↺ Bỏ thay đổi', '', function () { order = saved.slice(); moving = -1; asking = false; render(0); UI.toast('Đã trở lại thứ tự đang dùng'); });
+    var bDef = UI.button('Mặc định', '', function () { order = ROW_IDS.slice(); moving = -1; asking = false; render(0); UI.toast('Đã đưa về thứ tự mặc định. Bấm Lưu để dùng'); });
+    [bPrev, bSave, bUndo, bDef].forEach(function (b) { bar.appendChild(b); });
     function render(focusIdx) {
+      var dz = dirty();
+      bSave.classList.toggle('gold', dz);
+      bUndo.style.display = dz ? '' : 'none';
+      status.className = 'ordstatus' + (dz ? ' dirty' : '') + (asking ? ' ask' : '');
+      status.textContent = asking ? 'Bạn chưa lưu thứ tự mới. Bấm “Lưu” để giữ, hoặc bấm Quay lại lần nữa để bỏ thay đổi.' :
+        dz ? '● Có thay đổi chưa lưu' : '✓ Đang dùng thứ tự này';
       list.innerHTML = '';
       var items = [];
       order.forEach(function (k, i) {
-        var r = el('div', 'ordrow f' + (i === moving ? ' moving' : '') + (rowOn(k) ? '' : ' off'));
+        var changed = saved[i] !== k;
+        var r = el('div', 'ordrow f' + (i === moving ? ' moving' : '') + (rowOn(k) ? '' : ' off') + (changed ? ' changed' : ''));
         r.appendChild(el('div', 'ordnum', String(i + 1)));
         r.appendChild(el('div', 'ordname', ROW_NAMES[k]));
         r.appendChild(el('div', 'ordstate', rowOn(k) ? 'Hiện' : 'Ẩn'));
@@ -2259,15 +2505,71 @@
         };
         list.appendChild(r); items.push(r);
       });
-      if (focusIdx != null && items[focusIdx]) Nav.focus(items[focusIdx]);
+      if (asking) Nav.focus(bSave);
+      else if (focusIdx != null && items[focusIdx]) Nav.focus(items[focusIdx]);
     }
     view.onKeyHook = function (k) {
       if (moving < 0) return false;
       if (k === 38 || k === 40) { moving = move(moving, k === 38 ? -1 : 1); render(moving); return true; }
-      if (k === 13 || k === 10009 || k === 27 || k === 8) { var i = moving; moving = -1; render(i); UI.toast('Đã lưu thứ tự'); return true; }
+      if (k === 13 || k === 10009 || k === 27 || k === 8) { var i = moving; moving = -1; render(i); return true; }
       return true;
     };
+    view.onBeforeBack = function () {
+      if (!dirty() || asking) { if (asking) UI.toast('Đã bỏ thay đổi, giữ thứ tự cũ'); return true; }
+      asking = true; render(null);
+      return false;
+    };
+    view.refresh = function () { saved = homeOrder(); render(null); };
     render(0);
+    return view;
+  }
+
+  // Xem trước Trang chủ với thứ tự đang sắp (chưa lưu): ảnh lớn đầu trang rồi từng hàng, mỗi hàng vài ảnh bìa thật
+  function HomePreview(order, onSave) {
+    var v = UI.view();
+    v.classList.add('scroller');
+    var head = el('div', 'pagehead', 'Xem trước Trang chủ');
+    head.appendChild(el('span', 'rh', Store.profileName() + ' · chưa lưu'));
+    v.appendChild(head);
+    var bar = el('div', 'btns ordbar');
+    var bOk = UI.button('✓ Lưu thứ tự này', 'gold', function () { back(); setTimeout(onSave, 30); });
+    bar.appendChild(bOk);
+    bar.appendChild(UI.button('‹ Sửa tiếp', '', function () { back(); }));
+    v.appendChild(bar);
+    var pool = [];
+    try { pool = (Api.pool() || []).filter(function (it) { return it && (it.thumb || it.hero) && !Settings.hides(it); }); } catch (e) { pool = []; }
+    var seed = 0;
+    function pick(n) { var o = []; for (var i = 0; i < n; i++) { var it = pool.length ? pool[(seed++ * 7 + i) % pool.length] : null; o.push(it); } return o; }
+    var frame = el('div', 'pvframe');
+    var hero = el('div', 'pvhero');
+    var h0 = pick(1)[0];
+    if (h0) hero.style.backgroundImage = 'url("' + (h0.hero || h0.thumb) + '")';
+    hero.appendChild(el('div', 'pvherot', h0 ? h0.title : 'Ảnh lớn đầu trang'));
+    frame.appendChild(hero);
+    var hidden = [], shown = 0;
+    order.forEach(function (k) {
+      if (!rowOn(k)) { hidden.push(ROW_NAMES[k]); return; }
+      var i = shown++;
+      var rw = el('div', 'pvrow');
+      var t = k === 'rec' ? 'Đề xuất cho ' + Store.profileName() : ROW_NAMES[k];
+      var rh = el('div', 'pvrt');
+      rh.appendChild(el('span', 'pvn', String(i + 1)));
+      rh.appendChild(el('span', '', t));
+      rw.appendChild(rh);
+      var cards = el('div', 'pvcards' + (k === 'top' ? ' top' : ''));
+      pick(6).forEach(function (it, j) {
+        var c = el('div', 'pvcard');
+        if (it) c.style.backgroundImage = 'url("' + (it.thumb || it.hero) + '")';
+        if (k === 'top') c.appendChild(el('div', 'pvrank', String(j + 1)));
+        cards.appendChild(c);
+      });
+      rw.appendChild(cards);
+      frame.appendChild(rw);
+    });
+    v.appendChild(frame);
+    if (hidden.length) v.appendChild(el('div', 'setinfo ordinfo', 'Đang ẩn (không hiện ở Trang chủ): ' + hidden.join(', ') + '.'));
+    var view = { name: 'homepreview', el: v };
+    setTimeout(function () { Nav.focus(bOk); }, 0);
     return view;
   }
 
@@ -2573,6 +2875,8 @@
     if (logo) { var lg = el('div', 'ablogo'); lg.innerHTML = logo.outerHTML.replace(/id="bg"/, 'id="bga"').replace(/url\(#bg\)/, 'url(#bga)'); abL.appendChild(lg); }
     var abT = el('div', 'abt');
     abT.appendChild(el('div', 'abname', 'Tổng Tài TV'));
+    abT.appendChild(el('div', 'abtag', 'Phim ngắn tổng tài · ngọt sủng · báo thù, gom về một nơi, xem trên mọi màn hình.'));
+    abT.appendChild(el('div', 'abintro', 'Tổng Tài TV tuyển chọn phim ngắn mới nhất từ các kênh YouTube bạn theo dõi, sắp xếp gọn gàng theo thể loại và phát mượt trên TV Samsung, Android TV, điện thoại và máy tính. Mỗi thành viên trong gia đình có hồ sơ, lịch sử và gợi ý của riêng mình.'));
     abT.appendChild(el('div', 'abver', 'Phiên bản ' + C.VERSION + ' (build ' + C.BUILD + ') · cập nhật ' + C.UPDATED));
     abT.appendChild(el('div', 'abauth', 'Tác giả: ' + C.AUTHOR + (C.CONTACT ? ' · ' + C.CONTACT : '')));
     var upd = el('div', 'abupd', '');
@@ -2603,14 +2907,50 @@
     abL.appendChild(abT);
     ab.appendChild(abL);
     var cr = el('div', 'abcopy');
-    cr.appendChild(el('div', 'ititle', 'Lưu ý bản quyền'));
-    ['Ứng dụng không lưu trữ hay tải về video. Mọi phim phát qua trình phát chính thức của YouTube và chỉ những video chủ kênh cho phép nhúng.',
-      'Bản quyền phim, hình ảnh, âm nhạc thuộc về chủ kênh và nhà sản xuất gốc. Muốn gỡ phim, hãy liên hệ chủ kênh trên YouTube.',
-      'Dùng cho mục đích cá nhân, gia đình, phi thương mại. © 2026 ' + C.AUTHOR + '.'].forEach(function (t) {
+    cr.appendChild(el('div', 'ititle', 'Bản quyền và miễn trừ trách nhiệm'));
+    ['Tổng Tài TV không lưu trữ, tải xuống hay phân phối lại video. Mọi phim được phát qua trình phát nhúng chính thức của YouTube, chỉ với những video chủ kênh cho phép nhúng.',
+      'Quyền sở hữu phim, hình ảnh và âm thanh thuộc về chủ kênh và nhà sản xuất. Yêu cầu gỡ nội dung xin gửi trực tiếp tới chủ kênh trên YouTube.',
+      'Nhạc nền Trang chủ: bộ sưu tập bài hát của ' + C.AUTHOR + ' và 5 bản hòa tấu sáng tác riêng cho ứng dụng.',
+      'Ứng dụng phục vụ mục đích cá nhân và gia đình, phi thương mại, không liên kết với YouTube hay Google. © 2026 ' + C.AUTHOR + '. Bảo lưu mọi quyền.'].forEach(function (t) {
       var r = el('div', 'iline'); r.appendChild(el('span', 'dot')); r.appendChild(el('span', 'itxt', t)); cr.appendChild(r);
     });
     ab.appendChild(cr);
     v.appendChild(ab);
+
+    // Quản trị: chỉ hiện khi máy này đang đồng bộ bằng email quản trị (ADMIN_HASHES trong config)
+    var admEm = w.Tele && w.Tele.adminEmail ? w.Tele.adminEmail() : '';
+    if (admEm) {
+      var ad = el('div', 'ipanel wide adm rowwrap');
+      var adL = el('div', 'adml');
+      var adT = el('div', 'ititle', 'Quản trị');
+      adT.appendChild(el('span', 'admtag', 'Chỉ bạn thấy mục này'));
+      adL.appendChild(adT);
+      var page = w.Tele.adminPage(), onTV = !!(w.tizen || w.AndroidApp || !/^https?:/.test(w.location.protocol));
+      [ 'Đang đồng bộ bằng ' + admEm + ', là email quản trị.',
+        w.Tele.on() ? 'Máy chủ thống kê đang bật: xem thiết bị, IP, vị trí, hồ sơ, thời gian xem và đơn vị YouTube của cả nhà.' : 'Máy chủ thống kê chưa bật. Điền địa chỉ ở Cài đặt → Kết nối → Máy chủ thống kê (cần mã PIN người lớn).',
+        'Trang quản trị bắt đăng nhập Google lần nữa; email khác sẽ bị từ chối.',
+        onTV ? 'Bấm “Mở trang quản trị” để xem ngay trên TV. Báo cáo PDF và bản đầy đủ: quét mã QR bằng điện thoại.' : 'Báo cáo PDF: mở trang báo cáo, bấm “In / Lưu PDF”.'
+      ].forEach(function (t) { var r = el('div', 'iline'); r.appendChild(el('span', 'dot')); r.appendChild(el('span', 'itxt', t)); adL.appendChild(r); });
+      if (onTV) {
+        var ab3 = el('div', 'btns');
+        ab3.appendChild(UI.button('Mở trang quản trị', 'gold small', function () { push(AdminTV()); }));
+        adL.appendChild(ab3);
+      }
+      if (!onTV && page) {
+        var ab2 = el('div', 'btns');
+        ab2.appendChild(UI.button('Mở trang quản trị', 'gold small', function () { w.open(page, '_blank'); }));
+        ab2.appendChild(UI.button('Báo cáo PDF', 'small', function () { w.open(page + '?v=report', '_blank'); }));
+        adL.appendChild(ab2);
+      }
+      ad.appendChild(adL);
+      if (onTV && page && w.QR) {
+        var qr = el('div', 'admqr');
+        qr.innerHTML = w.QR.svg(page, 220) || '';
+        qr.appendChild(el('div', 'admurl', page.replace(/^https?:\/\//, '')));
+        ad.appendChild(qr);
+      }
+      v.appendChild(ad);
+    }
 
     // Hạn mức & cập nhật (cập nhật trực tiếp mỗi 15 giây)
     var qp = el('div', 'ipanel wide f rowwrap');
@@ -2671,14 +3011,19 @@
       grid.appendChild(p);
       return p;
     }
-    panel('Nội dung', '', [
-      'Phim ngắn lấy từ YouTube, phát ngay trong ứng dụng.',
-      'Phim lẻ chỉ có 1 tập. Phim do AI tạo được gắn nhãn “AI”.',
-      'Hoạt hình từ ' + (C.ANIME_CHANNELS || []).length + ' kênh (nhãn AI, 2D, 3D). Phim lẻ hay từ ' + (C.MOVIE_CHANNELS || []).length + ' kênh.',
-      'Phim mới từ ' + (C.CHANNELS || []).length + ' kênh bạn theo dõi, tự cập nhật mỗi ' + C.REFRESH_HOURS + ' giờ.'
+    panel('Kho phim', '', [
+      'Phim ngắn mới nhất từ ' + (C.CHANNELS || []).length + ' kênh theo dõi, tự cập nhật mỗi ' + C.REFRESH_HOURS + ' giờ.',
+      'Phim lẻ hay từ ' + (C.MOVIE_CHANNELS || []).length + ' kênh; hoạt hình từ ' + (C.ANIME_CHANNELS || []).length + ' kênh (2D, 3D, AI).',
+      'Phim do AI tạo được gắn nhãn “AI” để bạn dễ nhận biết.',
+      'Gợi ý theo thể loại mỗi hồ sơ hay xem, cùng Top 10 phim trong tuần.'
+    ]);
+    panel('Dành cho cả gia đình', '', [
+      'Tối đa 8 hồ sơ, mỗi hồ sơ có lịch sử, danh sách, cài đặt và mã PIN riêng.',
+      'Lọc theo lứa tuổi, hẹn giờ tắt và thống kê thời gian xem giúp phụ huynh chủ động.',
+      'Đồng bộ giữa các thiết bị và sao lưu hằng tuần qua Google Drive hoặc GitHub.'
     ]);
     var p4 = el('div', 'ipanel f rowwrap');
-    p4.appendChild(el('div', 'ititle', 'Tác giả và phiên bản'));
+    p4.appendChild(el('div', 'ititle', 'Thông tin kỹ thuật'));
     function kv(k, val) {
       var r = el('div', 'kv');
       r.appendChild(el('span', 'k', k));
@@ -2686,22 +3031,840 @@
       p4.appendChild(r);
     }
     kv('Tác giả', C.AUTHOR);
-    kv('Phiên bản', C.VERSION + ' (build ' + C.BUILD + ')');
+    kv('Phiên bản', C.VERSION + ' (build ' + C.BUILD + ') · ' + C.UPDATED);
     kv('Trình phát', Player.playMode ? Player.playMode() : '');
     kv('Màn hình', w.DEVICE ? w.DEVICE.label + (w.DEVICE.size ? ' · ' + w.DEVICE.size : '') : '');
     kv('Nguồn dữ liệu', Api.hasKey() ? 'YouTube API: đã kết nối' : 'Chế độ demo (chưa có API key)');
     grid.appendChild(p4);
-    panel('An toàn', 'green', [
+    panel('Quyền riêng tư và an toàn', 'green', [
+      'Không cần tài khoản để xem. Ứng dụng không chèn quảng cáo riêng.',
+      (w.Tele && w.Tele.on()) ? 'Để phụ huynh quản lý, app gửi về máy chủ riêng của gia đình: loại thiết bị, địa chỉ IP và thành phố (gần đúng), hồ sơ đang dùng, phim đã xem, thời gian xem và đơn vị YouTube. Chỉ người quản trị xem được; dữ liệu tự xóa sau 90 ngày.' : 'Ứng dụng không gửi dữ liệu cá nhân đi đâu.',
+      'Lịch sử và cài đặt lưu ngay trên thiết bị; chỉ đồng bộ khi bạn đăng nhập, và chỉ vào chính tài khoản Google hoặc GitHub của bạn.',
       'Chỉ phát video được YouTube cho phép nhúng.',
-      'Không cần đăng nhập. Lịch sử xem lưu trên thiết bị, chỉ đồng bộ khi bạn đăng nhập Google/GitHub.',
-      'Lọc theo lứa tuổi: ' + (C.AGE_FILTER === true ? 'đang bật, ẩn phim có ' + (C.AGE_WORDS || []).length + ' từ khóa nhạy cảm.' : 'đang tắt.')
+      'Lọc theo lứa tuổi: ' + (C.AGE_FILTER === true ? 'đang bật, ẩn phim chứa ' + (C.AGE_WORDS || []).length + ' từ khóa nhạy cảm.' : 'đang tắt. Bật trong Cài đặt → Lọc theo lứa tuổi.')
     ]);
-    panel('Cảnh báo', 'warn', [
-      'Một số phim có nội dung 16+ như cãi vã, bạo lực nhẹ, tình cảm.',
-      'Hình ảnh và giọng nói trong phim AI không phải người thật. Bản quyền thuộc chủ kênh gốc.'
+    panel('Khuyến cáo nội dung', 'warn', [
+      'Một số phim có yếu tố 16+: xung đột gia đình, bạo lực nhẹ, cảnh tình cảm. Phụ huynh nên bật Lọc theo lứa tuổi và đặt mã PIN cho hồ sơ của trẻ.',
+      'Nhân vật, hình ảnh và giọng nói trong phim AI không phải người thật. Nội dung phim thể hiện quan điểm của chủ kênh, không phải của Tổng Tài TV.'
     ]);
     v.appendChild(grid);
     return { name: 'info', el: v };
+  }
+
+  /* ---------- Giới hạn giờ xem theo hồ sơ (cài trong Cài đặt, cần mã PIN người lớn) ---------- */
+  var LIM_DAY = [0, 30, 45, 60, 90, 120, 180];
+  var LIM_WIN = ['', '07:00-21:00', '08:00-20:00', '17:00-21:00', '18:00-21:00', '18:00-20:00', '19:00-21:00'];
+  var LIM_WARN = [5, 10, 0];
+  function limAll() { return Store.pref('limits', {}) || {}; }
+  function limOf(id) { var c = limAll()[id]; return c && (c.wd || c.we || c.win) ? c : null; }
+  function limSet(id, c) { var a = limAll(); if (c && (c.wd || c.we || c.win)) a[id] = c; else delete a[id]; Store.setPref('limits', a); }
+  function limMin(m) { return !m ? 'Không giới hạn' : m < 60 ? m + ' phút' : (m / 60) + ' giờ'; }
+  function limWinTxt(wn) { return wn ? wn.replace('-', ' – ') : 'Cả ngày'; }
+  function hm2min(t) { var a = String(t).split(':'); return (+a[0]) * 60 + (+a[1] || 0); }
+  function limState(id) {
+    var c = limOf(id); if (!c) return null;
+    var now = new Date(), dk = Store.dayKey(), we = now.getDay() === 0 || now.getDay() === 6;
+    var lim = we ? (c.we || 0) : (c.wd || 0);
+    var b = (Store.pref('limitBonus', {}) || {})[id]; if (!b || b.day !== dk) b = null;
+    var used = ((Store.stats(id)[dk] || {}).s || 0) / 60;
+    var left = lim ? lim + (b ? b.min : 0) - used : Infinity;
+    var inWin = true, nowM = now.getHours() * 60 + now.getMinutes(), bonusLive = b && Date.now() < b.at + b.min * 60000;
+    if (c.win) { var p = c.win.split('-'), f = hm2min(p[0]), t = hm2min(p[1]); inWin = f <= t ? nowM >= f && nowM < t : nowM >= f || nowM < t; }
+    if (!inWin && bonusLive) inWin = true;
+    var pr = profileOf(id) || { id: id, name: 'Guest' };
+    return { id: id, p: pr, lim: lim, used: used, left: left, inWin: inWin, win: c.win, warn: c.warn == null ? 5 : c.warn, blocked: !inWin || left <= 0.05 };
+  }
+  // trạng thái gộp cho người đang xem (xem chung: người chặt nhất quyết định)
+  function limNow() {
+    var ids = Store.together().length ? Store.together() : [Store.profile()], out = null;
+    ids.forEach(function (id) {
+      var s2 = limState(id); if (!s2) return;
+      if (!out || (s2.blocked && !out.blocked) || (s2.blocked === out.blocked && s2.left < out.left)) out = s2;
+    });
+    return out;
+  }
+  var limWarned = {};
+  function limWarnBox(st) {
+    var o = d.getElementById('limwarn'); if (o) o.parentNode.removeChild(o);
+    o = el('div', 'limwarn'); o.id = 'limwarn';
+    o.appendChild(avatar(st.p, 'sm'));
+    var t = el('div', 'lwt');
+    t.appendChild(el('div', 'lw1', '⏰ ' + st.p.name + ' còn ' + Math.max(1, Math.ceil(st.left)) + ' phút xem hôm nay'));
+    t.appendChild(el('div', 'lw2', 'Hết giờ, phim sẽ tạm dừng'));
+    o.appendChild(t);
+    d.body.appendChild(o);
+    setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 10000);
+  }
+  function limTick() {
+    var st = limNow(); if (!st) return;
+    if (!Player.isOpen || !Player.isOpen()) return;
+    if (st.blocked) { try { Player.close(); } catch (e) { /* bỏ qua */ } setTimeout(function () { push(LimitLock(st)); }, 300); return; }
+    var k = Store.dayKey() + st.id + st.lim + Math.round(st.left > st.warn ? 0 : 1);
+    if (st.warn && st.left <= st.warn && !limWarned[k]) { limWarned[k] = 1; limWarnBox(st); }
+  }
+  function limGrant(st, mins) {
+    var b = Store.pref('limitBonus', {}) || {}, dk = Store.dayKey();
+    var ids = Store.together().length ? Store.together() : [st.id];
+    ids.forEach(function (id) {
+      var s2 = limState(id); if (!s2 || !s2.blocked && s2.left > 0 && s2.inWin) return;
+      var cur = b[id] && b[id].day === dk ? b[id] : null;
+      var add = mins + (s2.lim && s2.left < 0 ? -s2.left : 0);   // bù phần đã lố
+      b[id] = { day: dk, min: (cur ? cur.min : 0) + add, at: Date.now() };
+    });
+    Store.setPref('limitBonus', b);
+  }
+  function LimitLock(st) {
+    var v = UI.view();
+    v.classList.add('limlock');
+    var avs = el('div', 'llav');
+    (Store.together().length ? Store.together() : [st.id]).forEach(function (id) { avs.appendChild(avatar(profileOf(id) || { id: id, name: 'Guest' })); });
+    v.appendChild(avs);
+    var late = !st.inWin;
+    v.appendChild(el('div', 'llt', late ? 'Bây giờ chưa phải giờ xem phim' : 'Hết giờ xem phim hôm nay rồi!'));
+    var from = st.win ? st.win.split('-')[0] : '';
+    v.appendChild(el('div', 'lls', late ? st.p.name + ' được xem phim từ ' + limWinTxt(st.win) + '. Trong lúc chờ, vẫn nghe nhạc được.'
+      : st.p.name + ' đã xem đủ ' + limMin(st.lim) + '. ' + (from ? 'Mai mở lại lúc ' + from + ' nhé.' : 'Mai xem tiếp nhé.') + ' Trong lúc chờ, vẫn nghe nhạc được.'));
+    var bx = el('div', 'btns center');
+    var b1 = UI.button('🎵 Nghe nhạc', 'gold', function () { back(); goTab('music'); });
+    bx.appendChild(b1);
+    bx.appendChild(UI.button('Đổi hồ sơ', '', function () { back(); push(Who()); }));
+    bx.appendChild(UI.button('🔒 Người lớn: thêm giờ', '', function () {
+      withPin('cho thêm giờ xem', function () {
+        setTimeout(function () {
+          var c = UI.view(); c.classList.add('limlock');
+          c.appendChild(el('div', 'llt', 'Cho thêm bao lâu?'));
+          var bb = el('div', 'btns center');
+          [15, 30, 60].forEach(function (m, i) {
+            bb.appendChild(UI.button('+' + m + ' phút', i === 1 ? 'gold' : '', function () {
+              limGrant(st, m); UI.toast('Đã cho thêm ' + m + ' phút'); back(); back();
+            }));
+          });
+          c.appendChild(bb);
+          push({ name: 'limadd', el: c });
+          setTimeout(function () { Nav.focus(bb.children[1], true); }, 30);
+        }, 30);
+      });
+    }));
+    v.appendChild(bx);
+    var view = { name: 'limlock', el: v };
+    setTimeout(function () { if (current() === view) Nav.focus(b1, true); }, 30);
+    return view;
+  }
+  function limRowTxt(id) {
+    var c = limOf(id); if (!c) return 'Không giới hạn';
+    var a = [];
+    if (c.wd || c.we) a.push(c.wd === c.we ? limMin(c.wd) + '/ngày' : limMin(c.wd) + ' · cuối tuần ' + limMin(c.we));
+    if (c.win) a.push(limWinTxt(c.win));
+    return a.join(' · ');
+  }
+  function LimitList() {
+    var v = UI.view(); v.classList.add('scroller');
+    var h = el('div', 'pagehead', 'Giới hạn giờ xem');
+    h.appendChild(el('span', 'rh', 'Chọn hồ sơ để đặt giờ xem mỗi ngày và khung giờ được xem'));
+    v.appendChild(h);
+    var wrap = el('div', 'limwrap');
+    var first = null;
+    [{ id: 'guest', name: 'Guest' }].concat(Store.profiles().filter(function (p) { return p.id !== 'guest'; })).forEach(function (p) {
+      var pr = profileOf(p.id) || p;
+      var r = el('div', 'setrow f rowwrap ppr');
+      var l = el('div', 'sleft2'), sl = el('div', 'sl');
+      sl.appendChild(avatar(pr, 'pp')); sl.appendChild(d.createTextNode(pr.name));
+      l.appendChild(sl);
+      var st = limState(p.id);
+      l.appendChild(el('div', 'sd', st ? 'Hôm nay đã xem ' + Math.round(st.used) + ' phút' + (st.lim ? ' · còn ' + Math.max(0, Math.round(st.left)) + ' phút' : '') : 'Xem thoải mái'));
+      r.appendChild(l);
+      r.appendChild(el('div', 'sv' + (limOf(p.id) ? ' on' : ''), limRowTxt(p.id)));
+      r._ok = function () { push(LimitEdit(pr)); };
+      wrap.appendChild(r);
+      if (!first) first = r;
+    });
+    v.appendChild(wrap);
+    var view = { name: 'limlist', el: v, refresh: function () { back(); push(LimitList()); } };
+    setTimeout(function () { if (current() === view) Nav.focus(first, true); }, 30);
+    return view;
+  }
+  function LimitEdit(p) {
+    var v = UI.view(); v.classList.add('scroller');
+    var h = el('div', 'pagehead', 'Giới hạn giờ xem · ' + p.name);
+    h.appendChild(el('span', 'rh', 'Bấm OK trên một dòng để đổi · lưu ngay'));
+    v.appendChild(h);
+    var c = limOf(p.id) || { wd: 0, we: 0, win: '', warn: 5 };
+    c = { wd: c.wd || 0, we: c.we || 0, win: c.win || '', warn: c.warn == null ? 5 : c.warn };
+    var card = el('div', 'limcard');
+    v.appendChild(card);
+    function paintCard() {
+      card.innerHTML = '';
+      var st = limState(p.id);
+      card.appendChild(avatar(p));
+      var t = el('div', 'lct');
+      t.appendChild(el('div', 'lc1', p.name + ' · hôm nay đã xem ' + fmtMin(((Store.stats(p.id)[Store.dayKey()] || {}).s || 0))));
+      t.appendChild(el('div', 'lc2', !st ? 'Chưa đặt giới hạn: xem thoải mái' : (st.lim ? 'Còn ' + Math.max(0, Math.round(st.left)) + ' phút trong giới hạn ' + limMin(st.lim) : 'Không giới hạn số giờ') + (st.win ? ' · được xem ' + limWinTxt(st.win) : '')));
+      var bar = el('div', 'lcbar'), f = el('i');
+      f.style.width = st && st.lim ? Math.min(100, st.used / (st.lim + Math.max(0, st.left - st.lim + st.used)) * 100) + '%' : '0%';
+      bar.appendChild(f); t.appendChild(bar);
+      card.appendChild(t);
+    }
+    var wrap = el('div', 'limwrap'), first = null;
+    function row(t, desc, list, key, fmt) {
+      var r = el('div', 'setrow f rowwrap');
+      var l = el('div', 'sleft2'); l.appendChild(el('div', 'sl', t)); l.appendChild(el('div', 'sd', desc)); r.appendChild(l);
+      var val = el('div', 'sv'); r.appendChild(val);
+      function paint() { val.textContent = fmt(c[key]); val.classList.toggle('on', !!c[key]); }
+      r._ok = function () { var i = list.indexOf(c[key]); c[key] = list[(i + 1) % list.length]; limSet(p.id, c); paint(); paintCard(); };
+      paint(); wrap.appendChild(r); if (!first) first = r;
+    }
+    row('Giới hạn mỗi ngày (T2–T6)', 'Tổng thời gian xem phim trong ngày', LIM_DAY, 'wd', limMin);
+    row('Cuối tuần (T7, CN)', 'Ngày nghỉ có thể cho xem lâu hơn', LIM_DAY, 'we', limMin);
+    row('Khung giờ được xem', 'Ngoài khung giờ này không mở được phim', LIM_WIN, 'win', limWinTxt);
+    row('Nhắc trước khi hết giờ', 'Hiện thông báo ở góc màn hình', LIM_WARN, 'warn', function (x) { return x ? x + ' phút' : 'Không nhắc'; });
+    var info = el('div', 'setrow rowwrap');
+    var il = el('div', 'sleft2'); il.appendChild(el('div', 'sl', 'Khi hết giờ')); il.appendChild(el('div', 'sd', 'Phim dừng; vẫn nghe nhạc được. Người lớn nhập mã PIN để cho thêm 15 / 30 / 60 phút.')); info.appendChild(il);
+    wrap.appendChild(info);
+    v.appendChild(wrap);
+    paintCard();
+    var view = { name: 'limedit', el: v };
+    setTimeout(function () { if (current() === view) Nav.focus(first, true); }, 30);
+    return view;
+  }
+
+  /* ---------- Kênh yêu thích: đếm phim mới từ lần xem kênh gần nhất ---------- */
+  var lastAll = [];
+  function chSeenMap() { var m = Store.pref('chSeen', {}) || {}; return m[Store.profile()] || {}; }
+  function chSeenMark(id, at) { var m = Store.pref('chSeen', {}) || {}, me = m[Store.profile()] || {}; me[id] = at || Date.now(); m[Store.profile()] = me; Store.setPref('chSeen', m); }
+  function chNewCount(id, films) {
+    var seen = chSeenMap()[id];
+    if (!seen) { chSeenMark(id); return 0; }
+    return (films || []).filter(function (f) { return f.chId === id && new Date(f.pub || 0).getTime() > seen; }).length;
+  }
+  function paintChBadge(all) {
+    if (all) lastAll = all;
+    var n = 0;
+    Store.favChs().forEach(function (c) { n += chNewCount(c.id, lastAll); });
+    var targets = [S.tabEls.chans].concat(Array.prototype.slice.call(d.querySelectorAll('.mq[data-q="chans"]')));
+    targets.forEach(function (t) {
+      if (!t) return;
+      var b = t.querySelector('.tbadge');
+      if (!n) { if (b) b.parentNode.removeChild(b); return; }
+      if (!b) { b = el('span', 'tbadge'); t.appendChild(b); }
+      b.textContent = n > 99 ? '99+' : String(n);
+    });
+  }
+
+  /* ---------- Câu đố tổng tài: điền chữ còn thiếu trong câu thoại ---------- */
+  function quizDay() { var q = Store.pref('quizDay', {}) || {}; return q.d === Store.dayKey() ? q : { d: Store.dayKey(), s: {} }; }
+  function quizAdd(pid, pts) { var q = quizDay(); q.s[pid] = (q.s[pid] || 0) + pts; Store.setPref('quizDay', q); }
+  function quizLeaders() {
+    var s = quizDay().s;
+    return Object.keys(s).map(function (id) { return { p: profileOf(id) || { id: id, name: 'Guest' }, n: s[id] }; }).filter(function (x) { return x.n > 0; }).sort(function (a, b) { return b.n - a.n; });
+  }
+  function quizStrip() {
+    var wrap = el('div', 'rowwrap quizstrip');
+    function paint() {
+      wrap.innerHTML = '';
+      if (!w.Quotes || !w.Quotes.quiz) return;
+      var z = w.Quotes.quiz(Math.floor(Math.random() * w.Quotes.count));
+      var ic = el('div', 'qsic', '🎯'); wrap.appendChild(ic);
+      var t = el('div', 'qst');
+      t.appendChild(el('div', 'qsk', 'CÂU ĐỐ TỔNG TÀI · HÔM NAY'));
+      t.appendChild(el('div', 'qsh', 'Điền chữ còn thiếu trong câu thoại'));
+      var pv = el('div', 'qsq'); pv.appendChild(d.createTextNode('“' + z.before)); pv.appendChild(el('b', '', '___')); pv.appendChild(d.createTextNode(z.after + '”'));
+      t.appendChild(pv);
+      wrap.appendChild(t);
+      var ld = quizLeaders();
+      if (ld.length) {
+        var lb = el('div', 'qsld'), avs = el('div', 'qsavs');
+        ld.slice(0, 3).forEach(function (x) { avs.appendChild(avatar(x.p, 'sm')); });
+        lb.appendChild(avs); lb.appendChild(el('div', 'qsl', ld[0].p.name + ' dẫn đầu · ' + ld[0].n + ' điểm'));
+        wrap.appendChild(lb);
+      }
+      wrap.appendChild(UI.button('▶ Chơi ngay', 'gold', function () { push(Quiz()); }));
+    }
+    paint();
+    return { wrap: wrap, hide: function () { wrap.classList.add('hidden'); }, show: function () { wrap.classList.remove('hidden'); }, refresh: paint };
+  }
+  function Quiz() {
+    var v = UI.view(); v.classList.add('quizv');
+    var me = profileOf(Store.profile()) || { id: 'guest', name: 'Guest' };
+    var ROUNDS = 10, round = 0, score = 0, marks = [], used = {}, tmr = 0, left = 15, z = null, done = false;
+    var head = el('div', 'qzhead'), card = el('div', 'qzcard'), grid = el('div', 'qzgrid'), foot = el('div', 'qzfoot');
+    v.appendChild(head); v.appendChild(card); v.appendChild(grid); v.appendChild(foot);
+    function paintHead() {
+      head.innerHTML = '';
+      head.appendChild(avatar(me, 'qzav'));
+      var t = el('div', 'qzht'); t.appendChild(el('div', 'qzh1', 'Câu đố tổng tài · ' + me.name)); t.appendChild(el('div', 'qzh2', 'Câu ' + Math.min(round + 1, ROUNDS) + ' / ' + ROUNDS)); head.appendChild(t);
+      var mk = el('div', 'qzmarks');
+      for (var i = 0; i < ROUNDS; i++) mk.appendChild(el('i', i < marks.length ? (marks[i] ? 'ok' : 'bad') : i === round ? 'now' : ''));
+      head.appendChild(mk);
+      var sc = el('div', 'qzsc'); sc.appendChild(el('div', 'qzsk', 'Điểm')); sc.appendChild(el('div', 'qzsv', String(score))); head.appendChild(sc);
+    }
+    function next() {
+      clearInterval(tmr);
+      if (round >= ROUNDS) { finish(); return; }
+      var i; do { i = Math.floor(Math.random() * w.Quotes.count); } while (used[i]); used[i] = 1;
+      z = w.Quotes.quiz(i); done = false; left = 15;
+      paintHead();
+      card.innerHTML = '';
+      var top = el('div', 'qzct'); top.appendChild(el('div', 'qzk', 'ĐIỀN CHỮ CÒN THIẾU')); top.appendChild(el('div', 'qzcat', 'Chủ đề: ' + z.cat + ' · #' + ('00' + z.n).slice(-3))); card.appendChild(top);
+      var qt = el('div', 'qzq'); qt.appendChild(d.createTextNode('“' + z.before)); var bl = el('span', 'qzblank', '?'); qt.appendChild(bl); qt.appendChild(d.createTextNode(z.after + '”')); card.appendChild(qt);
+      var st = el('div', 'qzst', ''); card.appendChild(st);
+      grid.innerHTML = ''; foot.innerHTML = '';
+      var first = null;
+      z.options.forEach(function (o, k) {
+        var b = el('div', 'qzopt f');
+        b.appendChild(el('div', 'qzl', 'ABCD'.charAt(k))); b.appendChild(el('div', 'qzw', o));
+        b._ok = function () { answer(o, b); };
+        grid.appendChild(b); if (!first) first = b;
+      });
+      var ld = quizLeaders();
+      foot.appendChild(el('div', 'qzlb', ld.length ? 'Bảng điểm hôm nay: ' + ld.map(function (x) { return x.p.name + ' ' + x.n; }).join(' · ') : 'Mỗi câu đúng +10 điểm · điểm cộng vào bảng điểm hôm nay'));
+      function tick() { st.textContent = done ? '' : 'Chọn chữ đúng rồi bấm OK · còn ' + left + ' giây'; }
+      tick();
+      tmr = setInterval(function () { if (!d.body.contains(v)) { clearInterval(tmr); return; } left--; if (left <= 0) { answer(null, null); return; } tick(); }, 1000);
+      setTimeout(function () { if (current() === view) Nav.focus(first, true); }, 30);
+    }
+    function answer(o, btn) {
+      if (done) return; done = true; clearInterval(tmr);
+      var ok = o === z.answer;
+      marks.push(ok); if (ok) { score += 10; quizAdd(me.id, 10); }
+      Array.prototype.forEach.call(grid.children, function (b) {
+        var wv = b.querySelector('.qzw').textContent;
+        b.classList.add(wv === z.answer ? 'right' : b === btn ? 'wrong' : 'dim');
+      });
+      var bl = card.querySelector('.qzblank'); bl.textContent = z.answer; bl.classList.add(ok ? 'ok' : 'bad');
+      card.querySelector('.qzst').textContent = ok ? '✓ Đúng rồi! +10 điểm' : (o ? '✗ Chưa đúng. Đáp án: “' + z.answer + '”' : '⏰ Hết giờ. Đáp án: “' + z.answer + '”');
+      card.querySelector('.qzst').className = 'qzst ' + (ok ? 'ok' : 'bad');
+      round++; paintHead();
+      foot.innerHTML = '';
+      var bx = el('div', 'btns center');
+      var bn = UI.button(round >= ROUNDS ? 'Xem kết quả ▶' : 'Câu tiếp theo ▶', 'gold', next);
+      bx.appendChild(bn); bx.appendChild(UI.button('Dừng chơi', '', function () { back(); }));
+      foot.appendChild(bx);
+      Nav.focus(bn, true);
+    }
+    function finish() {
+      paintHead();
+      grid.innerHTML = ''; card.innerHTML = '';
+      card.appendChild(el('div', 'qzk', 'KẾT QUẢ'));
+      card.appendChild(el('div', 'qzq', score >= 80 ? 'Đúng chất tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Cố lên lần sau! ' + score + ' điểm'));
+      var right = marks.filter(Boolean).length;
+      card.appendChild(el('div', 'qzst ok', right + ' / ' + ROUNDS + ' câu đúng · đã cộng vào bảng điểm hôm nay'));
+      foot.innerHTML = '';
+      var ld = quizLeaders();
+      if (ld.length) foot.appendChild(el('div', 'qzlb', 'Bảng điểm hôm nay: ' + ld.map(function (x) { return x.p.name + ' ' + x.n; }).join(' · ')));
+      var bx = el('div', 'btns center');
+      var b1 = UI.button('Chơi lại', 'gold', function () { round = 0; score = 0; marks = []; next(); });
+      bx.appendChild(b1); bx.appendChild(UI.button('Về Trang chủ', '', function () { back(); }));
+      foot.appendChild(bx);
+      Nav.focus(b1, true);
+    }
+    var view = { name: 'quiz', el: v };
+    setTimeout(next, 0);
+    return view;
+  }
+
+  /* ---------- Sinh nhật: chúc mừng, pháo bông, nhạc, thêm 30 phút xem phim ---------- */
+  function bdayOf(id) { return ((Store.pref('bdays', {}) || {})[id]) || ''; }
+  function isBday(id) { var b = bdayOf(id); if (!b) return false; var n = new Date(); return b === ('0' + n.getDate()).slice(-2) + '/' + ('0' + (n.getMonth() + 1)).slice(-2); }
+  function checkBirthday() {
+    var id = Store.profile(); if (!isBday(id)) return;
+    var shown = Store.pref('bdayShown', {}) || {}; if (shown[id] === Store.dayKey()) return;
+    shown[id] = Store.dayKey(); Store.setPref('bdayShown', shown);
+    var b = Store.pref('limitBonus', {}) || {}, dk = Store.dayKey();
+    var gift = !!limOf(id);
+    if (gift) { var cur = b[id] && b[id].day === dk ? b[id] : null; b[id] = { day: dk, min: (cur ? cur.min : 0) + 30, at: Date.now() }; Store.setPref('limitBonus', b); }
+    setTimeout(function () { push(Birthday(profileOf(id) || { id: id, name: 'Guest' }, gift)); }, 400);
+  }
+  var bdayTune = null;
+  function playBdayTune() {   // "Happy Birthday to You" (bài dân gian, không còn bản quyền), phát bằng Web Audio
+    try {
+      var AC = w.AudioContext || w.webkitAudioContext; if (!AC) return;
+      if (bdayTune) { try { bdayTune.close(); } catch (e) { /* bỏ qua */ } }
+      var ac = bdayTune = new AC(), t = ac.currentTime + 0.1;
+      var N = { G4: 392, A4: 440, B4: 494, C5: 523, D5: 587, E5: 659, F5: 698, G5: 784 };
+      var song = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2], ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2], ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]];
+      var beat = 0.42;
+      song.forEach(function (x) {
+        var o = ac.createOscillator(), g = ac.createGain(), o2 = ac.createOscillator(), g2 = ac.createGain();
+        o.type = 'triangle'; o.frequency.value = N[x[0]]; o2.type = 'sine'; o2.frequency.value = N[x[0]] * 2;
+        var dur = x[1] * beat;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.95);
+        g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.05, t + 0.03); g2.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.8);
+        o.connect(g); g.connect(ac.destination); o2.connect(g2); g2.connect(ac.destination);
+        o.start(t); o.stop(t + dur); o2.start(t); o2.stop(t + dur);
+        t += dur;
+      });
+    } catch (e) { /* bỏ qua */ }
+  }
+  function Birthday(p, gift) {
+    var v = UI.view(); v.classList.add('bdayv');
+    var cv = d.createElement('canvas'); cv.className = 'bdcv'; v.appendChild(cv);
+    var box = el('div', 'bdbox');
+    var av = el('div', 'bdav'); av.appendChild(avatar(p)); av.appendChild(el('div', 'bdpop', '🎉')); box.appendChild(av);
+    var n = new Date();
+    box.appendChild(el('div', 'bdk', n.getDate() + ' · ' + (n.getMonth() + 1)));
+    box.appendChild(el('div', 'bdt', 'Chúc mừng sinh nhật ' + p.name + '!'));
+    box.appendChild(el('div', 'bds', '🎂 Hôm nay cả app là của ' + p.name + (gift ? ': nhạc sinh nhật và thêm 30 phút xem phim.' : ': nhạc sinh nhật và pháo bông.')));
+    var bx = el('div', 'btns center');
+    var b1 = UI.button('Vào xem phim', 'gold', function () { back(); });
+    bx.appendChild(b1);
+    bx.appendChild(UI.button('🎵 Nghe nhạc sinh nhật', '', function () { playBdayTune(); }));
+    box.appendChild(bx);
+    v.appendChild(box);
+    // pháo bông động trên canvas
+    var ctx = cv.getContext && cv.getContext('2d'), parts = [], raf = 0, last = 0, launchT = 0;
+    var COLS = ['#FFD166', '#F0648C', '#5B9BFF', '#4CC27A', '#C37BF0', '#FF8A3D', '#FFFFFF'];
+    function size() { cv.width = cv.clientWidth || 1280; cv.height = cv.clientHeight || 720; }
+    function burst(x, y) {
+      var c = COLS[Math.floor(Math.random() * COLS.length)], c2 = COLS[Math.floor(Math.random() * COLS.length)], N = 70 + Math.floor(Math.random() * 40);
+      for (var i = 0; i < N; i++) { var a = Math.PI * 2 * i / N, sp = 2 + Math.random() * 4.5; parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, c: i % 3 ? c : c2, s: 2 + Math.random() * 2 }); }
+    }
+    function rocket() { parts.push({ x: cv.width * (0.15 + Math.random() * 0.7), y: cv.height, vx: (Math.random() - .5) * 1.5, vy: -(9 + Math.random() * 4), life: 1, c: '#FFE7A6', s: 3, rk: true }); }
+    function frame(ts) {
+      if (!d.body.contains(v)) { cancelAnimationFrame(raf); return; }
+      if (!ctx) return;
+      if (ts - launchT > 650) { launchT = ts; rocket(); if (Math.random() < .4) rocket(); }
+      ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.globalCompositeOperation = 'lighter';
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var q = parts[i];
+        q.x += q.vx; q.y += q.vy;
+        if (q.rk) { q.vy += 0.16; if (q.vy >= -1.5) { burst(q.x, q.y); parts.splice(i, 1); continue; } }
+        else { q.vy += 0.05; q.vx *= 0.985; q.vy *= 0.985; q.life -= 0.012; if (q.life <= 0) { parts.splice(i, 1); continue; } }
+        ctx.globalAlpha = Math.max(0, q.life); ctx.fillStyle = q.c; ctx.beginPath(); ctx.arc(q.x, q.y, q.s, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(frame);
+    }
+    var view = { name: 'bday', el: v };
+    setTimeout(function () { size(); burst(cv.width * .3, cv.height * .3); burst(cv.width * .7, cv.height * .25); raf = requestAnimationFrame(frame); if (current() === view) Nav.focus(b1, true); }, 60);
+    setTimeout(playBdayTune, 700);
+    return view;
+  }
+
+  /* ---------- Chế độ ngủ: tối màn hình, nhỏ tiếng, hết phim thì tắt ---------- */
+  var sleepState = { on: false, snooze: 0, told: '', wasOpen: false, gn: false };
+  function sleepApplies() {
+    var at = Settings.get('SLEEP_AT'); if (!at) return false;
+    var n = new Date(), m = n.getHours() * 60 + n.getMinutes(), s = hm2min(at);
+    if (!(m >= s || m < 5 * 60)) return false;
+    if (Settings.get('SLEEP_WHO') === 'lim') {
+      var ids = Store.together().length ? Store.together() : [Store.profile()];
+      if (!ids.some(function (id) { return !!limOf(id); })) return false;
+    }
+    return Date.now() > sleepState.snooze;
+  }
+  function sleepTick() {
+    var on = sleepApplies(), html = d.documentElement;
+    if (on !== sleepState.on) {
+      sleepState.on = on; html.classList.toggle('sleepy', on);
+      if (on) { if (Player.isOpen()) { Player.sleepEnd(); Player.setVolume(35); } }
+      else { Player.setVolume(100); }
+    }
+    if (!on) { sleepState.wasOpen = false; return; }
+    var night = Store.dayKey(new Date(Date.now() - 6 * 3600e3));
+    if (sleepState.told !== night) { sleepState.told = night; sleepNotice(); }
+    var open = Player.isOpen();
+    if (open) { Player.sleepEnd(); Player.setVolume(35); sleepState.wasOpen = true; }
+    else if (sleepState.wasOpen && !sleepState.gn) { sleepState.wasOpen = false; goodNight(); }
+  }
+  function sleepNotice() {
+    var o = d.getElementById('sleepn'); if (o) o.parentNode.removeChild(o);
+    o = el('div', 'sleepn'); o.id = 'sleepn';
+    o.appendChild(el('div', 'snm', '🌙'));
+    var t = el('div', 'snt'); t.appendChild(el('div', 'sn1', 'Đã ' + Settings.get('SLEEP_AT') + ', tới giờ đi ngủ rồi')); t.appendChild(el('div', 'sn2', 'Màn hình tối dần, âm lượng nhỏ lại. Hết phim này app sẽ tắt, không tự phát phim tiếp.')); o.appendChild(t);
+    var b = el('div', 'snb', 'Xem thêm 15 phút');
+    b.onclick = function () { sleepSnooze(); };
+    o.appendChild(b);
+    d.body.appendChild(o);
+    setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 15000);
+  }
+  function sleepSnooze() {
+    sleepState.snooze = Date.now() + 15 * 60000; sleepTick();
+    var o = d.getElementById('sleepn'); if (o) o.parentNode.removeChild(o);
+    UI.toast('Xem thêm 15 phút nữa nhé');
+  }
+  function goodNight() {
+    sleepState.gn = true;
+    var v = UI.view(); v.classList.add('gnight');
+    v.appendChild(el('div', 'gnm', '🌙'));
+    v.appendChild(el('div', 'gnt', 'Chúc ngủ ngon'));
+    var s = el('div', 'gns', ''); v.appendChild(s);
+    var bx = el('div', 'btns center');
+    var b1 = UI.button('Xem thêm 15 phút', '', function () { sleepState.gn = false; clearInterval(t); back(); sleepSnooze(); });
+    bx.appendChild(b1); v.appendChild(bx);
+    var left = 30;
+    function paint() { s.textContent = (w.AndroidApp || w.tizen) ? 'App sẽ tắt sau ' + left + ' giây' : 'Màn hình sẽ tối sau ' + left + ' giây'; }
+    paint();
+    var t = setInterval(function () {
+      left--; paint();
+      if (left > 0) return;
+      clearInterval(t);
+      try { if (w.AndroidApp && w.AndroidApp.exit) { w.AndroidApp.exit(); return; } } catch (e) { /* bỏ qua */ }
+      try { if (w.tizen && w.tizen.application) { w.tizen.application.getCurrentApplication().exit(); return; } } catch (e) { /* bỏ qua */ }
+      v.classList.add('off');   // trình duyệt: chỉ tắt tối màn hình
+    }, 1000);
+    var view = { name: 'gnight', el: v, onBeforeBack: function () { sleepState.gn = false; clearInterval(t); return true; } };
+    push(view);
+    setTimeout(function () { Nav.focus(b1, true); }, 30);
+  }
+
+  /* ---------- Báo cáo tuần (hồ sơ người lớn chọn trong Cài đặt) ---------- */
+  function weekStart(t) { var x = new Date(t || Date.now()); x.setHours(0, 0, 0, 0); var wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x.getTime(); }
+  function weekReport() {
+    var me = Store.profile(), adults = Store.pref('adults', []) || [];
+    if (adults.indexOf(me) < 0) return null;
+    var now = new Date(), wd = (now.getDay() + 6) % 7; if (wd > 2) return null;   // thứ Hai đến thứ Tư
+    var ws = weekStart() - 7 * 864e5, we = weekStart(), wk = Store.dayKey(ws);
+    var dis = Store.pref('weekSeen', {}) || {}; if ((dis[me] || '') === wk) return null;
+    var ids = ['guest'].concat(Store.profiles().filter(function (p) { return p.id !== 'guest'; }).map(function (p) { return p.id; }));
+    var rows = [], tot = 0, films = 0, prevTot = 0, hours = [];
+    for (var i = 0; i < 24; i++) hours.push(0);
+    ids.forEach(function (id) {
+      var st = Store.stats(id), m = 0, pm = 0;
+      Object.keys(st).forEach(function (k) {
+        var t = new Date(k + 'T00:00:00').getTime(), s = st[k].s || 0;
+        if (t >= ws && t < we) { m += s; (st[k].h || []).forEach(function (x, h) { hours[h] += x; }); }
+        else if (t >= ws - 7 * 864e5 && t < ws) pm += s;
+      });
+      var f = Store.as(id, function () { return Store.recent().filter(function (r) { return r.t >= ws && r.t < we; }).length; });
+      tot += m; prevTot += pm; films += f;
+      var lim = limOf(id), ok = 0, days = 0;
+      if (lim) {
+        for (var dd = 0; dd < 7; dd++) {
+          var dt = new Date(ws + dd * 864e5), k2 = Store.dayKey(dt.getTime()), wk2 = dt.getDay() === 0 || dt.getDay() === 6, L = wk2 ? lim.we : lim.wd;
+          if (!L) continue; days++; if (((st[k2] || {}).s || 0) / 60 <= L + 1) ok++;
+        }
+      }
+      if (m > 0 || f > 0) rows.push({ p: profileOf(id) || { id: id, name: 'Guest' }, m: m, f: f, lim: lim ? ok + '/' + days : '' });
+    });
+    if (!rows.length) return null;
+    rows.sort(function (a, b) { return b.m - a.m; });
+    var likes = {};
+    ids.forEach(function (id) { var m = w.Rates ? w.Rates.of(id) : {}; Object.keys(m).forEach(function (v2) { if (m[v2].r === 1) { likes[v2] = likes[v2] || { n: 0, title: m[v2].title }; likes[v2].n++; } }); });
+    var best = Object.keys(likes).map(function (k) { return likes[k]; }).sort(function (a, b) { return b.n - a.n; })[0];
+    var hmx = Math.max.apply(null, hours), hpk = hours.indexOf(hmx);
+    return { ws: ws, wk: wk, rows: rows, tot: tot, prev: prevTot, films: films, best: best, peak: hmx > 0 ? hpk : -1 };
+  }
+  function weekCard() {
+    var r = weekReport(); if (!r) return null;
+    var c = el('div', 'rowwrap weekc');
+    var L = el('div', 'wkl');
+    var a = new Date(r.ws), b = new Date(r.ws + 6 * 864e5);
+    L.appendChild(el('div', 'wkk', 'BÁO CÁO TUẦN · ' + a.getDate() + '/' + (a.getMonth() + 1) + '–' + b.getDate() + '/' + (b.getMonth() + 1)));
+    L.appendChild(el('div', 'wkt', 'Tuần qua cả nhà xem ' + fmtMin(r.tot)));
+    var diff = r.tot - r.prev, sub = [];
+    if (r.prev > 0) sub.push((diff >= 0 ? 'Nhiều hơn' : 'Ít hơn') + ' tuần trước ' + fmtMin(Math.abs(diff)));
+    if (r.films) sub.push(r.films + ' phim'); sub.push(r.rows[0].p.name + ' xem nhiều nhất');
+    if (r.peak >= 0) sub.push('hay xem lúc ' + r.peak + '–' + (r.peak + 1) + ' giờ');
+    L.appendChild(el('div', 'wks', sub.join(' · ')));
+    var mx = r.rows[0].m || 1, cols = w.Avatars && w.Avatars.colors ? w.Avatars.colors(Store.profiles(), ['#5B9BFF', '#FF8A3D', '#4CC27A', '#C37BF0', '#F0648C', '#2EC4D6', '#E8B04B', '#FF6B6B']) : {};
+    r.rows.forEach(function (x) {
+      var rw = el('div', 'wkr');
+      rw.appendChild(avatar(x.p, 'sm'));
+      rw.appendChild(el('span', 'wkn', x.p.name));
+      var tr = el('div', 'wktr'), fl = el('i'); fl.style.width = Math.max(1, x.m / mx * 100) + '%'; fl.style.background = cols[x.p.id] || '#E8B04B'; tr.appendChild(fl); rw.appendChild(tr);
+      rw.appendChild(el('span', 'wkv', fmtMin(x.m)));
+      L.appendChild(rw);
+    });
+    c.appendChild(L);
+    var R = el('div', 'wkrt');
+    if (r.best) { var bb = el('div', 'wkbox'); bb.appendChild(el('div', 'wkbk', 'Phim cả nhà thích nhất')); bb.appendChild(el('div', 'wkbv', r.best.title)); bb.appendChild(el('div', 'wkbh', '❤ ' + r.best.n + ' người thích')); R.appendChild(bb); }
+    var lims = r.rows.filter(function (x) { return x.lim; });
+    if (lims.length) { var lb = el('div', 'wkbox'); lb.appendChild(el('div', 'wkbk', 'Giới hạn giờ xem')); lims.forEach(function (x) { lb.appendChild(el('div', 'wkbv sm', x.p.name + ': đúng giờ ' + x.lim + ' ngày')); }); R.appendChild(lb); }
+    R.appendChild(UI.button('Đã xem · ẩn đến tuần sau', 'small', function () {
+      var dis = Store.pref('weekSeen', {}) || {}; dis[Store.profile()] = r.wk; Store.setPref('weekSeen', dis);
+      if (c.parentNode) c.parentNode.removeChild(c);
+      Nav.focus(d.querySelector('.hero .btn') || S.tabEls.home, true);
+    }));
+    c.appendChild(R);
+    return c;
+  }
+
+  /* ---------- Tổng tài của tuần: phim cả nhà xem nhiều nhất 7 ngày qua, kèm một câu thoại ---------- */
+  function weekNo(t) { var x = new Date(t || Date.now()); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() + 3 - (x.getDay() + 6) % 7); var w1 = new Date(x.getFullYear(), 0, 4); return 1 + Math.round(((x - w1) / 864e5 - 3 + (w1.getDay() + 6) % 7) / 7); }
+  function weekPick(all) {
+    var since = Date.now() - 7 * 864e5, sc = {}, items = {};
+    ['guest'].concat(Store.profiles().map(function (p) { return p.id; })).forEach(function (id) {
+      Store.as(id, function () {
+        Store.recent().forEach(function (r) {
+          if (!r.item || r.t < since || r.item.kind === 'anime' || Settings.hides(r.item)) return;
+          var p = Store.getProgress(r.vid), part = p && p.d ? Math.min(1, p.p / p.d) : 0.3;
+          sc[r.item.id] = (sc[r.item.id] || 0) + 1 + part; items[r.item.id] = r.item;
+          var rr = w.Rates ? w.Rates.get(r.item.id, id) : null; if (rr === 1) sc[r.item.id] += 1.5; else if (rr === -1) sc[r.item.id] -= 2;
+        });
+      });
+    });
+    var best = Object.keys(sc).sort(function (a, b) { return sc[b] - sc[a]; })[0];
+    if (best && sc[best] > 0) return items[best];
+    var wk = (all || []).filter(function (f) { return new Date(f.pub || 0).getTime() > since; }).sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+    return wk[0] || null;
+  }
+
+  /* ---------- Có tập mới: phim bộ đang theo dõi vừa ra tập mới ---------- */
+  function newEpisodes(series) {
+    var byId = {}; (series || []).forEach(function (s) { byId[s.id] = s; });
+    var out = [], seen = {};
+    Store.recent().forEach(function (r) {
+      var it = r.item; if (!it || it.kind !== 'anime' || seen[it.id]) return; seen[it.id] = 1;
+      var cur = byId[it.id]; if (!cur || !(cur.eps > (it.eps || 0))) return;
+      out.push({ item: cur, n: cur.eps - (it.eps || 0) });
+    });
+    return out;
+  }
+
+  /* ---------- Tải sẵn ảnh bìa ---------- */
+  var preN = 0, preQ = [], preBusy = false, preSeen = {};
+  function preload(list) {
+    if (Settings.get('PRELOAD') === false) return;
+    (list || []).slice(0, 90).forEach(function (f) { [f.thumb, f.hero].forEach(function (u) { if (u && !preSeen[u]) { preSeen[u] = 1; preQ.push(u); } }); });
+    if (preBusy) return;
+    preBusy = true;
+    (function one() {
+      var u = preQ.shift(); if (!u) { preBusy = false; return; }
+      if (Player.isOpen()) { preQ.unshift(u); setTimeout(one, 5000); return; }   // đang xem phim: để mạng cho phim
+      var im = new Image(); im.onload = function () { preN++; setTimeout(one, 120); }; im.onerror = function () { setTimeout(one, 120); }; im.src = u;
+    })();
+  }
+
+  /* ---------- Quản trị trên TV: xem bằng remote, đăng nhập bằng Google của phần Đồng bộ ---------- */
+  function AdminTV(tab, days) {
+    tab = tab || 'overview'; days = days || 7;
+    var v = UI.view();
+    v.classList.add('scroller'); v.classList.add('stats'); v.classList.add('admtv');
+    var COLS = ['#5B9BFF', '#FF8A3D', '#4CC27A', '#C37BF0', '#F0648C', '#2EC4D6', '#E8B04B', '#FF6B6B'];
+    var base = String((w.Settings && Settings.get('STATS_URL')) || C.STATS_URL || '').replace(/\/+$/, '');
+    var em = w.Tele && w.Tele.adminEmail ? w.Tele.adminEmail() : '';
+    var SCR = { home: 'Trang chủ', music: 'Nghe nhạc', search: 'Tìm kiếm', chans: 'Duyệt kênh', cats: 'Danh mục', detail: 'Xem chi tiết phim', settings: 'Cài đặt', who: 'Chọn hồ sơ', info: 'Thông tin', guide: 'Hướng dẫn', history: 'Lịch sử' };
+    var mine = {}; Store.profiles().forEach(function (p) { mine[p.id] = p; });
+    var colorOf = w.Avatars && w.Avatars.colors ? w.Avatars.colors(Store.profiles(), COLS) : {};
+    function col(id) {   // mỗi hồ sơ một màu, theo màu hình thú; hồ sơ lạ lấy màu còn trống
+      if (!colorOf[id]) { var used = {}; Object.keys(colorOf).forEach(function (k) { used[colorOf[k]] = 1; }); colorOf[id] = COLS.filter(function (c2) { return !used[c2]; })[0] || COLS[Object.keys(colorOf).length % COLS.length]; }
+      return colorOf[id];
+    }
+    function pav(id, name, cls) {
+      if (mine[id]) return avatar(mine[id], 'admav ' + (cls || ''));
+      var a = el('div', 'admav ini ' + (cls || ''), String(name || '?').charAt(0).toUpperCase()); a.style.background = col(id); return a;
+    }
+    function num(n) { return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    function when(ts) {
+      if (!ts) return '—';
+      var t = new Date(ts), n = new Date(), dd = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+      return (dd === 0 ? 'Hôm nay ' : dd === 1 ? 'Hôm qua ' : t.getDate() + '/' + (t.getMonth() + 1) + ' ') + UI.hhmm(ts);
+    }
+    function place(x) { return [x.city, x.country === 'US' ? 'Hoa Kỳ' : x.country === 'VN' ? 'Việt Nam' : x.country].filter(Boolean).join(', '); }
+    function tok() { return w.__ttAdminTok ? Promise.resolve(w.__ttAdminTok) : Sync.idToken(); }
+    function call(path, body) {
+      return tok().then(function (t) {
+        return new Promise(function (ok, bad) {
+          var x = new XMLHttpRequest();
+          x.open(body ? 'POST' : 'GET', base + path + (path.indexOf('?') < 0 ? '?' : '&') + 'days=' + days + '&tz=' + new Date().getTimezoneOffset());
+          x.setRequestHeader('Authorization', 'Bearer ' + t);
+          if (body) x.setRequestHeader('Content-Type', 'application/json');
+          x.timeout = 15000;
+          x.onload = function () { var j = null; try { j = JSON.parse(x.responseText); } catch (e) { /* bỏ qua */ } if (x.status === 200 && j) ok(j); else bad({ status: x.status, j: j }); };
+          x.onerror = x.ontimeout = function () { bad({ net: true }); };
+          x.send(body ? JSON.stringify(body) : null);
+        });
+      });
+    }
+
+    // đầu trang
+    var top = el('div', 'sthead');
+    var crown = el('div', 'admcrown'); crown.innerHTML = '<svg viewBox="0 0 40 40"><path d="M8 13l6 5 6-9 6 9 6-5-2 10H10z" fill="#1A1206"/><rect x="10" y="25" width="20" height="2.6" rx="1.3" fill="#1A1206"/></svg>';
+    top.appendChild(crown);
+    var tt = el('div', 'sttitle');
+    tt.appendChild(el('div', 'stt1', 'Quản trị'));
+    var sub = el('div', 'stt2', (em || '') + ' · đang tải…');
+    tt.appendChild(sub);
+    top.appendChild(tt);
+    var seg = el('div', 'stseg');
+    [[1, 'Hôm nay'], [7, '7 ngày'], [30, '30 ngày']].forEach(function (x) {
+      var b = el('div', 'stsegb f' + (x[0] === days ? ' on' : ''), x[1]);
+      b._ok = function () { if (x[0] !== days) { back(); push(AdminTV(tab, x[0])); } };
+      seg.appendChild(b);
+    });
+    top.appendChild(seg);
+    v.appendChild(top);
+    var tabs = el('div', 'admtabs rowwrap');
+    [['overview', 'Tổng quan'], ['devices', 'Thiết bị và IP'], ['profile', 'Hồ sơ']].forEach(function (x) {
+      var b = el('div', 'admtab f' + (x[0] === tab ? ' on' : ''), x[1]);
+      b._ok = function () { if (x[0] !== tab) { back(); push(AdminTV(x[0], days)); } };
+      tabs.appendChild(b);
+    });
+    tabs.appendChild(el('div', 'admhint', 'Bản đầy đủ, báo cáo PDF: Thông tin → Quản trị → quét mã QR'));
+    v.appendChild(tabs);
+    var body = el('div', 'stwrap');
+    body.appendChild(el('div', 'admmsg', 'Đang tải số liệu…'));
+    v.appendChild(body);
+
+    function fail(e) {
+      body.innerHTML = '';
+      var m = e && e.nologin ? 'Màn hình này dùng tài khoản Google của phần Đồng bộ. Vào Cài đặt → Đồng bộ, đăng nhập bằng email quản trị rồi mở lại.'
+        : e && e.noid ? 'Google chưa trả mã xác minh. Đăng xuất phần Đồng bộ rồi đăng nhập lại một lần.'
+        : e && e.status === 403 ? 'Máy chủ từ chối: email này không có trong danh sách quản trị.'
+        : e && e.status === 401 ? 'Máy chủ chưa nhận Client ID của TV. Thêm GOOGLE_TV_CLIENT_ID vào biến GOOGLE_CLIENT_ID trên Cloudflare (xem HUONG-DAN-ADMIN).'
+        : e && e.net ? 'Không kết nối được máy chủ thống kê. Kiểm tra mạng hoặc địa chỉ trong Cài đặt.' : 'Lỗi máy chủ (' + (e && e.status || '?') + ').';
+      body.appendChild(el('div', 'admmsg bad', m));
+    }
+    function card(title, subt, cls) {
+      var c = el('div', 'stcard rowwrap ' + (cls || ''));
+      var h = el('div', 'stch-h'); h.appendChild(el('div', 'stct', title)); if (subt) h.appendChild(el('div', 'stcs', subt)); c.appendChild(h);
+      return c;
+    }
+    function kpis(list) {
+      var kr = el('div', 'stkpis rowwrap');
+      list.forEach(function (x) {
+        var t = el('div', 'stkpi f'); t._ok = function () {};
+        t.appendChild(el('div', 'stk', x[0])); t.appendChild(el('div', 'stv', String(x[1]))); t.appendChild(el('div', 'stdelta', x[2] || ''));
+        kr.appendChild(t);
+      });
+      return kr;
+    }
+    function act(id, action) {
+      return call('/a/device', { id: id, action: action }).then(function () {
+        UI.toast(action === 'block' ? 'Đã chặn thiết bị' : action === 'unblock' ? 'Đã bỏ chặn' : 'Đã đánh dấu người nhà');
+        back(); push(AdminTV(tab, days));
+      }, fail);
+    }
+    function stamp() { sub.textContent = (em ? em + ' · ' : '') + (days === 1 ? 'hôm nay' : days + ' ngày qua') + ' · cập nhật ' + UI.hhmm(Date.now()); }
+
+    if (!base) { fail({ net: true }); body.firstChild.textContent = 'Chưa có máy chủ thống kê. Điền ở Cài đặt → Kết nối → Máy chủ thống kê.'; return { name: 'admintv', el: v }; }
+
+    if (tab === 'overview') {
+      call('/a/overview').then(function (j) {
+        body.innerHTML = ''; stamp();
+        j.profiles.forEach(function (p) { col(p.id); });
+        (j.newDevices || []).forEach(function (x) {
+          var a = el('div', 'admalert rowwrap');
+          var t = el('div', 'admat');
+          t.appendChild(el('div', 'admat1', 'Thiết bị mới: ' + x.label));
+          t.appendChild(el('div', 'admat2', [place(x), x.ip, x.pname ? 'hồ sơ ' + x.pname : '', when(x.first_seen)].filter(Boolean).join(' · ')));
+          a.appendChild(t);
+          a.appendChild(UI.button('Đây là người nhà', 'gold small', function () { act(x.id, 'trust'); }));
+          a.appendChild(UI.button('Chặn', 'small warn', function () { act(x.id, 'block'); }));
+          body.appendChild(a);
+        });
+        var k = j.kpi;
+        body.appendChild(kpis([['Tổng giờ xem', fmtMin(k.minutes * 60), k.films + ' phim'], ['Thiết bị hoạt động', k.devicesActive, k.devicesLive + ' đang mở app'], ['Hồ sơ dùng app', k.profiles, j.profiles[0] ? j.profiles[0].name + ' xem nhiều nhất' : ''], ['Đơn vị YouTube hôm nay', num(k.unitsToday), 'trên 10.000 mỗi ngày']]));
+        var row = el('div', 'strow');
+        var left = card('Giờ xem theo hồ sơ', days === 1 ? 'hôm nay' : days + ' ngày qua', 'wide');
+        var mx = Math.max.apply(null, j.profiles.map(function (p) { return p.minutes; }).concat([1]));
+        j.profiles.forEach(function (p) {
+          var r = el('div', 'admprow f');
+          r._ok = function () { back(); var s2 = AdminTV('profile', days); push(s2); };
+          r.appendChild(pav(p.id, p.name));
+          var mid = el('div', 'admpmid');
+          var nm = el('div', 'admpn', p.name); if (p.live) nm.appendChild(el('span', 'admlive', 'Đang mở'));
+          mid.appendChild(nm);
+          var tr = el('div', 'admtr'), fl = el('div', 'admfl'); fl.style.width = Math.max(1, p.minutes / mx * 100) + '%'; fl.style.background = col(p.id); tr.appendChild(fl); mid.appendChild(tr);
+          r.appendChild(mid);
+          var rt = el('div', 'admpr'); rt.appendChild(el('div', 'admpv', fmtMin(p.minutes * 60))); rt.appendChild(el('div', 'admps', p.films + ' phim · ' + num(p.unitsToday) + ' đv hôm nay')); r.appendChild(rt);
+          left.appendChild(r);
+        });
+        row.appendChild(left);
+        var right = card('Đang mở app', (j.live || []).length + ' thiết bị');
+        (j.live || []).forEach(function (x) {
+          var r = el('div', 'admlv f'); r._ok = function () {};
+          r.appendChild(pav(x.profile, x.pname, 'sm'));
+          var t = el('div', 'admlvt');
+          t.appendChild(el('div', 'admlv1', (x.pname || '') + ' · ' + (x.film || SCR[x.screen] || x.screen || '')));
+          t.appendChild(el('div', 'admlv2', (x.name || x.label) + ' · ' + place(x)));
+          r.appendChild(t); right.appendChild(r);
+        });
+        if (!(j.live || []).length) right.appendChild(el('div', 'admempty', 'Không có thiết bị nào đang mở app.'));
+        row.appendChild(right);
+        body.appendChild(row);
+      }, fail);
+    } else if (tab === 'devices') {
+      call('/a/devices').then(function (j) {
+        body.innerHTML = ''; stamp();
+        var c = card('Thiết bị đã kết nối', j.devices.length + ' thiết bị · bấm Chặn để dừng app trên máy đó');
+        j.devices.forEach(function (x) {
+          var r = el('div', 'admdev rowwrap' + (x.blocked ? ' blk' : ''));
+          var ic = el('div', 'admdic');
+          ic.innerHTML = /tv/.test(x.kind) ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg>' : /phone|tablet/.test(x.kind) ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>';
+          r.appendChild(ic);
+          var a = el('div', 'admd1');
+          var n = el('div', 'admdn', x.name || x.label);
+          if (x.blocked) n.appendChild(el('span', 'admtag blk', 'Đã chặn')); else if (x.trusted) n.appendChild(el('span', 'admtag ok', 'Người nhà')); else n.appendChild(el('span', 'admtag new', 'Mới'));
+          if (x.live) n.appendChild(el('span', 'admlive', 'Đang mở'));
+          a.appendChild(n);
+          a.appendChild(el('div', 'admds', x.label + (x.version ? ' · bản ' + x.version : '') + ' · lần cuối ' + (x.live ? 'đang mở' : when(x.last_seen))));
+          r.appendChild(a);
+          var b = el('div', 'admd2'); b.appendChild(el('div', 'admip', x.ip)); b.appendChild(el('div', 'admds', (x.isp || '') + (place(x) ? ' · ' + place(x) : ''))); r.appendChild(b);
+          var ps = el('div', 'admd3'); x.profiles.slice(0, 4).forEach(function (p) { ps.appendChild(pav(p.id, p.name, 'sm')); }); r.appendChild(ps);
+          var bt = el('div', 'admd4');
+          if (!x.trusted && !x.blocked) bt.appendChild(UI.button('Người nhà', 'small', function () { act(x.id, 'trust'); }));
+          bt.appendChild(x.blocked ? UI.button('Bỏ chặn', 'gold small', function () { act(x.id, 'unblock'); }) : UI.button('Chặn', 'small warn', function () { act(x.id, 'block'); }));
+          r.appendChild(bt);
+          c.appendChild(r);
+        });
+        body.appendChild(c);
+        if ((j.locations || []).length) {
+          var lc = card('Vị trí kết nối', 'gần đúng tới thành phố, tính từ IP');
+          var g = el('div', 'admlocs');
+          j.locations.forEach(function (x) { var t = el('div', 'admloc'); t.appendChild(el('b', '', place(x) || 'Không rõ')); t.appendChild(el('span', '', x.n + ' thiết bị')); g.appendChild(t); });
+          lc.appendChild(g); body.appendChild(lc);
+        }
+      }, fail);
+    } else {
+      call('/a/overview').then(function (o) {
+        o.profiles.forEach(function (p) { col(p.id); });
+        var pid = AdminTV.pid && o.profiles.some(function (p) { return p.id === AdminTV.pid; }) ? AdminTV.pid : (o.profiles[0] || {}).id;
+        if (!pid) { body.innerHTML = ''; body.appendChild(el('div', 'admmsg', 'Chưa có số liệu hồ sơ.')); return; }
+        return call('/a/profile?id=' + encodeURIComponent(pid)).then(function (j) {
+          body.innerHTML = ''; stamp();
+          var pl = el('div', 'admplist rowwrap');
+          o.profiles.forEach(function (p) {
+            var b = el('div', 'admpbtn f' + (p.id === pid ? ' on' : ''));
+            b.appendChild(pav(p.id, p.name, 'sm')); b.appendChild(el('span', '', p.name));
+            b._ok = function () { if (p.id !== pid) { AdminTV.pid = p.id; back(); push(AdminTV('profile', days)); } };
+            pl.appendChild(b);
+          });
+          body.appendChild(pl);
+          var c0 = col(pid), tot = j.daily.reduce(function (a, x) { return a + x.m; }, 0);
+          var done = j.films.filter(function (f) { return f.dur && f.pos / f.dur > 0.9; }).length;
+          var u = j.units.reduce(function (a, x) { return a + (x.u || 0); }, 0);
+          var hmx = Math.max.apply(null, j.hours.concat([1])), ht = j.hours.indexOf(hmx);
+          body.appendChild(kpis([['Giờ xem', fmtMin(tot * 60), 'TB ' + fmtMin(tot * 60 / Math.max(1, days)) + '/ngày'], ['Phim đã xem', j.films.length, done + ' xem hết'], ['Đơn vị YouTube', num(u), j.searches.length ? 'hay tìm: ' + j.searches[0].q : ''], ['Hay xem lúc', hmx > 1 ? ht + '–' + (ht + 1) + ' giờ' : '—', j.devices.map(function (x) { return x.label; }).slice(0, 2).join(', ')]]));
+          var row = el('div', 'strow');
+          var dc = card('Phút xem mỗi ngày', '', 'wide');
+          var dmx = Math.max.apply(null, j.daily.map(function (x) { return x.m; }).concat([1]));
+          var bars = el('div', 'admbars');
+          j.daily.forEach(function (x, i) {
+            var b = el('div', 'admbar'); var f = el('i'); f.style.height = Math.max(x.m ? 2 : 0, x.m / dmx * 100) + '%'; f.style.background = c0; b.appendChild(f);
+            var dt = new Date(x.day); if (j.daily.length <= 7 || i % 5 === 0 || i === j.daily.length - 1) b.appendChild(el('span', '', dt.getDate() + '/' + (dt.getMonth() + 1)));
+            bars.appendChild(b);
+          });
+          dc.appendChild(bars);
+          var heat = el('div', 'admheat');
+          j.hours.forEach(function (m, h) { var x = el('div'); var i2 = el('i'); i2.style.background = c0; i2.style.opacity = (0.08 + 0.92 * m / hmx).toFixed(2); x.appendChild(i2); x.appendChild(el('span', '', h % 3 === 0 ? String(h) : '')); heat.appendChild(x); });
+          dc.appendChild(el('div', 'stcs admhl', 'Khung giờ hay xem (0 → 23 giờ)'));
+          dc.appendChild(heat);
+          row.appendChild(dc);
+          var cc = card('Kênh xem nhiều');
+          var cs = j.channels.reduce(function (a, x) { return a + x.s; }, 0) || 1;
+          j.channels.slice(0, 5).forEach(function (x) {
+            var r = el('div', 'admch'); r.appendChild(el('span', 'admchn', x.ch)); var tr = el('div', 'admtr'), fl = el('div', 'admfl'); fl.style.width = (x.s / cs * 100) + '%'; fl.style.background = c0; tr.appendChild(fl); r.appendChild(tr); r.appendChild(el('b', '', Math.round(x.s / cs * 100) + '%')); cc.appendChild(r);
+          });
+          if (!j.channels.length) cc.appendChild(el('div', 'admempty', 'Chưa có.'));
+          row.appendChild(cc);
+          body.appendChild(row);
+          var fc = card('Phim xem gần đây', j.films.length + ' phim');
+          j.films.slice(0, 8).forEach(function (f) {
+            var p = f.dur ? Math.min(100, Math.round(f.pos / f.dur * 100)) : 0;
+            var r = el('div', 'admfilm f'); r._ok = function () {};
+            var t = el('div', 'admft'); t.appendChild(el('div', 'admf1', f.title)); t.appendChild(el('div', 'admds', f.ch + ' · ' + when(f.last) + ' · ' + (f.device || ''))); r.appendChild(t);
+            r.appendChild(el('div', 'admfw', fmtMin(f.s)));
+            var pg = el('div', 'admfp'); var tr = el('div', 'admtr'), fl = el('div', 'admfl'); fl.style.width = p + '%'; fl.style.background = p >= 90 ? '#4CC27A' : c0; tr.appendChild(fl); pg.appendChild(tr); pg.appendChild(el('span', '', p >= 90 ? 'Xem hết' : p + '%')); r.appendChild(pg);
+            fc.appendChild(r);
+          });
+          if (!j.films.length) fc.appendChild(el('div', 'admempty', 'Chưa xem phim nào trong khoảng này.'));
+          body.appendChild(fc);
+        });
+      }).then(null, fail);
+    }
+    return { name: 'admintv', el: v };
   }
 
   /* ---------- Hướng dẫn sử dụng (có hình) ---------- */
@@ -2729,9 +3892,10 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">2.21.0</text></svg>', t: 'Có gì mới (2.10 – 2.21)', l: ['Màn hình khởi động vàng kim có tiến độ tải kênh. Hồ sơ người xem với 25 hình thú kawaii.', 'Hẹn giờ tắt, tự phát phim tiếp theo, đánh dấu “Đã xem”, thống kê thời gian xem từng hồ sơ.', 'Lọc phim theo lứa tuổi có mã PIN (đổi được), lịch sử tìm kiếm, chủ đề theo mùa và ngày lễ, kênh yêu thích theo hồ sơ, đồng hồ 12 giờ, nhạc nền Trang chủ.', 'Mới 2.21: Nhạc của tôi, 20 bài hát làm nhạc nền Trang chủ. 2.20: màn hình chờ giống Netflix (để yên 10 phút: ảnh bìa phim mới chạy chậm + đồng hồ). 2.19: mỗi hồ sơ tự sắp xếp các hàng Trang chủ; hàng “Đề xuất cho <tên>” theo thể loại người đó hay xem.', 'Nhật ký lỗi, thông báo lỗi dễ hiểu, sao lưu tự động hằng tuần, nút kiểm tra bản mới. Chi tiết từng mục ở bên dưới.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">2.24.0</text></svg>', t: 'Có gì mới (2.10 – 2.24)', l: ['Màn hình khởi động vàng kim có tiến độ tải kênh. Hồ sơ người xem với 25 hình thú kawaii.', 'Hẹn giờ tắt, tự phát phim tiếp theo, đánh dấu “Đã xem”, thống kê thời gian xem từng hồ sơ.', 'Lọc phim theo lứa tuổi có mã PIN (đổi được), lịch sử tìm kiếm, chủ đề theo mùa và ngày lễ, kênh yêu thích theo hồ sơ, đồng hồ 12 giờ, nhạc nền Trang chủ.', 'Mới 2.23: trang Nhạc, lời chạy theo bài, ảnh tổng tài, Kiểu A / Kiểu B. 2.22: xem trước Trang chủ khi sắp xếp các hàng; âm lượng nhạc Ngưỡng; trang Thông tin viết lại. 2.21: Nhạc của tôi, 20 bài hát làm nhạc nền Trang chủ. 2.20: màn hình chờ giống Netflix (để yên 10 phút: ảnh bìa phim mới chạy chậm + đồng hồ). 2.19: mỗi hồ sơ tự sắp xếp các hàng Trang chủ; hàng “Đề xuất cho <tên>” theo thể loại người đó hay xem.', 'Nhật ký lỗi, thông báo lỗi dễ hiểu, sao lưu tự động hằng tuần, nút kiểm tra bản mới. Chi tiết từng mục ở bên dưới.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh” và thanh tiến độ cho biết app đang tải phim từ bao nhiêu kênh.', 'Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.', 'Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây, hoặc “Đến khi tải xong”.', 'Dịp lễ: dòng chữ dưới logo đổi thành lời chúc (ví dụ “Giáng Sinh An Lành”).'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M84 30v46a12 10 0 1 1-6-8.7V40l48-10v38a12 10 0 1 1-6-8.7V36.4z" fill="#E8B04B"/><g fill="#4FAE8A"><rect x="40" y="70" width="6" height="22" rx="3"/><rect x="50" y="58" width="6" height="34" rx="3"/><rect x="60" y="76" width="6" height="16" rx="3"/></g></svg>', t: 'Nhạc nền Trang chủ', l: ['Nhạc của tôi: 20 bài hát của Ryan Nguyen (Chủ Tịch Giả Nghèo, Tổng Tài Ở Rể, Vợ Yêu Đừng Chạy…) phát ở Trang chủ, lần lượt hoặc trộn bài.', 'Mở phim hay sang trang khác thì nhạc tạm dừng, quay lại Trang chủ phát tiếp đúng chỗ. Ô “♪ tên bài” góc dưới bên phải: bấm để qua bài.', 'Cài đặt → Nhạc nền Trang chủ: Nhạc của tôi (lần lượt / trộn bài), Hòa tấu (5 bản), Tắt; Chọn bài để nghe bài bất kỳ; Âm lượng. Riêng từng hồ sơ.', 'TV lấy nhạc từ GitHub Pages của bạn. Android TV: Cài đặt → Kết nối → Địa chỉ nhạc. Không tải được thì app tự phát 5 bản hòa tấu.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14161E"/><rect x="10" y="12" width="80" height="45" rx="6" fill="#3A2A14"/><rect x="10" y="64" width="60" height="6" rx="2" fill="#F4F1EC"/><rect x="10" y="76" width="80" height="3" rx="1.5" fill="#33384A"/><rect x="10" y="76" width="34" height="3" rx="1.5" fill="#E8B04B"/><circle cx="50" cy="96" r="10" fill="#E8B04B"/><rect x="104" y="20" width="80" height="5" rx="2" fill="#5A5F6E"/><rect x="104" y="36" width="88" height="9" rx="3" fill="#E8B04B"/><rect x="104" y="54" width="76" height="5" rx="2" fill="#8A8F9E"/><rect x="104" y="66" width="70" height="5" rx="2" fill="#5A5F6E"/></svg>', t: 'Trang Nhạc', l: ['Tab Nhạc: nghe 20 bài hát, lời chạy theo nhạc (câu đang hát tô vàng dần), ảnh phim tổng tài đổi chậm.', 'Kiểu A chia đôi (ảnh + lời + bài tiếp theo) hoặc Kiểu B toàn màn hình kiểu karaoke: nút ⛶ trên trang, hoặc Cài đặt → Kiểu trang Nhạc.', 'Nút: Trộn bài, Bài trước, Phát/Dừng, Bài kế, Đổi kiểu, ⏱ Chỉnh lời, Tất cả bài.', 'Lời lệch giờ: bấm ⏱ Chỉnh lời, nghe từ đầu, mỗi câu bắt đầu thì bấm OK. Xong tự lưu, đồng bộ các máy.'] },
       { svg: REMOTE, t: 'Remote', l: ['Mũi tên để di chuyển, OK để chọn. Ô đang chọn có viền trắng.', 'Đồng hồ góc trên: Cài đặt → Giao diện → Đồng hồ: 24 giờ hoặc 12 giờ (AM/PM).', 'Bấm OK 2 lần thật nhanh: về Trang chủ từ bất kỳ đâu (kể cả đang xem phim). Tắt được trong Cài đặt → Remote.', 'Back để quay lại trang trước. Ở trang chủ bấm Back 2 lần để thoát app.', 'GIỮ LÂU nút OK (khoảng 1 giây): hỏi xóa phim ở Lịch sử, xóa kênh, xóa hồ sơ.'] },
       { img: 'g_home', t: 'Trang chủ', l: ['Ảnh lớn đầu trang là phim mới nhất. “Xem ngay” để phát, “Chi tiết” để xem thông tin.', 'Các hàng: Tiếp tục xem, Từ kênh yêu thích (mặc định ẩn), Phim mới cập nhật, Đang hot, Đề xuất cho <tên hồ sơ> (theo 2 thể loại người đó hay xem), Top 10 phim trong tuần, Phim lẻ hay, Hoạt hình.', 'Mỗi hồ sơ tự sắp xếp thứ tự các hàng: Cài đặt → Trang chủ → Sắp xếp các hàng.', 'Dòng vàng cạnh “Phim mới cập nhật” cho biết còn bao lâu app tự lấy phim mới.'] },
       { img: 'g_play', t: 'Xem phim', l: ['OK: tạm dừng / phát. Trái / phải: tua 10 giây (bấm liên tục để tua nhanh).', 'Mũi tên lên: chọn các nút −10s, +10s, Danh sách, Bỏ phim, Phụ đề, Hẹn giờ, Chất lượng. Bấm ▲ 2 lần nhanh: bật/tắt phụ đề tiếng Việt.', 'Thanh điều khiển tự ẩn sau 5 giây. Back để thoát phim, app nhớ chỗ đang xem.'] },
@@ -2746,7 +3910,15 @@
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="70" cy="52" r="18" fill="#E8B04B"/><path d="M40 96c0-17 13-28 30-28s30 11 30 28z" fill="#E8B04B"/><circle cx="130" cy="56" r="14" fill="#4FAE8A"/><path d="M106 96c0-14 11-23 24-23s24 9 24 23z" fill="#4FAE8A"/></svg>', t: 'Hồ sơ người xem (Ai đang xem?)', l: ['Mở app sẽ hỏi “Ai đang xem?”. Chọn Guest hoặc hồ sơ của bạn. Đổi hồ sơ bất cứ lúc nào: ô tròn chữ cái góc trên bên phải, hoặc Cài đặt → Hồ sơ người xem.', 'Mỗi hồ sơ có lịch sử xem, phim xem dở, danh sách và 5 từ khóa tìm gần nhất riêng.', '“+ Thêm” để tạo hồ sơ mới (tối đa 8): gõ tên rồi chọn 1 trong 25 hình thú kawaii. Guest tự có hình gấu trúc.', 'Giữ lâu trên một hồ sơ (TV: giữ lâu OK) để mở menu: Đặt / Đổi / Bỏ mã PIN, Đổi hình, Xóa hồ sơ.', 'Bỏ mã PIN khi không cần: menu giữ lâu → 🔓 Bỏ mã PIN, hoặc Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này → Bỏ mã PIN. Nhập mã cũ (quên thì dùng mã PIN người lớn).', 'Cài đặt riêng từng hồ sơ: các dòng có hình con thú trong Cài đặt (giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi) là của riêng người đang xem; đổi hồ sơ là đổi theo.', 'Mã PIN riêng cho từng hồ sơ: Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này. Hồ sơ có 🔒 phải nhập mã mới vào được; mã PIN người lớn mở được mọi hồ sơ.', 'Không muốn bị hỏi mỗi lần mở app: Cài đặt → “Hỏi Ai đang xem? khi mở app” → Tắt.', 'Chủ đề theo mùa và ngày lễ: Cài đặt → Chủ đề. Tự động đổi theo ngày (Tết, Noel, Valentine, Halloween, 4 mùa…), chọn tay một chủ đề, hoặc Tắt. TV chậm thì tắt “Hiệu ứng rơi”.', 'Thống kê xem (Lịch sử → “Thống kê xem”, hoặc Cài đặt → Hồ sơ người xem): số phút xem 7 ngày qua, kênh xem nhiều nhất, so sánh các hồ sơ. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="26" width="120" height="68" rx="10" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M88 46v28l22-14z" fill="#F4F1EC"/><path d="M40 104h120" stroke="#4FAE8A" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Tự phát phim tiếp theo', l: ['Hết phim, màn hình hiện phim/tập tiếp theo và đếm ngược 30 giây rồi tự phát.', '“Phát ngay” để xem luôn, “Hủy” (hoặc Back) để dừng lại. Trái/phải để chọn nút.', 'Phim tiếp theo ưu tiên phim chưa xem, cùng kênh, cùng thể loại. Tắt trong Cài đặt → Xem phim → Tự phát phim tiếp theo.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="62" r="38" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M100 40v24l16 10" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Hẹn giờ tắt và Đã xem', l: ['Đang xem phim: bấm ▲ để hiện nút, chọn “Hẹn giờ”. Mỗi lần OK đổi: 30 phút → 60 phút → 90 phút → Hết phim này → Tắt.', 'Hết giờ, phim tạm dừng và hiện thông báo; bấm OK để xem tiếp. Còn 1 phút app nhắc trước.', 'Phim xem hết có dấu “✓ Đã xem” và không hiện lại ở Phim mới, Đang hot, Đề xuất (tắt trong Cài đặt → Trang chủ).', 'Trang chi tiết phim: nút “Đánh dấu đã xem” / “Đã xem ✓” để tự đánh dấu hoặc bỏ đánh dấu.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><defs><linearGradient id="gsv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A14"/><stop offset="1" stop-color="#0B0B0E"/></linearGradient></defs><rect width="200" height="120" rx="12" fill="url(#gsv)"/><circle cx="60" cy="34" r="12" fill="#E8B04B" opacity=".35"/><circle cx="120" cy="26" r="9" fill="#E8B04B" opacity=".3"/><path d="M0 120V84h18v-14h16v20h14V64h20v56z" fill="#000" opacity=".7"/><rect x="16" y="92" width="26" height="6" rx="2" fill="#E8B04B"/><rect x="16" y="102" width="60" height="7" rx="2" fill="#F4F1EC"/><text x="186" y="104" text-anchor="end" font-size="26" font-weight="300" fill="#F4F1EC" font-family="sans-serif">11:19</text></svg>', t: 'Màn hình chờ', l: ['Để app yên 10 phút: hiện ảnh bìa phim mới chạy chậm, đổi phim mỗi 12 giây, kèm tên phim và đồng hồ lớn, giống Netflix.', 'Bấm phím bất kỳ (hoặc chạm) để quay lại đúng chỗ cũ, phím đó không làm gì khác.', 'Đang chiếu phim thì không hiện. Nhạc nền tạm im. Đồng hồ đổi góc để màn TV không bị in hình.', 'Cài đặt → Giao diện → Màn hình chờ: Tắt / 5 / 10 / 15 / 30 phút, có nút Xem thử.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><defs><linearGradient id="gsv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A14"/><stop offset="1" stop-color="#0B0B0E"/></linearGradient></defs><rect width="200" height="120" rx="12" fill="url(#gsv)"/><circle cx="60" cy="34" r="12" fill="#E8B04B" opacity=".35"/><circle cx="120" cy="26" r="9" fill="#E8B04B" opacity=".3"/><path d="M0 120V84h18v-14h16v20h14V64h20v56z" fill="#000" opacity=".7"/><rect x="16" y="92" width="26" height="6" rx="2" fill="#E8B04B"/><rect x="16" y="102" width="60" height="7" rx="2" fill="#F4F1EC"/><text x="186" y="104" text-anchor="end" font-size="26" font-weight="300" fill="#F4F1EC" font-family="sans-serif">11:19</text></svg>', t: 'Màn hình chờ', l: ['Để app yên 10 phút: hiện ảnh bìa phim mới chạy chậm, đổi phim mỗi 12 giây, kèm tên phim và đồng hồ lớn, giống Netflix.', 'Bấm phím bất kỳ (hoặc chạm) để quay lại đúng chỗ cũ, phím đó không làm gì khác.', 'Đang chiếu phim thì không hiện. Nhạc nền tạm im. Đồng hồ đổi góc để màn TV không bị in hình.', 'Cài đặt → Giao diện → Màn hình chờ: Tắt / 5 / 10 / 15 / 30 phút, có nút Xem thử.', 'Câu thoại tổng tài: mỗi lần màn hình chờ hiện là một câu mới (250 câu, 5 chủ đề, đi hết mới lặp lại), hiện cùng tên phim. Tắt ở Cài đặt → Câu thoại tổng tài.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="52" r="30" fill="none" stroke="#2A3042" stroke-width="10"/><path d="M100 22a30 30 0 0 1 26 45" fill="none" stroke="#E8B04B" stroke-width="10" stroke-linecap="round"/><text x="100" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">1 giờ</text><text x="100" y="106" text-anchor="middle" font-size="13" fill="#9AA0AE" font-family="sans-serif">18:00 – 21:00</text></svg>', t: 'Giới hạn giờ xem', l: ['Cài đặt → Hồ sơ người xem → Giới hạn giờ xem (cần mã PIN người lớn). Chọn hồ sơ, đặt số giờ mỗi ngày, cuối tuần, khung giờ được xem, nhắc trước 5 hoặc 10 phút.', 'Sắp hết giờ: góc màn hình nhắc “còn 5 phút”. Hết giờ: phim dừng, hiện màn hình “Hết giờ xem phim hôm nay”. Vẫn nghe nhạc được.', 'Người lớn bấm “Người lớn: thêm giờ”, nhập mã PIN, cho thêm 15 / 30 / 60 phút.', 'Giới hạn đồng bộ qua Google nên áp dụng trên mọi máy của gia đình. Thời gian xem tính theo thống kê xem của hồ sơ.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="82" cy="54" r="22" fill="#DDEBFF"/><circle cx="118" cy="54" r="22" fill="#FFE4EE" stroke="#1D2230" stroke-width="4"/><circle cx="134" cy="36" r="9" fill="#E8B04B"/><path d="M130 36l3 3 6-6" stroke="#1a1206" stroke-width="2.5" fill="none"/><rect x="50" y="88" width="100" height="18" rx="9" fill="#E8B04B"/></svg>', t: 'Xem chung', l: ['Ai đang xem? → chọn “Xem chung” → chọn 2 đến 4 người → “Xem chung: …”.', 'Phim, phim xem dở và thời gian xem được ghi cho tất cả. Hàng Đề xuất gợi ý theo sở thích chung.', 'Có giới hạn giờ xem thì người có giới hạn chặt nhất quyết định.', 'Thôi xem chung: chọn lại một hồ sơ trong Ai đang xem?.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="56" r="26" fill="#E0314B"/><rect x="93" y="40" width="14" height="24" rx="7" fill="#fff"/><path d="M86 58a14 14 0 0 0 28 0M100 72v8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><text x="100" y="106" text-anchor="middle" font-size="13" fill="#F4F1EC" font-family="sans-serif">“tổng tài giả nghèo”</text></svg>', t: 'Tìm bằng giọng nói', l: ['Trang Tìm kiếm có nút micro đỏ (điện thoại, máy tính, Android TV). Bấm rồi nói tên phim, app tự tìm.', 'Android TV: hộp giọng nói của Google hiện ra. Remote có nút Tìm kiếm thì bấm nút đó cũng được.', 'Lần đầu trình duyệt hỏi quyền dùng micro: chọn Cho phép.', 'TV Samsung không cho app dùng micro nên không có nút này.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="18" y="20" width="80" height="12" rx="6" fill="#E8B04B"/><rect x="18" y="42" width="120" height="14" rx="4" fill="#F4F1EC"/><rect x="18" y="66" width="140" height="8" rx="4" fill="#2A3042"/><rect x="18" y="66" width="100" height="8" rx="4" fill="#E8B04B"/><rect x="18" y="86" width="60" height="20" rx="10" fill="#E8B04B"/><circle cx="170" cy="30" r="12" fill="#E0314B"/><text x="170" y="35" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="sans-serif">3</text></svg>', t: 'Xem tiếp và phim mới của kênh yêu thích', l: ['Phim xem dở gần nhất (trong 4 ngày) lên banner Trang chủ: “còn 12 phút”, nút Xem tiếp hoặc Xem từ đầu.', 'Tab Kênh có chấm đỏ: tổng số phim mới của các kênh yêu thích từ lần bạn mở kênh đó gần nhất.', 'Trong trang Kênh, kênh yêu thích có số đỏ và dòng “3 phim mới”. Mở kênh là số được đặt lại.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#2a1f3a"/><text x="20" y="50" font-size="15" font-style="italic" fill="#FBF6EC" font-family="Georgia,serif">“…giữ luôn cả</text><rect x="122" y="56" width="50" height="4" rx="2" fill="#E8B04B"/><rect x="18" y="74" width="40" height="30" rx="7" fill="#151922"/><rect x="62" y="74" width="40" height="30" rx="7" fill="#2B8A3E"/><rect x="106" y="74" width="40" height="30" rx="7" fill="#151922"/><rect x="150" y="74" width="40" height="30" rx="7" fill="#151922"/><text x="82" y="94" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="sans-serif">đời</text></svg>', t: 'Câu đố tổng tài', l: ['Trang chủ có dải “Câu đố tổng tài” (đổi chỗ hoặc tắt trong Cài đặt → Các hàng Trang chủ). Bấm “Chơi ngay”.', 'Mỗi câu che một chữ trong câu thoại; chọn 1 trong 4 chữ bằng mũi tên rồi OK. 15 giây mỗi câu, 10 câu mỗi lượt.', 'Đúng +10 điểm. Điểm cộng vào bảng điểm hôm nay theo hồ sơ; người dẫn đầu hiện ngay trên Trang chủ.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><text x="100" y="58" text-anchor="middle" font-size="40" font-family="sans-serif">❤ 👎</text><text x="100" y="98" text-anchor="middle" font-size="14" fill="#F4F1EC" font-family="sans-serif">Bạn thấy phim này thế nào?</text></svg>', t: 'Đánh giá phim', l: ['Hết phim: phía trên thẻ “Phim tiếp theo” có ❤ Thích / 😐 Bình thường / 👎 Không thích. Bấm ▲ để chọn.', 'Trang chi tiết phim cũng có nút ♡ Thích và 👎 Không thích (bấm lại để bỏ).', 'Đề xuất theo hồ sơ học từ đánh giá: thể loại bạn thích lên trước, phim bạn không thích không hiện lại trong hàng Đề xuất.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="20" y="22" width="76" height="76" rx="8" fill="#fff"/><rect x="30" y="32" width="20" height="20" fill="#111"/><rect x="66" y="32" width="20" height="20" fill="#111"/><rect x="30" y="68" width="20" height="20" fill="#111"/><rect x="58" y="60" width="10" height="10" fill="#111"/><rect x="128" y="20" width="44" height="80" rx="8" fill="#2A3042" stroke="#E8B04B" stroke-width="3"/></svg>', t: 'Gửi phim sang điện thoại', l: ['Đang xem: bấm ▲ hiện nút → “Gửi sang điện thoại”. Phim tạm dừng, TV hiện mã QR.', 'Quét bằng camera điện thoại: phim mở đúng chỗ đang xem, cùng hồ sơ. Không cần đăng nhập.', 'Điện thoại chưa có hồ sơ đó thì app tự tạo hồ sơ cùng tên và hình.', 'Bên cạnh có mã QR thứ hai: mở phim bằng ứng dụng YouTube, đúng chỗ đang xem (để thích, bình luận, đăng ký kênh).'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14162a"/><text x="100" y="66" text-anchor="middle" font-size="44" font-family="sans-serif">🌙</text><text x="100" y="102" text-anchor="middle" font-size="14" fill="#DCE3FF" font-family="sans-serif">22:00 · Chúc ngủ ngon</text></svg>', t: 'Chế độ ngủ, sinh nhật, báo cáo tuần', l: ['Chế độ ngủ (Cài đặt → Giao diện): tới giờ, màn hình tối dần, âm lượng nhỏ lại, hết phim không tự phát tiếp; 30 giây sau app tắt (TV) hoặc màn hình tối (trình duyệt). Có nút “Xem thêm 15 phút”.', 'Ngày sinh của hồ sơ (Cài đặt → Hồ sơ người xem): hôm đó app chúc mừng, pháo bông, nhạc sinh nhật và thêm 30 phút xem phim nếu có giới hạn.', 'Hồ sơ xem báo cáo tuần (Cài đặt → Hồ sơ người xem, cần PIN): thứ Hai đến thứ Tư, Trang chủ hiện báo cáo tuần trước của cả nhà.', 'Tổng tài của tuần: ảnh lớn đầu Trang chủ là phim cả nhà xem nhiều nhất 7 ngày qua, kèm một câu thoại. Có tập mới: hàng riêng khi phim bộ đang theo dõi ra tập mới.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 20l40 15v28c0 22-17 35-40 42-23-7-40-20-40-42V35z" fill="#E8B04B"/><path d="M84 62l11 11 22-24" fill="none" stroke="#221206" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Giữ hồ sơ khi cập nhật hay cài lại', l: ['Cập nhật bản mới (cài đè, cùng địa chỉ web): hồ sơ, hình, mã PIN, lịch sử còn nguyên.', 'Cài lại từ đầu, xóa dữ liệu, đổi máy: sao lưu TRƯỚC. Tốt nhất là đăng nhập Google (hoặc GitHub) trong Cài đặt, cài lại xong đăng nhập lại là đủ mọi hồ sơ.', 'Không có tài khoản: Cài đặt → Xuất mã sao lưu, gửi mã cho chính mình; cài lại xong vào Nhập mã sao lưu.', 'Khôi phục chỉ gộp thêm, không xóa gì. API key phải nhập lại trên máy mới.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="80" width="18" height="22" rx="3" fill="#E8B04B"/><rect x="66" y="56" width="18" height="46" rx="3" fill="#E8B04B"/><rect x="92" y="66" width="18" height="36" rx="3" fill="#E8B04B"/><rect x="118" y="34" width="18" height="68" rx="3" fill="#E8B04B"/><rect x="144" y="46" width="18" height="56" rx="3" fill="#4FAE8A"/></svg>', t: 'Thống kê xem', l: ['Lịch sử → nút “Thống kê xem” (hoặc Cài đặt → Hồ sơ người xem → Thống kê xem). Chọn 7 ngày hoặc 30 ngày ở góc phải.', 'Tổng, trung bình, hôm nay, phim xem hết (so với 7 ngày trước); biểu đồ theo ngày có đường trung bình, chọn từng cột để xem chi tiết; nhận xét tự động; khung giờ hay xem; 5 kênh xem nhiều nhất.', 'So sánh thời gian xem của tất cả hồ sơ, tiện theo dõi bé xem bao lâu. Chỉ tính lúc phim đang chạy, mỗi thiết bị tính riêng, giữ 35 ngày. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><g fill="#fff"><circle cx="40" cy="30" r="4"/><circle cx="160" cy="24" r="5"/><circle cx="120" cy="90" r="4"/><circle cx="66" cy="96" r="3"/></g><path d="M30 104h140" stroke="#D7262E" stroke-width="2"/><circle cx="50" cy="104" r="5" fill="#F5C542"/><circle cx="80" cy="104" r="5" fill="#2FA84F"/><circle cx="110" cy="104" r="5" fill="#D7262E"/><circle cx="140" cy="104" r="5" fill="#4FA3FF"/><path d="M100 22l26 52H74z" fill="#2FA84F"/><rect x="95" y="74" width="10" height="12" fill="#8A5A33"/><path d="M100 14l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6-4.5-4 6-1z" fill="#F5C542"/></svg>', t: 'Chủ đề theo mùa và ngày lễ', l: ['Cài đặt → Chủ đề theo mùa và ngày lễ → Chủ đề: Tự động (đổi theo ngày), Tắt, hoặc chọn tay một chủ đề.', '17 chủ đề: Tết, Valentine, Năm mới, Giáng sinh, 8/3, 20/10, 1/6, Ngày của Mẹ, Ngày của Cha, Trung thu, Halloween, Lễ Tạ Ơn, Hoa anh đào, Xuân, Hạ, Thu, Đông. Tết và Trung thu tính theo âm lịch.', 'Có tuyết, hoa, lá, trái tim… rơi; dây đèn nhấp nháy; lồng đèn; hình nhỏ trên logo; lời chúc. TV chạy chậm: tắt “Hiệu ứng rơi”.'] },
@@ -2756,9 +3928,9 @@
       { img: 'g_key', t: 'Nhập YouTube API key', l: ['Lấy key ở console.cloud.google.com → APIs & Services → Credentials (chuỗi 39 ký tự, giữ kín, đừng gửi cho ai).', 'Trên TV: Cài đặt → Kết nối → “YouTube API key” → OK.', 'Gõ từng ký tự: “Chữ HOA” đổi hoa/thường, “Xóa” xóa 1 ký tự. Xong chọn “Lưu”.', 'Kiểm tra: tab Thông tin → Nguồn dữ liệu ghi “YouTube API: đã kết nối”.'] },
       { img: 'g_host', t: 'Nhập PLAYER_HOST (chỉ Samsung)', l: ['Chỉ TV Samsung cần. Hisense / Android TV bỏ qua bước này.', 'Cài đặt → Kết nối → “PLAYER_HOST (Samsung)” → OK. Đã có sẵn “https://”.', 'Gõ tiếp địa chỉ GitHub Pages của bạn, dạng tên-của-bạn.github.io/tongtai-player/ (dùng phím . / -) rồi “Lưu”.', 'Kiểm tra: tab Thông tin → Trình phát ghi “Qua https://…”. Còn lỗi 153 là địa chỉ chưa đúng.'] },
       { img: 'g_set_update', t: 'Cài đặt: Cập nhật phim mới', l: ['Tự cập nhật phim mới: Bật thì app tự lấy phim mới khi đang mở.', 'Cập nhật mỗi: 1, 2, 3, 6 hoặc 12 giờ. Càng thưa càng tiết kiệm hạn mức.', 'Tạm dừng khi TV để không: không ai bấm remote sau 1, 3 hoặc 6 giờ thì ngừng cập nhật.', 'Số video lấy mỗi kênh: 10, 25 hoặc 50 (gồm hết video mới + video cũ chọn ngẫu nhiên).'] },
-      { img: 'g_set_home', t: 'Cài đặt: Trang chủ, danh mục, phim', l: ['Ẩn phim đã xem hết: Bật thì phim xem xong không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay.', 'Sắp xếp các hàng: chọn một hàng, OK để nhấc lên, ▲ ▼ để di chuyển, OK để đặt xuống (điện thoại/máy tính bấm ▲ ▼). Riêng từng hồ sơ.', 'Ẩn/Hiện từng hàng, theo đúng thứ tự đã sắp xếp. “Từ kênh yêu thích” mặc định Ẩn.', 'Danh mục ít phim thì tìm thêm trên YouTube: Tắt để tiết kiệm (~100 đơn vị mỗi lần tìm).', 'Phim lẻ dài tối thiểu, Hoạt hình dài tối thiểu, Phim quay dọc Hiện/Ẩn. Đổi xong app tải lại danh sách.'] },
+      { img: 'g_set_home', t: 'Cài đặt: Trang chủ, danh mục, phim', l: ['Ẩn phim đã xem hết: Bật thì phim xem xong không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay.', 'Sắp xếp các hàng: chọn một hàng, OK để nhấc lên, ▲ ▼ để di chuyển, OK để đặt xuống (điện thoại/máy tính bấm ▲ ▼). Bấm “Xem trước” để xem Trang chủ mới, rồi “Lưu”. Chưa lưu mà quay lại thì app hỏi trước. Riêng từng hồ sơ.', 'Ẩn/Hiện từng hàng, theo đúng thứ tự đã sắp xếp. “Từ kênh yêu thích” mặc định Ẩn.', 'Danh mục ít phim thì tìm thêm trên YouTube: Tắt để tiết kiệm (~100 đơn vị mỗi lần tìm).', 'Phim lẻ dài tối thiểu, Hoạt hình dài tối thiểu, Phim quay dọc Hiện/Ẩn. Đổi xong app tải lại danh sách.'] },
       { img: 'g_set_more', t: 'Cài đặt: Xem phim, kênh, nút cuối trang', l: ['Tự phát phim tiếp theo (Bật/Tắt), Phụ đề tiếng Việt khi mở phim, Chất lượng mặc định.', 'Hồ sơ người xem: đổi hồ sơ, hình đại diện, thống kê, hỏi “Ai đang xem?”. Hỗ trợ: Nhật ký lỗi, Giới thiệu.', 'Kênh theo dõi: “+ Thêm kênh mới”; mỗi kênh đổi Phim ngắn → Phim lẻ hay → Hoạt hình → Tắt.', 'Ước tính hạn mức hiện ngay theo cài đặt bạn chọn.', 'Cập nhật ngay · Hiện lại phim đã bỏ · Khôi phục mặc định (vẫn giữ kênh, API key, PLAYER_HOST).'] },
-      { img: 'g_info', t: 'Thông tin, giới thiệu và hạn mức', l: ['Khung “Giới thiệu”: phiên bản, tác giả, lưu ý bản quyền. Nút “Kiểm tra bản mới” so với bản trên GitHub Pages (version.json).', 'Hạn mức YouTube đã dùng hôm nay trên TV này, còn bao lâu làm mới hạn mức.', 'Ước tính theo Cài đặt và còn bao nhiêu phút cập nhật phim mới.', 'Xem phim không tốn hạn mức. Hạn mức làm mới lúc 0 giờ giờ California (3 giờ chiều VN).'] },
+      { img: 'g_info', t: 'Thông tin, giới thiệu và hạn mức', l: ['Khung “Giới thiệu”: giới thiệu ứng dụng, phiên bản, tác giả, bản quyền và miễn trừ trách nhiệm. Bên dưới: Kho phim, Dành cho cả gia đình, Quyền riêng tư và an toàn, Khuyến cáo nội dung. Nút “Kiểm tra bản mới” so với bản trên GitHub Pages (version.json).', 'Hạn mức YouTube đã dùng hôm nay trên TV này, còn bao lâu làm mới hạn mức.', 'Ước tính theo Cài đặt và còn bao nhiêu phút cập nhật phim mới.', 'Xem phim không tốn hạn mức. Hạn mức làm mới lúc 0 giờ giờ California (3 giờ chiều VN).'] },
       { img: 'g_web', t: 'Xem trên trình duyệt (máy tính, điện thoại)', l: ['Mở địa chỉ bản web (dạng tên-của-bạn.github.io/tongtai-player/app/) bằng Chrome hoặc Safari.', 'Bấm chuột / chạm vào phim để mở. Lăn chuột hoặc vuốt để di chuyển. Phím mũi tên, Enter, Esc cũng dùng được.', 'Xóa phim ở Lịch sử, xóa kênh, xóa hồ sơ: GIỮ LÂU (chạm giữ hoặc giữ chuột) để hiện dấu ✕, rồi bấm ✕. Bấm ra chỗ khác để ẩn.', 'Nút “‹ Quay lại” ở góc dưới bên trái. Khi xem phim: bấm vào video để tạm dừng, bấm các nút để tua.', 'iPhone: giao diện điện thoại riêng, cuộn bằng tay. Safari → nút Chia sẻ → “Thêm vào MH chính” để có biểu tượng như app.', 'Lần đầu: Cài đặt → YouTube API key, dán key (key chỉ lưu trong trình duyệt của bạn).'] },
     ];
     SECTIONS.forEach(function (s) {
@@ -2789,6 +3961,21 @@
   /* ---------- Khởi tạo thanh tab ---------- */
 
   function init() {
+    var po = w.Player.open;
+    w.Player.open = function () {   // giới hạn giờ xem: chặn mở phim khi đã hết giờ / ngoài khung giờ
+      var st = limNow();
+      if (st && st.blocked) { push(LimitLock(st)); return; }
+      return po.apply(this, arguments);
+    };
+    setInterval(limTick, 15000);
+    setInterval(sleepTick, 30000); setTimeout(sleepTick, 3000);
+    // nút micro / tìm kiếm trên remote Android TV
+    w.__voiceKey = function () {
+      if (!w.Voice || !w.Voice.available()) return;
+      if (w.__voiceKeyHere && w.__voiceKeyHere()) return;
+      goTab('search');
+      setTimeout(function () { if (w.__voiceKeyHere) w.__voiceKeyHere(); }, 400);
+    };
     var box = d.getElementById('tabs');
     TABS.forEach(function (t) {
       var e = el('div', 'tab f', t.name);
@@ -2816,7 +4003,7 @@
   }
 
   w.Screens = {
-    init: init, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
+    init: init, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, adminTV: function (t, d2) { push(AdminTV(t, d2)); }, quiz: function () { push(Quiz()); }, birthday: function (id) { push(Birthday(profileOf(id || Store.profile()) || { id: 'guest', name: 'Guest' }, false)); }, afterBoot: function () { checkBirthday(); }, sleepTick: function () { sleepTick(); }, preN: function () { return preN; }, weekPick: function () { return weekPick(Api.pool()); }, limitList: function () { push(LimitList()); }, limitLock: function () { var st = limNow(); if (st) push(LimitLock(st)); }, limNow: function () { return limNow(); }, chBadge: function () { paintChBadge(); }, push: push, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
     depth: function () { return S.stack.length; },
     current: function () { return current(); }
   };

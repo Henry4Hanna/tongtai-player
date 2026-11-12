@@ -145,6 +145,7 @@
       if (!Store.profiles().some(function (x) { return x.id === id; })) id = 'guest';
       prof = id;
       try { w.localStorage.setItem(P + 'profile', id); } catch (e) { /* bỏ qua */ }
+      tog = []; set('together', []);   // chọn một người = thôi xem chung
     },
     // Mã PIN riêng của hồ sơ (lưu dạng băm). hash = null để bỏ mã
     setProfilePin: function (id, hash) {
@@ -173,6 +174,17 @@
       m.profiles = list;
       set('prefs', m);
       return id;
+    },
+    // Hồ sơ gửi từ TV qua mã QR: tạo đúng mã hồ sơ đó trên máy này nếu chưa có
+    ensureProfile: function (id, name, av) {
+      if (!id || id === 'guest' || Store.profiles().some(function (x) { return x.id === id; })) return id || 'guest';
+      var m = get('prefs', {}), list = (m.profiles || []).slice();
+      name = String(name || 'Hồ sơ').slice(0, 20);
+      if (list.some(function (x) { return String(x.name).toLowerCase() === name.toLowerCase(); })) name = name + ' (TV)';
+      var pf = { id: String(id).slice(0, 30), name: name, c: (list.length + 1) % 6 };
+      if (av != null) pf.av = av;
+      list.push(pf); m.profiles = list; set('prefs', m);
+      return pf.id;
     },
     // Xóa hồ sơ (không xóa được Guest): xóa luôn lịch sử, tiến độ, danh sách của hồ sơ đó
     removeProfile: function (id) {
@@ -283,6 +295,30 @@
       }
     }
   };
+
+  /* ---------- Xem chung: nhiều hồ sơ cùng xem; phim, tiến độ, thời gian xem ghi cho tất cả ---------- */
+  var tog = get('together', []);
+  function others() {
+    if (!(tog && tog.length > 1) || tog.indexOf(prof) < 0) return [];
+    var ok = {}; Store.profiles().forEach(function (x) { ok[x.id] = 1; });
+    return tog.filter(function (id) { return id !== prof && ok[id]; });
+  }
+  // chạy fn như thể đang ở hồ sơ id (đọc/ghi dữ liệu riêng của hồ sơ đó)
+  Store.as = function (id, fn) { var keep = prof; prof = id; try { return fn(); } finally { prof = keep; } };
+  Store.together = function () { var o = others(); return o.length ? [prof].concat(o) : []; };
+  Store.setTogether = function (ids) {
+    ids = (ids || []).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+    Store.setProfile(ids[0] || 'guest');
+    tog = ids.length > 1 ? ids : []; set('together', tog);
+  };
+  ['setProgress', 'touchRecent', 'addWatch', 'setWatched'].forEach(function (n) {
+    var f = Store[n];
+    Store[n] = function () {
+      var a = arguments, r = f.apply(Store, a);
+      others().forEach(function (id) { try { Store.as(id, function () { f.apply(Store, a); }); } catch (e) { /* bỏ qua */ } });
+      return r;
+    };
+  });
 
   w.Store = Store;
 })(window);

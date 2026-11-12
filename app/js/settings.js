@@ -22,8 +22,8 @@
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
     THEME: C.THEME || 'dark',
-    CLOCK_12: !!C.CLOCK_12, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER,
-    MUSIC: C.MUSIC || 'songs', MUSIC_URL: C.MUSIC_URL || '', MUSIC_VOL: C.MUSIC_VOL || 'low',
+    CLOCK_12: !!C.CLOCK_12, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
+    MUSIC: C.MUSIC || 'songs', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low',
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX !== false,
     AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
     AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
@@ -91,8 +91,8 @@
 
   /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
      Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
-  var PP = { HOME_ORDER: 1, MUSIC: 1, MUSIC_VOL: 1, THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
-    SHOW_CONT: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
+  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+    SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {
     if (PP[k]) { var ps = psaved(); if (ps[k] !== undefined) return ps[k]; }

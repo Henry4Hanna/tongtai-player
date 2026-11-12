@@ -1,4 +1,4 @@
-# Tổng Tài TV – bản xem trên trình duyệt (2.21.1, miễn phí, GitHub Pages)
+# Tổng Tài TV – bản xem trên trình duyệt (2.26.1, miễn phí, GitHub Pages)
 
 ## CÀI ĐẶT LÊN GITHUB PAGES
 
@@ -32,7 +32,7 @@ Phụ đề: khi đang xem phim, bấm ▲ 2 lần nhanh để bật/tắt phụ
 
 Cập nhật bản mới: tải đè thư mục app lên GitHub như bước 2 (gồm cả version.json), chờ 1–2 phút rồi tải lại trang (kéo xuống hoặc F5).
 
-## HƯỚNG DẪN SỬ DỤNG (bản 2.21.1)
+## HƯỚNG DẪN SỬ DỤNG (bản 2.26.1)
 
 Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy tính, điện thoại). Trên TV dùng remote; trên máy tính bấm chuột hoặc dùng bàn phím (mũi tên, Enter, Esc); trên điện thoại chạm và vuốt.
 
@@ -66,20 +66,36 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 - Khi đang ở màn hình Ai đang xem, thanh tab (Lịch sử, Kênh, Thể loại, Cài đặt…) bị khóa: chỉ bấm được trong khung chọn hồ sơ. Lúc mở app phải chọn một hồ sơ; mở từ ô hình hồ sơ thì có nút "‹ Quay lại" trong khung.
 - **Mã PIN riêng từng hồ sơ**: giữ lâu trên hồ sơ → **Đặt mã PIN** (hoặc Cài đặt → Hồ sơ người xem → **Mã PIN của hồ sơ này**) → nhập mã 4–8 số hai lần. Hồ sơ có 🔒 phải nhập mã mới mở hoặc xóa được. **Bỏ mã PIN khi không cần**: giữ lâu trên hồ sơ ở màn hình Ai đang xem → **🔓 Bỏ mã PIN**, hoặc mở hồ sơ đó rồi vào Cài đặt → Hồ sơ người xem → **Mã PIN của hồ sơ này** → **Bỏ mã PIN**; nhập mã cũ là xong, dấu 🔒 biến mất. Đổi mã cũng ở hai chỗ này. Quên mã: dùng mã PIN người lớn (mục 9).
 
+- **Xem chung**: màn hình Ai đang xem? → **👥 Xem chung** → chọn 2 đến 4 người → **▶ Xem chung: …**. Góc trên hiện hình của mọi người. Phim, phim xem dở và thời gian xem ghi cho tất cả; hàng Đề xuất gợi ý theo sở thích chung. Thôi xem chung: chọn lại một hồ sơ.
+
+### 3a. Giới hạn giờ xem
+- Cài đặt → Hồ sơ người xem → **Giới hạn giờ xem** (cần mã PIN người lớn) → chọn hồ sơ. Đặt **giờ xem mỗi ngày** (T2–T6), **cuối tuần**, **khung giờ được xem** (ví dụ 18:00–21:00) và **nhắc trước** 5 hoặc 10 phút.
+- Sắp hết giờ: góc màn hình nhắc "còn 5 phút". Hết giờ hoặc ngoài khung giờ: phim dừng, hiện màn hình "Hết giờ xem phim hôm nay"; vẫn **nghe nhạc** hoặc **đổi hồ sơ** được.
+- **Người lớn: thêm giờ** → nhập mã PIN → cho thêm 15 / 30 / 60 phút trong hôm nay.
+- Giới hạn đồng bộ qua Google nên dùng chung trên mọi máy. Xem chung thì người có giới hạn chặt nhất quyết định.
+
 ### 3b. Kênh yêu thích
 - Mỗi hồ sơ chọn kênh yêu thích riêng. Phim mới của các kênh này hiện ở hàng **"Từ kênh yêu thích của …"** (mặc định **ẩn**, bật trong Cài đặt → Trang chủ), ảnh lớn đầu Trang chủ cũng lấy từ đây, và phim tự phát tiếp theo ưu tiên các kênh này.
 - Cách chọn: tab **Kênh** → mở một kênh → **"☆ Yêu thích"**; hoặc trang chi tiết phim → **"☆ Thích kênh này"**; hoặc **Cài đặt → Hồ sơ người xem → Kênh yêu thích** (danh sách mọi kênh, OK để bật/tắt ★).
 - Ở tab Kênh, kênh yêu thích có ★ và nằm đầu danh sách. Hiện/ẩn hàng này: Cài đặt → Trang chủ → "Từ kênh yêu thích".
+- **Phim mới của kênh yêu thích**: tab Kênh có **chấm đỏ** với tổng số phim mới; mỗi kênh yêu thích có số đỏ và dòng "3 phim mới" (tính từ lần bạn mở kênh đó gần nhất). Mở kênh là số được đặt lại.
 
 ### 4. Trang chủ
+- **Tổng tài của tuần**: khi không có phim xem dở, ảnh lớn đầu Trang chủ là phim cả nhà xem nhiều nhất 7 ngày qua, kèm một câu thoại tổng tài.
+- **Có tập mới**: phim bộ (nhiều tập) bạn đang theo dõi ra tập mới thì hiện ở hàng riêng, có nhãn đỏ "Tập 13 mới".
+- **Câu đố tổng tài**: dải tím trên Trang chủ → "Chơi ngay". Mỗi câu che một chữ trong câu thoại, chọn 1 trong 4 chữ; 10 câu mỗi lượt, đúng +10 điểm, bảng điểm hôm nay theo hồ sơ.
+- **Báo cáo tuần**: thứ Hai đến thứ Tư, hồ sơ người lớn (chọn ở Cài đặt → Hồ sơ người xem → Hồ sơ xem báo cáo tuần, cần PIN) thấy thẻ báo cáo tuần trước của cả nhà. Bấm "Đã xem" để ẩn đến tuần sau.
+- **Xem tiếp**: phim bạn xem dở gần nhất (trong 4 ngày) lên ảnh lớn đầu Trang chủ, ghi "còn 12 phút" kèm thanh tiến độ; nút **Xem tiếp** hoặc **Xem từ đầu**.
 
 - Ảnh lớn đầu trang là phim mới nhất: "Xem ngay" hoặc "Chi tiết".
 - Các hàng: Tiếp tục xem, Từ kênh yêu thích (mặc định ẩn), Phim mới cập nhật, Đang hot, **Đề xuất cho <tên hồ sơ>**, Top 10 trong tuần, Phim lẻ hay, Hoạt hình.
 - **Đề xuất theo hồ sơ**: app xem lịch sử, danh sách và phim đã xem hết của hồ sơ đang xem, chọn 2 thể loại người đó hay xem nhất (ví dụ "Theo thể loại hay xem: Xuyên không · Trùng sinh"). Hồ sơ mới chưa xem gì thì gợi ý 2 thể loại đổi theo ngày.
-- **Sắp xếp các hàng** (riêng từng hồ sơ): Cài đặt → Trang chủ → **Sắp xếp các hàng**. TV: chọn một hàng, nhấn OK để nhấc lên, ▲ ▼ để di chuyển, nhấn OK để đặt xuống. Điện thoại / máy tính: bấm ▲ ▼. Các dòng Hiện/Ẩn bên dưới cũng xếp theo đúng thứ tự này. Ảnh lớn đầu trang luôn ở trên cùng.
+- **Sắp xếp các hàng** (riêng từng hồ sơ): Cài đặt → Trang chủ → **Sắp xếp các hàng**. TV: chọn một hàng, nhấn OK để nhấc lên, ▲ ▼ để di chuyển, nhấn OK để đặt xuống. Điện thoại / máy tính: bấm ▲ ▼. Thay đổi **chưa lưu ngay**: bấm **👁 Xem trước** để xem Trang chủ mới (ảnh lớn đầu trang và từng hàng theo thứ tự mới), thấy ưng thì **Lưu thứ tự này**, chưa ưng thì **Sửa tiếp**. Có **Bỏ thay đổi** và **Mặc định**. Chưa lưu mà bấm Quay lại thì app nhắc; bấm Quay lại lần nữa là bỏ thay đổi. Các dòng Hiện/Ẩn bên dưới cũng xếp theo đúng thứ tự này. Ảnh lớn đầu trang luôn ở trên cùng.
 - **Phim đã xem hết** (từ 92%) không hiện lại ở Phim mới, Đang hot, Đề xuất, Phim lẻ hay. Nơi khác có dấu **"✓ Đã xem"**. Tắt: Cài đặt → Trang chủ → Ẩn phim đã xem hết.
 
 ### 5. Xem phim
+- **Đánh giá phim**: hết phim, phía trên thẻ "Phim tiếp theo" có ❤ Thích / 😐 Bình thường / 👎 Không thích (bấm ▲ để chọn). Trang chi tiết phim cũng có nút ♡ Thích và 👎 Không thích. Đề xuất học từ đánh giá.
+- **Gửi sang điện thoại**: đang xem, bấm ▲ → "Gửi sang điện thoại", quét mã QR bằng camera. Phim mở đúng chỗ, cùng hồ sơ, không cần đăng nhập. Mã thứ hai mở phim bằng ứng dụng YouTube, đúng chỗ đang xem.
 
 - OK: tạm dừng/phát. Trái/phải: tua 10 giây (bấm liên tục để tua nhanh).
 - Mũi tên **lên**: hiện các nút −10s, +10s, Danh sách, Bỏ phim, Phụ đề, **Hẹn giờ**, Chất lượng. Bấm ▲ 2 lần nhanh: bật/tắt phụ đề tiếng Việt.
@@ -96,6 +112,7 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 - Chọn chữ trên bàn phím màn hình, không cần gõ dấu, rồi "Tìm kiếm".
 - **"Tìm gần đây"**: 5 từ khóa vừa tìm, chọn để tìm lại ngay. "Xóa lịch sử tìm" để xóa.
+- **Tìm bằng giọng nói**: bấm nút **micro đỏ** trong ô tìm rồi nói tên phim (ví dụ "tổng tài giả nghèo"), app tự tìm. Có trên Android TV (hộp giọng nói của Google; remote có nút Tìm kiếm thì bấm nút đó cũng được), điện thoại và máy tính (lần đầu chọn **Cho phép** dùng micro). TV Samsung không cho app dùng micro nên không có nút này.
 
 ### 8. Lịch sử và Thống kê xem
 
@@ -117,11 +134,22 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 - Cài đặt → **Nhạc nền Trang chủ**:
   - **Nhạc nền**: Nhạc của tôi (lần lượt) / Nhạc của tôi (trộn bài) / Hòa tấu (5 bản hòa tấu tự sáng tác) / Tắt / một bản hòa tấu. Riêng từng hồ sơ.
   - **Chọn bài**: danh sách 20 bài, chọn bài nào nghe bài đó ngay (ở màn hình này cũng phát để nghe thử).
-  - **Âm lượng**: Nhỏ / Vừa / To. iPhone luôn phát theo nút âm lượng của máy.
+  - **Âm lượng**: **Ngưỡng** (rất nhỏ, vừa đủ nghe) / Nhỏ / Vừa / To. iPhone luôn phát theo nút âm lượng của máy.
 - **Nhạc nằm ở đâu**: bản web lấy `music/` cùng chỗ với app (chép cả thư mục `music/` lên GitHub Pages). TV không chứa nhạc trong file cài, mà tải từ GitHub Pages: TV Samsung tự dò theo PLAYER_HOST; Android TV (hoặc khi dò không được) vào Cài đặt → Kết nối → **Địa chỉ nhạc**, gõ địa chỉ GitHub Pages của bản web (dạng `https://tên-của-bạn.github.io/…/`). Địa chỉ này đồng bộ qua tài khoản Google, đặt một lần cho mọi máy.
 - **Thêm / bớt bài**: chép file mp3 vào `music/`, rồi sửa `music/list.json` (mỗi bài một dòng: tên bài, tên file, số giây). Không cần cài lại TV.
 - Chưa tải được nhạc của tôi (mất mạng, sai địa chỉ) thì app tự phát 5 bản hòa tấu.
 - Trình duyệt / iPhone chỉ cho phát nhạc sau lần chạm/bấm đầu tiên; app TV phát ngay.
+
+### 9c. Trang Nhạc (nghe nhạc có lời chạy theo bài)
+- Tab **Nhạc** (sau Danh mục; điện thoại: ô **Nhạc** ở đầu trang). Mở ra là phát ngay 20 bài hát của bạn, kể cả khi nhạc nền Trang chủ đang tắt.
+- **Lời bài hát chạy theo nhạc**: câu đang hát to và tô vàng dần như karaoke, có ghi đang ở đoạn nào (Lời 1, Điệp khúc, Đoạn chuyển…). Lời lấy từ chính file nhạc.
+- **Ảnh phim tổng tài** đổi chậm mỗi 8 giây (ảnh bìa các phim tổng tài trong kho phim); mỗi bài bắt đầu bằng ảnh khác nhau.
+- **Hai kiểu**, đổi bằng nút ⛶ trên trang hoặc Cài đặt → Nhạc nền Trang chủ → **Kiểu trang Nhạc** (riêng từng hồ sơ):
+  - **Kiểu A, chia đôi**: bên trái ảnh lớn, tên bài, thanh thời gian, nút; bên phải lời bài hát; dưới cùng 5 bài **Tiếp theo** (chọn để nghe ngay).
+  - **Kiểu B, toàn màn hình**: ảnh phủ cả màn hình, lời to ở giữa (câu trước, câu đang hát, câu sau), đồng hồ góc trên.
+- Nút: Trộn bài · Bài trước · Phát/Dừng · Bài kế · Đổi kiểu · ⏱ Chỉnh lời · Tất cả bài. Remote có nút ⏯ ⏮ ⏭ thì dùng được luôn.
+- Dừng trên trang Nhạc rồi sang trang khác thì Trang chủ phát nhạc lại như thường. Ở trang Nhạc không hiện màn hình chờ.
+- **Chỉnh lời theo nhạc** (⏱): giờ của từng câu lúc đầu do app tự ước lượng nên có thể lệch vài giây. Bấm ⏱, bài hát phát lại từ đầu; mỗi khi câu tô vàng **bắt đầu** được hát thì bấm OK (hoặc chạm nút lớn). Nhầm thì **Lùi 1 câu**. Xong câu cuối app tự lưu, và đồng bộ sang các máy khác qua tài khoản. **Dùng giờ tự động** để bỏ phần đã chỉnh.
 
 ### 10. Chủ đề theo mùa và ngày lễ
 
@@ -129,12 +157,18 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 - 17 chủ đề: Tết, Valentine, Năm mới, Giáng sinh, 8/3, 20/10, 1/6, Ngày của Mẹ, Ngày của Cha, Trung thu, Halloween, Lễ Tạ Ơn, Hoa anh đào, Xuân, Hạ, Thu, Đông. Ngày lễ ưu tiên hơn mùa; Tết và Trung thu theo âm lịch.
 - Có hiệu ứng rơi (tuyết, hoa, lá, trái tim…), dây đèn, lồng đèn, hình nhỏ trên logo, lời chúc. TV chậm: tắt **"Hiệu ứng rơi"**.
 
+### 10a. Chế độ ngủ, sinh nhật, tải sẵn ảnh
+- **Chế độ ngủ** (Cài đặt → Giao diện): chọn giờ (21:00–23:00) và áp dụng cho cả nhà hoặc chỉ hồ sơ có giới hạn giờ xem. Tới giờ: màn hình tối dần, âm lượng nhỏ lại, hết phim không tự phát tiếp; 30 giây sau app tắt (TV) hoặc màn hình tối (trình duyệt). Có nút "Xem thêm 15 phút".
+- **Sinh nhật** (Cài đặt → Hồ sơ người xem → Ngày sinh của hồ sơ, gõ 1411 cho 14/11): hôm đó app chúc mừng, pháo bông, nhạc sinh nhật, và thêm 30 phút xem phim nếu hồ sơ có giới hạn.
+- **Tải sẵn ảnh bìa** (Cài đặt → Giao diện, mặc định Bật): khi rảnh app tải trước ảnh bìa phim mới để TV mở nhanh; đang xem phim thì tạm dừng.
+
 ### 10b. Màn hình chờ
 - Để app yên **10 phút** (không bấm remote, không chạm) thì hiện màn hình chờ giống Netflix: ảnh bìa các phim mới trượt chậm, đổi phim mỗi 12 giây, kèm tên phim, kênh và đồng hồ lớn với thứ, ngày.
 - Bấm **phím bất kỳ** (hoặc chạm / bấm chuột) để quay lại đúng chỗ cũ; phím đó không làm gì khác.
 - Đang chiếu phim thì không hiện. Phim đang tạm dừng thì sau 10 phút vẫn hiện, quay lại phim vẫn dừng đúng chỗ. Nhạc nền tạm im khi đang ở màn hình chờ.
 - Đồng hồ đổi góc trên/dưới sau mỗi ảnh để màn TV không bị in hình. Chỉ hiện phim đã qua bộ lọc lứa tuổi.
 - Cài đặt → Giao diện → **Màn hình chờ**: Tắt / 5 / 10 / 15 / 30 phút; **Xem thử màn hình chờ** để xem ngay.
+- **Câu thoại tổng tài**: mỗi lần màn hình chờ hiện là một câu mới (250 câu, 5 chủ đề: Bá đạo, Ngọt sủng, Hào môn & thương trường, Hối hận & tái hợp, Hài hước & đời thường; đi hết 250 câu mới lặp lại), hiện phía trên tên phim. Tắt ở Cài đặt → Giao diện → **Câu thoại tổng tài**.
 
 ### 11. Đồng bộ, sao lưu
 
@@ -166,6 +200,17 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 ## LỊCH SỬ PHIÊN BẢN
 
+- Phiên bản 2.26.1 (11/11/2026): Gửi sang điện thoại có thêm mã QR mở phim trên YouTube.
+- Phiên bản 2.26.0 (11/11/2026): Đánh giá phim ❤/👎. Có tập mới. Chế độ ngủ. Báo cáo tuần. Tổng tài của tuần. Câu đố tổng tài. Sinh nhật có pháo bông. Tải sẵn ảnh bìa. Gửi phim sang điện thoại bằng mã QR.
+- Phiên bản 2.25.1 (11/11/2026): 250 câu thoại tổng tài, mỗi lần màn hình chờ hiện một câu mới.
+- Phiên bản 2.25.0 (11/11/2026): Giới hạn giờ xem theo hồ sơ. Xem chung nhiều hồ sơ. Tìm bằng giọng nói. Xem tiếp trên banner Trang chủ. Số phim mới của kênh yêu thích. Câu thoại tổng tài trên màn hình chờ.
+- Phiên bản 2.24.4 (11/11/2026): Ai đang xem có "3 Không".
+- Phiên bản 2.24.3 (11/11/2026): Quản trị: mỗi hồ sơ một màu riêng theo hình thú.
+- Phiên bản 2.24.2 (11/11/2026): Quản trị xem được ngay trên TV bằng remote.
+- Phiên bản 2.24.1 (11/11/2026): Mục Quản trị trong trang Thông tin (chỉ email quản trị thấy); Báo cáo PDF trong trang quản trị.
+- Phiên bản 2.24.0 (11/11/2026): Trang quản trị cho phụ huynh (tùy chọn): app gửi thiết bị, hồ sơ, thời gian xem và đơn vị YouTube về máy chủ riêng (Cloudflare Worker) khi đã điền Máy chủ thống kê; trang Thông tin ghi rõ việc này. Hướng dẫn trong HUONG-DAN-ADMIN.
+- Phiên bản 2.23.0 (11/11/2026): Trang Nhạc mới: nghe 20 bài hát với lời chạy theo nhạc (tô vàng kiểu karaoke) và ảnh phim tổng tài đổi chậm; Kiểu A chia đôi và Kiểu B toàn màn hình; Chỉnh lời theo nhạc bằng cách bấm OK theo từng câu.
+- Phiên bản 2.22.0 (11/11/2026): Sắp xếp các hàng: thay đổi chưa lưu ngay, bấm “Xem trước” để xem Trang chủ mới rồi “Lưu” (có Bỏ thay đổi, Mặc định; chưa lưu mà quay lại thì app hỏi). Âm lượng nhạc nền thêm mức Ngưỡng (nhỏ hơn Nhỏ). Trang Thông tin viết lại chuyên nghiệp hơn.
 - Phiên bản 2.21.1 (10/11/2026): Sửa tên bài: Tổng Tài Lạnh Lùng, Đêm Mưa Trên Mái Nhà Hào Môn.
 - Phiên bản 2.21.0 (10/11/2026): Nhạc của tôi: 20 bài hát của Ryan Nguyen làm nhạc nền Trang chủ (lần lượt hoặc trộn bài, chọn bài, phát tiếp đúng chỗ khi quay lại Trang chủ). Sửa lỗi file cài TV bản 2.20.0–2.20.3 (config.xml và build.gradle.kts bị rỗng).
 - Phiên bản 2.20.3 (10/11/2026): Bỏ mã PIN hồ sơ ngay trong Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này (trước đây chỉ đổi được).

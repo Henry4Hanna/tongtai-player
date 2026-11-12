@@ -146,5 +146,32 @@
       c(50, 50, 50, a.bg) + a.d() + '</svg>';
   }
 
-  w.Avatars = { count: A.length, svg: svg, name: function (i) { return (A[i] || {}).name || ''; } };
+  function bg(i) { return (A[((i % A.length) + A.length) % A.length] || {}).bg || ''; }
+  function hsl(hex) {
+    var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || ''); if (!m) return null;
+    var r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+    if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return { h: (h * 60 + 360) % 360, s: d / (1 - Math.abs(mx + mn - 1) || 1) };
+  }
+  // Mỗi hồ sơ một màu riêng, gần với màu nền hình thú của hồ sơ đó; không hai hồ sơ trùng màu.
+  // list: [{id, av}] theo thứ tự hồ sơ trong app; pal: bảng màu đậm. Trả về {id: màu}.
+  function colors(list, pal) {
+    var out = {}, used = {}, ph = pal.map(hsl);
+    function free() { for (var i = 0; i < pal.length; i++) if (!used[i]) return i; return -1; }
+    (list || []).forEach(function (p) {
+      if (!p || !p.id || out[p.id] || p.av == null) return;
+      var h = hsl(bg(p.av)), best = -1, bd = 999;
+      pal.forEach(function (c2, i) {
+        if (used[i] || !ph[i] || ph[i].s < 0.25) return;
+        var dd = Math.abs(ph[i].h - h.h); dd = Math.min(dd, 360 - dd);
+        if (dd < bd) { bd = dd; best = i; }
+      });
+      if (best < 0) best = free();
+      if (best >= 0) { used[best] = 1; out[p.id] = pal[best]; }
+    });
+    (list || []).forEach(function (p) { if (p && p.id && !out[p.id]) { var i = free(); out[p.id] = i >= 0 ? pal[i] : pal[Object.keys(out).length % pal.length]; if (i >= 0) used[i] = 1; } });
+    return out;
+  }
+
+  w.Avatars = { count: A.length, svg: svg, bg: bg, colors: colors, name: function (i) { return (A[i] || {}).name || ''; } };
 })(window);

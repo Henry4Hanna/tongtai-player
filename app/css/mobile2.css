@@ -163,3 +163,21 @@ html.mobile.mscrolled #views { top: calc(49px + env(safe-area-inset-top)); }
 .mobile .lrctime { margin: 12px 14px; font-size: 15px; }
 .mobile .mv-kara .mvtop { position: absolute; left: 0; right: 0; top: 0; margin: 14px 16px 0; }
 .mobile .mv-kara .mvlyr { margin-top: calc(90px + 8vh); }
+
+/* ô nhanh: chữ một dòng, căn giữa, đều nhau */
+.mq { min-width: 0; text-align: center; white-space: nowrap; font-size: 10.5px; letter-spacing: -.1px; padding: 8px 0 7px; }
+.mq span, .mq div { display: block; width: 100%; text-align: center; overflow: hidden; text-overflow: clip; }
+/* tiêu đề trang không dính vào thanh trên */
+.mobile .pagehead { padding-top: 26px; line-height: 1.25; }
+.mquick { gap: 6px; } .mq { font-size: 10px; letter-spacing: -.2px; }
+html.mobile .quizstrip .btn { height: 40px !important; min-height: 0 !important; padding: 0 14px !important; font-size: 14px !important; flex: none; }
+html.mobile .quizstrip .btn svg { width: 14px; height: 14px; }
+html.mobile .qsh { font-size: 15px; line-height: 1.3; }
+
+/* Trang Nhạc: tóm tắt bài hát (điện thoại: luôn hiện dưới tên bài) */
+.mobile .mvsum { display: block; margin-top: 12px; }
+.mobile .mvsp { margin: 0; font-size: 15px; line-height: 1.55; color: #D9D4CA; }
+.mobile .mvsq { margin: 10px 0 0; padding: 2px 0 2px 12px; border-left: 3px solid #E8B04B; font-size: 15px; line-height: 1.5; font-style: italic; color: #F6DFA8; }
+.mobile .mvlyr.hasintro.inintro .mvintro { display: none; }
+.mobile .mvlyr.hasintro.inintro .mvwin { opacity: 1; }
+.mobile .mv-kara .mvsum { display: none; }

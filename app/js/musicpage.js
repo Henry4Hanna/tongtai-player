@@ -80,6 +80,8 @@
     var title = el('div', 'mvtitle', '');
     var sub = el('div', 'mvsub', '');
     meta.appendChild(kicker); meta.appendChild(title); meta.appendChild(sub);
+    var msum = el('div', 'mvsum');   // tóm tắt bài (điện thoại: luôn hiện dưới tên bài)
+    meta.appendChild(msum);
     left.appendChild(meta);
     var prog = el('div', 'mvprog'), bar = el('div', 'mvbar'), fill = el('div', 'mvfill');
     bar.appendChild(fill); prog.appendChild(bar);
@@ -120,6 +122,8 @@
     lyr.appendChild(lhead);
     var win = el('div', 'mvwin'), lines = el('div', 'mvlines');
     win.appendChild(lines); lyr.appendChild(win);
+    var intro = el('div', 'mvintro');   // TV / máy tính: tóm tắt bài hiện trong khung lời lúc nhạc dạo
+    lyr.appendChild(intro);
     var note = el('div', 'mvnote', '');
     lyr.appendChild(note);
     v.appendChild(lyr);
@@ -150,10 +154,42 @@
       b.classList.remove('kb1', 'kb2'); void b.offsetWidth; b.classList.add(Math.random() < 0.5 ? 'kb1' : 'kb2');
       b.classList.add('on'); a.classList.remove('on');
     }
+    // Ảnh của từng bài (10 ảnh, đổi mỗi 8 giây):
+    // 1) ảnh tự tải lên trong trang quản trị (covers)  2) phim chọn sẵn (films: mã video YouTube)
+    // 3) tự chọn 10 phim thật trong kho phim có tên hợp với bài (keys: từ khóa), đổi mỗi ngày
+    function nk(x) { x = String(x || '').toLowerCase(); try { x = x.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { /* TV cũ */ } return x.replace(/đ/g, 'd'); }
+    function coversOf(i0) {
+      var i = i0 == null ? S.index() : i0, sg = S.song(i);
+      if (!sg) return null;
+      var up = sg.covers || (sg.cover ? [sg.cover] : []);
+      if (up.length) {
+        var u = String(S.url ? S.url(i) : '').replace(/[^\/]*$/, '');
+        return up.map(function (c) { return { src: u + c, title: '', cover: true }; });
+      }
+      var pool = []; try { pool = (w.Api.pool() || []).filter(function (it) { return it && (it.hero || it.thumb) && !(w.Settings.hides && w.Settings.hides(it)); }); } catch (e) { pool = []; }
+      var byId = {}; pool.forEach(function (it) { byId[it.id] = it; });
+      var out = [], seen = {};
+      function add(it) { var src = it.hero || it.thumb; if (!src || seen[src] || out.length >= 10) return; seen[src] = 1; out.push({ src: src, title: it.title || '' }); }
+      (sg.films || []).forEach(function (id) { add(byId[id] || { hero: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', title: '' }); });
+      if (out.length < 10 && pool.length) {
+        var keys = (sg.keys && sg.keys.length ? sg.keys : [sg.title]).map(nk);
+        var day = Math.floor(Date.now() / 864e5), hs = function (t) { var h = day; for (var q = 0; q < t.length; q++) h = (h * 31 + t.charCodeAt(q)) | 0; return h; };
+        var hit = pool.filter(function (it) { var t = nk(it.title); return keys.some(function (k) { return t.indexOf(k) >= 0; }); });
+        hit.sort(function (a, b) { return hs(sg.file + a.id) - hs(sg.file + b.id); });
+        hit.forEach(add);
+        if (out.length < 10) imgs.slice().sort(function (a, b) { return hs(sg.file + a.src) - hs(sg.file + b.src); }).forEach(function (it) { add({ hero: it.src, title: it.title }); });
+      }
+      return out.length ? out : null;
+    }
+    var covK = 0, covList = null;
     function nextImage() {
       lastImgAt = Date.now();
-      if (!imgs.length) { v.classList.add('noimg'); return; }
-      var it = imgs[imgK % imgs.length]; imgK++;
+      covList = coversOf();
+      if (covList && covList.length === 1 && v.classList.contains('hascover') && artCap.dataset.src === covList[0].src) return;
+      if (!covList && !imgs.length) { v.classList.add('noimg'); return; }
+      var it = covList ? covList[covK % covList.length] : imgs[imgK % imgs.length];
+      if (covList) covK++; else imgK++;
+      artCap.dataset.src = it.src; v.classList.toggle('hascover', !!(it && it.cover)); v.classList.remove('noimg');
       var pre = new Image();
       pre.onload = pre.onerror = function () {
         setBg([bgA, bgB], it.src); setBg([artA, artB], it.src);
@@ -166,7 +202,8 @@
     }
     function paintDots() {
       dots.innerHTML = '';
-      var n = Math.min(6, imgs.length), on = (imgK - 1) % n;
+      var n = covList ? covList.length : Math.min(6, imgs.length), on = covList ? (covK - 1) % n : (imgK - 1) % n;
+      if (n < 2) return;
       for (var i = 0; i < n; i++) dots.appendChild(el('i', i === on ? 'on' : ''));
     }
 
@@ -181,6 +218,7 @@
         return;
       }
       times = lineTimes(song);
+      paintSummary(song);
       var n = S.all().length;
       title.textContent = mtt.textContent = song.title;
       sub.textContent = ms.textContent = 'Ryan Nguyen · Bài ' + (i + 1) + ' / ' + n;
@@ -191,11 +229,25 @@
         lines.appendChild(e);
       });
       if (!(song.lyrics || []).length) lines.appendChild(el('div', 'mvl cur', '♪ Bài này chưa có lời'));
-      note.textContent = hasOwnTimes(song) ? 'Lời đã canh giờ bằng tay' : 'Lời canh giờ tự động, có thể lệch vài giây · bấm ⏱ “Chỉnh lời” để canh đúng';
+      note.textContent = hasOwnTimes(song) ? 'Lời đã canh giờ bằng tay' : song.lrcAuto === false ? 'Lời đã canh giờ theo nhạc' : 'Lời canh giờ tự động, có thể lệch vài giây · bấm ⏱ “Chỉnh lời” để canh đúng';
       // ảnh: mỗi bài bắt đầu ở chỗ khác
-      imgK = imgs.length ? (i * 5) % imgs.length : 0;
+      imgK = imgs.length ? (i * 5) % imgs.length : 0; covK = 0;
       nextImage();
       renderQueue();
+    }
+    function sumHTML(song, cls) {
+      var esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+      var ex = song.ex || [];
+      return (song.sum ? '<p class="' + cls + 'p">' + esc(song.sum) + '</p>' : '') +
+        (ex.length ? '<blockquote class="' + cls + 'q">' + ex.map(esc).join('<br>') + '</blockquote>' : '');
+    }
+    function paintSummary(song) {
+      var has = !!(song && (song.sum || (song.ex && song.ex.length)));
+      msum.innerHTML = has ? sumHTML(song, 'mvs') : '';
+      msum.style.display = has ? '' : 'none';
+      intro.innerHTML = has ? '<div class="mvik">GIỚI THIỆU BÀI HÁT</div>' + sumHTML(song, 'mvi') +
+        (times.length && times[0] > 3 ? '<div class="mvin">♪ Lời bắt đầu ở ' + fmt(times[0]) + '</div>' : '') : '';
+      lyr.classList.toggle('hasintro', has);
     }
     function renderQueue() {
       qrow.innerHTML = '';
@@ -204,7 +256,7 @@
         var j = ord[(p + k) % ord.length], s = all[j];
         if (!s) continue;
         var c = el('div', 'mvq f');
-        var im = imgs.length ? imgs[(j * 5 + 2) % imgs.length].src : '';
+        var cl = coversOf(j), im = cl && cl.length ? cl[0].src : imgs.length ? imgs[(j * 5 + 2) % imgs.length].src : '';   // ảnh đầu tiên của bài đó
         if (im) c.style.backgroundImage = 'url("' + im.replace(/"/g, '%22') + '")';
         c.appendChild(el('div', 'mvqshade'));
         var tt = el('div', 'mvqt');
@@ -230,6 +282,7 @@
         var tg = '';
         for (var q = Math.max(0, k); q >= 0; q--) { if (song.lyrics[q] && song.lyrics[q].s) { tg = song.lyrics[q].s; break; } }
         tag.textContent = k < 0 ? 'NHẠC DẠO' : tg;
+        lyr.classList.toggle('inintro', k < 0);
         // đưa câu đang hát vào giữa khung
         var target = kids[Math.max(0, k)];
         if (target) {
@@ -242,6 +295,17 @@
       if (cur && k >= 0) {
         var a = times[k], b = times[k + 1] != null ? times[k + 1] : a + 4;
         var p = Math.max(0, Math.min(1, (t - a) / Math.max(0.8, Math.min(b - a, 8) - 0.3)));
+        var L = song.lyrics[k], ws = L && L.w;
+        if (song.mode === 'line') p = 1;                       // hiện cả câu
+        else if (song.mode === 'word' && ws && ws.length) {     // chạy theo từng chữ (giờ từng chữ từ file .ass)
+          var sh = a - (L.at || a), tot = 0, done = 0;           // sh: lệch khi người dùng tự chỉnh giờ câu
+          ws.forEach(function (x) { tot += String(x[1]).length + 1; });
+          for (var q = 0; q < ws.length; q++) {
+            var ln = String(ws[q][1]).length + 1, s0 = ws[q][0] + sh, s1 = ws[q + 1] ? ws[q + 1][0] + sh : Math.min(b, s0 + 1.2);
+            if (t >= s1) done += ln; else { if (t > s0) done += ln * (t - s0) / Math.max(0.05, s1 - s0); break; }
+          }
+          p = Math.min(1, done / Math.max(1, tot));
+        }
         cur.style.backgroundSize = (p * 100).toFixed(1) + '% 100%, 100% 100%';
       }
     }

@@ -104,7 +104,36 @@
     return q;
   }
 
+  /* Tiết kiệm đơn vị tự động: gần hết 10.000 đơn vị/ngày thì làm mới chậm lại, không để bị khóa giữa chừng.
+     Mức 0: bình thường · Mức 1 (từ 70%): làm mới thưa gấp 3 · Mức 2 (từ 90%): chỉ dùng phim đã lưu, tạm tắt tìm kiếm. */
+  var SAVE_MULT = [1, 3, 12], saveShown = -1;
+  function familyUnits() {   // tổng cả nhà do máy chủ quản trị báo về (nếu có)
+    var f = Store.keep('famq'); return f && f.day === ptDay(Date.now()) ? f.u : 0;
+  }
+  function saveInfo() {
+    var lim = C.QUOTA_LIMIT || 10000, mine = quotaToday().units, fam = familyUnits(), u = Math.max(mine, fam);
+    var on = !w.Settings || w.Settings.get('QUOTA_SAVER') !== false;
+    var lvl = !on ? 0 : u >= lim * 0.9 ? 2 : u >= lim * 0.7 ? 1 : 0;
+    return { level: lvl, units: u, mine: mine, family: fam, limit: lim, on: on, resetAt: quotaResetAt() };
+  }
+  function cacheH(h) { return (h || C.CACHE_HOURS || 1) * SAVE_MULT[saveInfo().level]; }
+  function saveNotify() {
+    var si = saveInfo();
+    if (si.level === saveShown) return si;
+    if (saveShown >= 0 && si.level > saveShown && w.UI) {
+      w.UI.toast(si.level === 2 ? 'Hôm nay đã dùng ' + Math.round(si.units / 100) + '% đơn vị YouTube: tạm tắt tìm kiếm, chỉ hiện phim đã lưu đến ' + hhmm(si.resetAt) + '.'
+        : 'Hôm nay đã dùng ' + Math.round(si.units / 100) + '% đơn vị YouTube: app tự làm mới phim chậm lại để không hết hạn mức.');
+    }
+    saveShown = si.level; return si;
+  }
+  function famSet(u) { Store.keep('famq', { u: +u || 0, day: ptDay(Date.now()), at: Date.now() }); saveNotify(); }
+
   function call(path, params) {
+    if (path === 'search' && saveNotify().level >= 2) {
+      var se = new Error('saver'); se.saver = true; se.quota = false;
+      if (w.UI) w.UI.toast('Đang tiết kiệm đơn vị YouTube: tìm kiếm tạm tắt đến ' + hhmm(quotaResetAt()) + '. Phim đã lưu vẫn xem bình thường.');
+      return Promise.reject(se);
+    }
     return callRaw(path, params).then(function (d) { quotaLog(path); return d; }, function (e) {
       quotaLog(path, e);
       if (w.Log) w.Log.err('YouTube API (' + path + '): ' + explain(e) + (e && e.reason ? ' [' + e.reason + ']' : ''));
@@ -262,7 +291,7 @@
   function films(q, order) {
     if (!hasKey()) return Promise.resolve(demoFilms(order));
     var ck = 'f6:' + q + ':' + (order || 'relevance');
-    var hit = Store.cacheGet(ck, C.CACHE_HOURS);
+    var hit = Store.cacheGet(ck, cacheH());
     if (hit) { hit = notBlocked(hit); addPool(hit); return Promise.resolve(hit); }
     return call('search', {
       part: 'snippet', type: 'video', q: q, order: order || 'relevance', maxResults: 50,
@@ -285,7 +314,7 @@
   function anime(q) {
     if (!hasKey()) return Promise.resolve(demoAnime());
     var ck = 'a3:' + q;   // khóa mới: bỏ cache cũ còn lẫn hoạt hình 3D
-    var hit = Store.cacheGet(ck, C.CACHE_HOURS);
+    var hit = Store.cacheGet(ck, cacheH());
     if (hit) return Promise.resolve(notBlocked(hit));
     return call('search', {
       part: 'snippet', type: 'playlist', q: q, maxResults: 30,
@@ -334,7 +363,7 @@
     }
     if (!hasKey()) return Promise.resolve(demoEpisodes(pl));
     var ck = 'e2:' + pl.id;
-    var hit = Store.cacheGet(ck, C.CACHE_HOURS);
+    var hit = Store.cacheGet(ck, cacheH());
     if (hit) return Promise.resolve(notBlocked(hit));
     var ids = [];
     function page(token, n) {
@@ -405,10 +434,19 @@
       x.onload = function () {
         var map = {};
         try {
-          var d = JSON.parse(x.responseText);
-          (d.channels || d || []).forEach(function (c) { if (c && c.id) map[normName(c.name)] = c; });
-        } catch (e) { map = saved ? saved.map : {}; }
-        if (x.status === 200) Store.keep('shared', { t: Date.now(), map: map });
+          var d = JSON.parse(x.responseText), base = url.replace(/[^\/]*$/, '');
+          (d.channels || d || []).forEach(function (c) {
+            if (!c || !c.name) return;
+            if (c.img && !/^https?:/.test(c.img)) c.img = base + c.img;   // ảnh kênh tải lên từ trang quản trị (đường dẫn tính từ channels.json)
+            if (c.id || c.img || c.title) map[normName(c.name)] = c;
+          });
+          var list = d.v >= 2 ? d.channels : null;   // channels.json bản 2: danh sách kênh do trang quản trị quản lý
+        } catch (e) { map = saved ? saved.map : {}; list = saved && saved.list; }
+        if (x.status === 200) {
+          var changed = JSON.stringify(list || null) !== JSON.stringify((saved && saved.list) || null);
+          Store.keep('shared', { t: Date.now(), map: map, list: list || null });
+          if (changed && w.Settings && w.Settings.apply) { try { w.Settings.apply(); } catch (e2) { /* bỏ qua */ } }
+        }
         resolve(map);
       };
       x.onerror = x.ontimeout = function () { resolve(saved ? saved.map : {}); };
@@ -417,8 +455,16 @@
     return sharedP;
   }
 
+  function sharedInfo(c, ch) {   // tên hiển thị + ảnh kênh do trang quản trị đặt
+    var sv = Store.keep('shared'), s2 = sv && sv.map && sv.map[normName(c.name)];
+    if (s2) { if (s2.title) ch.title = s2.title; if (s2.img) ch.thumb = s2.img; else if (!ch.thumb && s2.thumb) ch.thumb = s2.thumb; }
+    return ch;
+  }
   function resolveChannel(c) {
-    if (c.id) return Promise.resolve({ name: c.name, id: c.id, title: c.name, thumb: '' });
+    if (c.id) return sharedChannels().then(function () { var k = Store.keep('ch:' + c.name); return sharedInfo(c, { name: c.name, id: c.id, title: (k && k.title) || c.name, thumb: (k && k.thumb) || '' }); });
+    return resolveChannel0(c).then(function (ch) { return ch ? sharedInfo(c, ch) : ch; });
+  }
+  function resolveChannel0(c) {
     if (Store.keep('ch:' + c.name)) return Promise.resolve(Store.keep('ch:' + c.name));
     return sharedChannels().then(function (map) {
       var s = map[normName(c.name)];
@@ -566,7 +612,7 @@
     // Tiết kiệm: mỗi giờ chỉ đọc danh sách tải lên (1 đơn vị) và lấy chi tiết video MỚI;
     // lượt xem của video cũ được làm mới mỗi C.FULL_REFRESH_HOURS giờ
     var meta = Store.keep('m:' + ck) || null, old = Store.cacheGetAny(ck);
-    var incremental = meta && old && Array.isArray(old) && old.length > 0 && Date.now() - (meta.full || 0) < (C.FULL_REFRESH_HOURS || 6) * 3600e3;
+    var incremental = meta && old && Array.isArray(old) && old.length > 0 && Date.now() - (meta.full || 0) < cacheH(C.FULL_REFRESH_HOURS || 6) * 3600e3;
     var ids = [];
     // Đọc 50 video gần nhất (vẫn 1 đơn vị). Lấy hết video MỚI, phần còn lại chọn ngẫu nhiên
     // từ video cũ hơn của kênh (đổi mỗi ngày) cho đủ CHANNEL_VIDEOS.
@@ -844,7 +890,7 @@
     explain: explain, pool: function () { return fl(pool); }, catsOf: catsOf,
     channels: channels, channelFilms: fP(channelFilms), channelWhy: channelWhy, groupEpisodes: groupEpisodes, movieFilms: fP(movieFilms),
     cachedFilms: function (q) { return fl((q && Store.cacheGetAny('f6:' + q + ':relevance')) || []); },
-    missingChannels: function () { return lastMissing; }, quotaToday: quotaToday, followedFilms: fP(followedFilms), catFilms: fP(catFilms), animeSearchLocal: fP(animeSearchLocal),
+    missingChannels: function () { return lastMissing; }, quotaToday: quotaToday, saveInfo: saveInfo, famSet: famSet, cacheHours: cacheH, followedFilms: fP(followedFilms), catFilms: fP(catFilms), animeSearchLocal: fP(animeSearchLocal),
     onProgress: function (f) { progFns.push(f); }, progress: function () { return { n: progN, total: Math.max(progN, totalChannels()) }; },
     checkUpdate: checkUpdate, updateUrl: updateUrl, filter: fl
   };

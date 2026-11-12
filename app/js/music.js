@@ -292,7 +292,11 @@
   var Songs = (function () {
     var list = null, base = '', src = '', loading = null, failedAt = 0, au = null, idx = -1, order = [], pos = 0, fadeT = 0, fading = false, want = false, lastUrl = '';
     var SVOL = { min: 0.12, low: 0.35, mid: 0.6, high: 0.9 };
-    function svol() { return SVOL[cfg().MUSIC_VOL] || SVOL.low; }
+    function svol() {
+      var v = SVOL[cfg().MUSIC_VOL] || SVOL.low, sg = list && list[idx];   // cân bằng âm lượng: mọi bài nghe đều nhau (gain do trang quản trị đo)
+      if (sg && sg.gain && cfg().MUSIC_LEVEL !== false) v = v * Math.pow(10, Math.max(-12, Math.min(6, sg.gain)) / 20);
+      return Math.min(1, v);
+    }
     function urls() {
       var out = [], c = cfg();
       function add(u) { if (u && out.indexOf(u) < 0) out.push(u); }
@@ -341,6 +345,20 @@
       if (cfg().MUSIC === 'songsx') for (var i = order.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = order[i]; order[i] = order[j]; order[j] = t; }
       pos = idx >= 0 ? Math.max(0, order.indexOf(idx)) : 0;
     }
+    // iPhone/iPad không cho đổi audio.volume: đi qua Web Audio (GainNode) để chỉnh được âm lượng như máy khác
+    var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var actx = null, gn = null, gv = 1;
+    function graph() {
+      if (!IOS || gn || !au) return;
+      try {
+        if (!actx) actx = new (w.AudioContext || w.webkitAudioContext)();
+        if (actx.state !== 'running') { actx.resume(); return; }
+        var src0 = actx.createMediaElementSource(au); gn = actx.createGain(); gn.gain.value = gv;
+        src0.connect(gn); gn.connect(actx.destination);
+      } catch (e) { IOS = false; }
+    }
+    function vget() { return gn ? gv : el().volume; }
+    function vset(v) { gv = v; if (gn) { try { gn.gain.value = v; } catch (e) { /* bỏ qua */ } } else { try { el().volume = v; } catch (e) { /* bỏ qua */ } } }
     function el() {
       if (au) return au;
       au = new Audio(); au.preload = 'auto';
@@ -350,9 +368,9 @@
     }
     function fade(to, ms, done) {
       clearInterval(fadeT); fading = true;
-      var a = el(), from = a.volume, n = Math.max(1, Math.round(ms / 50)), k = 0;
+      var from = vget(), n = Math.max(1, Math.round(ms / 50)), k = 0;
       fadeT = setInterval(function () {
-        k++; try { a.volume = Math.max(0, Math.min(1, from + (to - from) * k / n)); } catch (e) { /* iPhone: không đổi được âm lượng */ }
+        k++; vset(Math.max(0, Math.min(1, from + (to - from) * k / n)));
         if (k >= n) { clearInterval(fadeT); fading = false; if (done) done(); }
       }, 50);
     }
@@ -362,7 +380,7 @@
       pos = Math.max(0, order.indexOf(idx));
       var a = el(), u = base + encodeURI(list[idx].file).replace(/#/g, '%23');
       lastUrl = u;
-      try { a.volume = 0; } catch (e) { /* bỏ qua */ }
+      vset(0);
       a.src = u;
       want = true;
       var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* chờ lần bấm đầu */ });
@@ -393,7 +411,7 @@
       if (!unlocked || !onHome()) { pause(); return; }
       if (idx < 0) { play(order[0]); return; }
       if (au && au.paused && !want) resume();
-      else if (au && !au.paused && Math.abs(au.volume - svol()) > 0.03 && !fading) { try { au.volume = svol(); } catch (e) { /* bỏ qua */ } }
+      else if (au && !au.paused && Math.abs(vget() - svol()) > 0.03 && !fading) vset(svol());
     }
     return {
       ok: function () { return !!(list && list.length) || list === null; },
@@ -423,7 +441,7 @@
       paused: function () { return !au || au.paused; },
       source: function () { return src; },
       // iPhone: lần phát đầu bị chặn nếu không nằm trong một lần chạm; chạm lần sau thì phát tiếp
-      retry: function () { if (au && want && au.paused) { var pr = au.play(); if (pr && pr.catch) pr.catch(function () {}); } },
+      retry: function () { graph(); if (actx && actx.state !== 'running') { try { actx.resume(); } catch (e) { /* bỏ qua */ } } if (au && want && au.paused) { var pr = au.play(); if (pr && pr.catch) pr.catch(function () {}); } },
       play: function (i) { userPaused = false; play(i); }, next: function () { userPaused = false; next(); }, tick: tick, load: function (f) { if (f) { loading = null; list = null; } return load(true); }
     };
   })();

@@ -24,12 +24,12 @@ window.APP_CONFIG = {
 
   SCREENSAVER: 10,  // màn hình chờ: để yên bao nhiêu phút thì hiện ảnh bìa phim mới + đồng hồ (0 = tắt)
   BOOT_SECS: 3,      // màn hình khởi động hiện bao lâu: số giây (1, 2, 3, 5, 8) hoặc 'auto' = đến khi tải xong kênh
-  CLOCK_12: false,   // đồng hồ: false = 24 giờ (14:05), true = 12 giờ (2:05 PM). Đổi trong Cài đặt → Giao diện
+  CLOCK_12: true,    // đồng hồ: true = 12 giờ (2:05 PM, mặc định), false = 24 giờ (14:05). Đổi trong Cài đặt → Giao diện
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.26.1',
-  BUILD: 84,
+  VERSION: '2.28.0',
+  BUILD: 87,
   UPDATED: '11/11/2026',
   CONTACT: '',
   // Kiểm tra bản mới: địa chỉ file version.json. Để trống = tự dùng PLAYER_HOST + 'app/version.json' (TV)
@@ -44,13 +44,13 @@ window.APP_CONFIG = {
   MUSIC_URL: '',
   ADMIN_HASHES: ['95db4e4e635ec618bced1909f3fe20fcbab24956bb52560573ba3d33ea9be03c', 'dfc441d28737366d7329d2264ee8c8f326b77e939d70c2876df2a458308b5772'],  // email quản trị (mã hóa SHA-256, không lộ email). Đồng bộ bằng email này thì trang Thông tin hiện mục Quản trị
   ADMIN_PAGE: 'https://henry4hanna.github.io/tongtai-player/app/admin.html',  // địa chỉ trang quản trị (TV hiện mã QR tới đây)
-  STATS_URL: 'https://tongtai-stats.ryannguyen0128.workers.dev/',        // máy chủ thống kê cho trang quản trị (Cloudflare Worker), ví dụ https://tongtai-stats.ten-cua-ban.workers.dev . Để trống = không gửi gì
+  STATS_URL: '',        // máy chủ thống kê cho trang quản trị (Cloudflare Worker), ví dụ https://tongtai-stats.ten-cua-ban.workers.dev . Để trống = không gửi gì
   MUSIC_VIEW: 'split',  // trang Nhạc: 'split' (Kiểu A: chia đôi) hoặc 'karaoke' (Kiểu B: toàn màn hình)        // địa chỉ trang web có thư mục music/ (GitHub Pages của bạn). Để trống = tự dò theo bản web / PLAYER_HOST
   MUSIC_VOL: 'low',     // âm lượng nhạc nền: 'low', 'mid', 'high'
   SEASON: 'auto',       // chủ đề theo mùa/ngày lễ: 'auto' (tự đổi theo ngày), 'off' (tắt), hoặc mã chủ đề (vd 'noel', 'tet')
   SEASON_FX: true,      // hiệu ứng rơi (tuyết, hoa, lá…). Tắt nếu TV chạy chậm
   PIN: '1234',
-  PIN_FORCE: '',        // QUÊN MÃ PIN: điền mã mới ở đây (ví dụ '1234'), tải lại app một lần, rồi để trống lại          // mã PIN mặc định (đổi trong Cài đặt → Mã PIN). Dùng cho: tắt lọc lứa tuổi, sửa từ khóa, khôi phục mặc định, đổi PIN    // sao lưu tự động hằng tuần vào Google Drive / GitHub Gist (khi đã đăng nhập)
+  PIN_FORCE: '1028',        // QUÊN MÃ PIN: điền mã mới ở đây (ví dụ '1234'), tải lại app một lần, rồi để trống lại          // mã PIN mặc định (đổi trong Cài đặt → Mã PIN). Dùng cho: tắt lọc lứa tuổi, sửa từ khóa, khôi phục mặc định, đổi PIN    // sao lưu tự động hằng tuần vào Google Drive / GitHub Gist (khi đã đăng nhập)
 
   // Chỉ chọn phim phù hợp lứa tuổi: ẩn phim có các từ khóa này trong tên/mô tả (sửa trong Cài đặt → Lọc theo lứa tuổi)
   AGE_FILTER: false,

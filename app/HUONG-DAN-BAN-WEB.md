@@ -1,4 +1,4 @@
-# Tổng Tài TV – bản xem trên trình duyệt (2.26.1, miễn phí, GitHub Pages)
+# Tổng Tài TV – bản xem trên trình duyệt (2.26.2, miễn phí, GitHub Pages)
 
 ## CÀI ĐẶT LÊN GITHUB PAGES
 
@@ -32,7 +32,7 @@ Phụ đề: khi đang xem phim, bấm ▲ 2 lần nhanh để bật/tắt phụ
 
 Cập nhật bản mới: tải đè thư mục app lên GitHub như bước 2 (gồm cả version.json), chờ 1–2 phút rồi tải lại trang (kéo xuống hoặc F5).
 
-## HƯỚNG DẪN SỬ DỤNG (bản 2.26.1)
+## HƯỚNG DẪN SỬ DỤNG (bản 2.26.2)
 
 Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy tính, điện thoại). Trên TV dùng remote; trên máy tính bấm chuột hoặc dùng bàn phím (mũi tên, Enter, Esc); trên điện thoại chạm và vuốt.
 
@@ -200,6 +200,7 @@ Phần này dùng chung cho TV (Samsung, Hisense/Android TV) và bản web (máy
 
 ## LỊCH SỬ PHIÊN BẢN
 
+- Phiên bản 2.26.2 (12/11/2026): Đồng hồ mặc định 12 giờ; sửa chữ ô nhanh và tiêu đề trang trên điện thoại.
 - Phiên bản 2.26.1 (11/11/2026): Gửi sang điện thoại có thêm mã QR mở phim trên YouTube.
 - Phiên bản 2.26.0 (11/11/2026): Đánh giá phim ❤/👎. Có tập mới. Chế độ ngủ. Báo cáo tuần. Tổng tài của tuần. Câu đố tổng tài. Sinh nhật có pháo bông. Tải sẵn ảnh bìa. Gửi phim sang điện thoại bằng mã QR.
 - Phiên bản 2.25.1 (11/11/2026): 250 câu thoại tổng tài, mỗi lần màn hình chờ hiện một câu mới.

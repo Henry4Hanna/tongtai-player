@@ -1306,7 +1306,7 @@
     opt('SLEEP_WHO', 'Chế độ ngủ áp dụng cho', 'Cả nhà, hoặc chỉ khi đang xem bằng hồ sơ có giới hạn giờ xem', [{ v: 'all', t: 'Cả nhà', on: true }, { v: 'lim', t: 'Hồ sơ có giới hạn', on: true }]);
     opt('PRELOAD', 'Tải sẵn ảnh bìa', 'Lưu sẵn ảnh bìa phim mới khi rảnh để TV mở nhanh, đỡ giật khi mạng yếu (tạm dừng khi đang xem phim)', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
     row('Xem thử màn hình chờ', 'Bấm phím bất kỳ để quay lại', function () { return { t: 'Xem thử' }; }, function () { if (w.Saver) setTimeout(w.Saver.show, 150); });
-    opt('CLOCK_12', 'Đồng hồ', 'Kiểu giờ ở góc trên và trong app', [{ v: false, t: '24 giờ (14:05)', on: true }, { v: true, t: '12 giờ (2:05 PM)', on: true }]);
+    opt('CLOCK_12', 'Đồng hồ', 'Kiểu giờ ở góc trên và trong app', [{ v: true, t: '12 giờ (2:05 PM)', on: true }, { v: false, t: '24 giờ (14:05)', on: true }]);
 
     sec('Hồ sơ người xem');
     row('Đang xem với hồ sơ', 'Mỗi hồ sơ có lịch sử, phim xem dở, danh sách và từ khóa tìm kiếm riêng', function () {
@@ -1398,7 +1398,8 @@
       var n = w.Music && w.Music.songs ? w.Music.songs().length : 0;
       return { t: n ? n + ' bài · Mở' : 'Mở', on: n > 0 };
     }, function () { push(SongPick()); });
-    opt('MUSIC_VOL', 'Âm lượng nhạc nền', 'Ngưỡng: rất nhỏ, vừa đủ nghe (nhỏ hơn mức Nhỏ)', [{ v: 'min', t: 'Ngưỡng', on: true }, { v: 'low', t: 'Nhỏ', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'To', on: true }]);
+    opt('MUSIC_LEVEL', 'Cân bằng âm lượng các bài', 'Bài nào cũng nghe to như nhau, ở Trang chủ, trang Nhạc và màn hình chờ', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
+        opt('MUSIC_VOL', 'Âm lượng nhạc nền', 'Ngưỡng: rất nhỏ, vừa đủ nghe (nhỏ hơn mức Nhỏ)', [{ v: 'min', t: 'Ngưỡng', on: true }, { v: 'low', t: 'Nhỏ', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'To', on: true }]);
 
     sec('Chủ đề theo mùa và ngày lễ');
     markPP(row('Chủ đề', 'Tự động đổi theo ngày: Tết, Noel, Năm mới, Valentine, 8/3, 20/10, 1/6, Ngày của Mẹ/Cha, Trung thu, Halloween, Lễ Tạ Ơn, hoa anh đào, 4 mùa', function () {
@@ -1412,6 +1413,7 @@
     sec('Cập nhật phim mới');
     opt('AUTO_REFRESH', 'Tự cập nhật phim mới', 'Lấy video mới từ các kênh theo dõi khi đang mở app', ONOFF);
     opt('REFRESH_HOURS', 'Cập nhật mỗi', 'Càng thưa càng tiết kiệm hạn mức', [1, 2, 3, 6, 12].map(function (h) { return { v: h, t: h + ' giờ' }; }));
+    opt('QUOTA_SAVER', 'Tiết kiệm đơn vị YouTube', 'Gần hết 10.000 đơn vị trong ngày thì tự làm mới phim chậm lại; quá 90% thì chỉ hiện phim đã lưu', [{ v: true, t: 'Tự động', on: true }, { v: false, t: 'Tắt' }]);
     opt('IDLE_STOP_HOURS', 'Tạm dừng khi TV để không', 'Không ai bấm remote một lúc thì ngừng cập nhật',
       [{ v: 1, t: 'Sau 1 giờ' }, { v: 3, t: 'Sau 3 giờ' }, { v: 6, t: 'Sau 6 giờ' }, { v: 0, t: 'Không tạm dừng' }]);
     opt('CHANNEL_VIDEOS', 'Số video lấy mỗi kênh', 'Nhiều hơn = danh mục đầy hơn, vẫn 1 đơn vị/kênh',
@@ -2980,7 +2982,10 @@
       qbody.innerHTML = '';
       var over = q.errAt && q.errAt > q.resetAt - 86400e3;
       qk('Trạng thái', over ? 'Đã hết hạn mức lúc ' + UI.hhmm(q.errAt) : 'Bình thường', over ? 'bad' : 'good');
+      var si = Api.saveInfo();
       qk('Đã dùng hôm nay (TV này)', num(q.units) + ' / 10.000 đơn vị');
+      if (si.family) qk('Cả nhà hôm nay (mọi máy)', num(si.family) + ' / 10.000 đơn vị');
+      qk('Tiết kiệm tự động', !si.on ? 'Đang tắt (Cài đặt → Tiết kiệm đơn vị)' : si.level === 2 ? 'Mức 2: chỉ hiện phim đã lưu, tạm tắt tìm kiếm đến ' + UI.hhmm(si.resetAt) : si.level === 1 ? 'Mức 1: làm mới phim thưa gấp 3 (đã dùng trên 70%)' : 'Chưa cần (tự bật khi dùng quá 70%)', si.level === 2 ? 'bad' : si.level === 1 ? 'mid' : 'good');
       qk('Tìm kiếm · Đọc kênh/video', q.search + ' lần = ' + num(q.search * 100) + ' · ' + q.other + ' lần = ' + num(q.other));
       qk('Hạn mức làm mới sau', hm(q.resetAt - Date.now()) + ' (lúc ' + UI.hhmm(q.resetAt) + ')');
       qk('Ước tính theo Cài đặt', '~' + e.hour + ' đơn vị/giờ · mở 8 tiếng ≈ ' + num(e.day) + '/ngày');
@@ -2990,10 +2995,10 @@
       if (sy.loggedIn) qk('Đồng bộ', ((sy.google ? (sy.email || 'Google') : '') + (sy.google && sy.github ? ' + ' : '') + (sy.github ? 'GitHub' : '')) + ' · ' + (sy.error || 'lần cuối ' + (sy.lastSync ? UI.hhmm(sy.lastSync) : '—')), sy.error ? 'bad' : '');
       var bk = Sync.backupStatus ? Sync.backupStatus() : null;
       if (bk && bk.can) qk('Sao lưu hằng tuần', bk.error ? bk.error : bk.at ? 'Đã sao lưu lúc ' + UI.hhmm(bk.at) + ' ngày ' + new Date(bk.at).toLocaleDateString('vi-VN') + (bk.where ? ' · ' + bk.where : '') : 'Chưa sao lưu', bk.error ? 'bad' : '');
-      var pct = Math.min(100, q.units / 100);
+      var pct = Math.min(100, si.units / 100);
       fill.style.width = Math.max(1, pct) + '%';
       fill.className = 'qfill' + (pct > 80 || over ? ' bad' : pct > 50 ? ' mid' : '');
-      qnote.textContent = 'Chỉ đếm trên TV này. Nếu Samsung và Hisense dùng chung API key thì tổng thật là cộng cả hai. Xem phim không tốn hạn mức.';
+      qnote.textContent = si.family ? 'Thanh màu tính theo số lớn hơn: TV này hoặc cả nhà (máy chủ quản trị báo về mỗi phút). Xem phim không tốn hạn mức.' : 'Chỉ đếm trên TV này. Nếu Samsung và Hisense dùng chung API key thì tổng thật là cộng cả hai. Bật máy chủ quản trị để thấy số của cả nhà. Xem phim không tốn hạn mức.';
     }
     paintQuota();
     var qt = setInterval(function () { if (!d.body.contains(v)) { clearInterval(qt); return; } paintQuota(); }, 15000);
@@ -3679,6 +3684,7 @@
     top.appendChild(tt);
     var seg = el('div', 'stseg');
     [[1, 'Hôm nay'], [7, '7 ngày'], [30, '30 ngày']].forEach(function (x) {
+      if (tab === 'channels' || tab === 'music') return;
       var b = el('div', 'stsegb f' + (x[0] === days ? ' on' : ''), x[1]);
       b._ok = function () { if (x[0] !== days) { back(); push(AdminTV(tab, x[0])); } };
       seg.appendChild(b);
@@ -3686,7 +3692,7 @@
     top.appendChild(seg);
     v.appendChild(top);
     var tabs = el('div', 'admtabs rowwrap');
-    [['overview', 'Tổng quan'], ['devices', 'Thiết bị và IP'], ['profile', 'Hồ sơ']].forEach(function (x) {
+    [['overview', 'Tổng quan'], ['devices', 'Thiết bị và IP'], ['profile', 'Hồ sơ'], ['channels', 'Kênh'], ['music', 'Nhạc']].forEach(function (x) {
       var b = el('div', 'admtab f' + (x[0] === tab ? ' on' : ''), x[1]);
       b._ok = function () { if (x[0] !== tab) { back(); push(AdminTV(x[0], days)); } };
       tabs.appendChild(b);
@@ -3807,7 +3813,7 @@
           lc.appendChild(g); body.appendChild(lc);
         }
       }, fail);
-    } else {
+    } else if (tab !== 'channels' && tab !== 'music') {
       call('/a/overview').then(function (o) {
         o.profiles.forEach(function (p) { col(p.id); });
         var pid = AdminTV.pid && o.profiles.some(function (p) { return p.id === AdminTV.pid; }) ? AdminTV.pid : (o.profiles[0] || {}).id;
@@ -3864,7 +3870,272 @@
         });
       }).then(null, fail);
     }
+
+    if (tab === 'channels') {
+      var TY = { drama: 'Phim ngắn', anime: 'Hoạt hình', movie: 'Phim lẻ' };
+      call('/a/channels').then(function (j) {
+        if (!j.ok) { fail({ status: 'GitHub' }); body.firstChild.textContent = 'Máy chủ chưa nối GitHub (GH_TOKEN, GH_REPO). Xem HUONG-DAN-ADMIN, bước “Nối GitHub”.'; return; }
+        var dd = j.data || {}, L = dd.v >= 2 ? dd.channels : null, sha = j.sha;
+        if (!L) {   // channels.json bản cũ: dựng từ danh sách đang dùng
+          var mp = {}; (dd.channels || []).forEach(function (c) { if (c && c.name) mp[normKey(c.name)] = c; });
+          L = [];
+          [['CHANNELS', 'drama'], ['ANIME_CHANNELS', 'anime'], ['MOVIE_CHANNELS', 'movie']].forEach(function (q) { (C[q[0]] || []).forEach(function (c) { var m = mp[normKey(c.name)] || {}; var o = { name: c.name, type: q[1] }; if (c.id || m.id) o.id = c.id || m.id; if (m.title) o.title = m.title; if (m.thumb) o.thumb = m.thumb; if (c.tag) o.tag = c.tag; L.push(o); }); });
+        }
+        body.innerHTML = ''; sub.textContent = (em ? em + ' · ' : '') + L.length + ' kênh · channels.json trên GitHub';
+        function save(msg) {
+          return call('/a/channels', { sha: sha, message: msg, channels: L }).then(function (r) { if (!r.ok) throw r; sha = r.sha; UI.toast('Đã lưu: ' + msg); }, function (e) { UI.toast('Không lưu được'); throw e; });
+        }
+        var on = L.filter(function (c) { return c.on !== false; });
+        var miss = L.filter(function (c) { return !c.id; }), at = miss.filter(function (c) { return /^@/.test(c.name); }).length, units = at + (miss.length - at) * 100;
+        body.appendChild(kpis([['Kênh đang hiện', on.length + ' / ' + L.length, ''], ['Phim ngắn', on.filter(function (c) { return c.type === 'drama'; }).length, ''], ['Hoạt hình', on.filter(function (c) { return c.type === 'anime'; }).length, ''], ['Có mã kênh', (L.length - miss.length) + ' / ' + L.length, 'có mã = không tốn đơn vị tìm kênh']]));
+        var idc = card('Tự lấy mã kênh', miss.length ? miss.length + ' kênh chưa có mã · ' + at + ' × 1 đơn vị' + (miss.length - at ? ' + ' + (miss.length - at) + ' × 100 đơn vị' : '') + ' = khoảng ' + units + ' đơn vị' : 'Tất cả kênh đã có mã');
+        if (miss.length) idc.appendChild(UI.button('Lấy mã ' + miss.length + ' kênh (≈ ' + units + ' đơn vị)', 'gold', function () {
+          var k = 0, ok = 0;
+          (function step() {
+            if (k >= miss.length) { if (ok) save('Tự lấy mã cho ' + ok + ' kênh').then(function () { back(); push(AdminTV('channels', days)); }); else UI.toast('Không lấy được mã nào'); return; }
+            var c = miss[k++]; UI.toast('Đang tìm ' + c.name + ' (' + k + '/' + miss.length + ')');
+            var pr = /^@/.test(c.name) ? { part: 'snippet', forHandle: c.name } : null;
+            ytGet(pr ? 'channels' : 'search', pr || { part: 'snippet', type: 'channel', q: c.name, maxResults: 1 }).then(function (r) {
+              var it = (r.items || [])[0]; if (!it) return;
+              c.id = pr ? it.id : it.id.channelId; var th = (it.snippet.thumbnails || {}); c.thumb = (th.medium || th.default || {}).url || ''; if (!c.title) c.title = it.snippet.title; ok++;
+            }).then(step, step);
+          })();
+        }));
+        var ageD = function (c) { var t = c.last ? Date.parse(c.last) : NaN; return isNaN(t) ? -1 : Math.floor((Date.now() - t) / 86400e3); };
+        var dorm = L.filter(function (c) { return c.on !== false && (c.gone || ageD(c) >= 60); });
+        var dc = card('Kênh “ngủ đông”', dorm.length ? dorm.length + ' kênh đang bật: 60 ngày không ra phim mới hoặc không còn trên YouTube' : 'Không có kênh ngủ đông · kiểm tra bằng RSS, không tốn đơn vị');
+        var dbx = el('div', 'admsegs');
+        dbx.appendChild(UI.button('Kiểm tra ' + L.filter(function (c) { return c.id; }).length + ' kênh (0 đơn vị)', dorm.length ? '' : 'gold', function () {
+          var ids = L.filter(function (c) { return c.id; }).map(function (c) { return c.id; }), parts = [], res = {}, k = 0;
+          for (var q = 0; q < ids.length; q += 20) parts.push(ids.slice(q, q + 20));
+          (function step() {
+            if (k >= parts.length) {
+              var now = new Date().toISOString(), n = 0;
+              L.forEach(function (c) { var r = c.id && res[c.id]; if (!r || r.err) return; n++; c.chk = now; if (r.gone) c.gone = true; else { delete c.gone; if (r.last) c.last = r.last; } });
+              save('Kiểm tra ' + n + ' kênh (ngủ đông)').then(function () { back(); push(AdminTV('channels', days)); });
+              return;
+            }
+            UI.toast('Đang kiểm tra ' + Math.min(ids.length, (k + 1) * 20) + ' / ' + ids.length + ' kênh…');
+            call('/a/channels/check', { ids: parts[k++] }).then(function (r) { if (r.ok) for (var key in r.res) res[key] = r.res[key]; }).then(step, step);
+          })();
+        }));
+        if (dorm.length) dbx.appendChild(UI.button('Tắt ' + dorm.length + ' kênh ngủ đông', 'gold', function () { dorm.forEach(function (c) { c.on = false; }); save('Tắt ' + dorm.length + ' kênh ngủ đông').then(function () { back(); push(AdminTV('channels', days)); }); }));
+        dbx.appendChild(UI.button('↶ Lịch sử thay đổi', '', function () { push(HistoryTV('channels', call)); }));
+        dc.appendChild(dbx);
+        body.appendChild(idc); body.appendChild(dc);
+        var lc = card('Danh sách kênh', 'OK = bật / tắt kênh · thêm, sửa, đổi ảnh trên trang quản trị ở máy tính');
+        L.forEach(function (c) {
+          var r = el('div', 'admprow admchrow f' + (c.on === false ? ' off' : ''));
+          var av = el('div', 'admav ini', String(c.title || c.name).replace(/^@/, '').charAt(0).toUpperCase()); av.style.background = col(c.name);
+          var src = c.img ? (/^https?:/.test(c.img) ? c.img : String(C.CHANNELS_JSON || '').replace(/[^\/]*$/, '') + c.img) : c.thumb;
+          if (src && (c.thumb || /^https?:/.test(src))) { var im = new Image(); im.onload = function () { av.style.backgroundImage = 'url(' + src + ')'; av.textContent = ''; av.classList.add('img'); }; im.src = src; }
+          r.appendChild(av);
+          var mid = el('div', 'admpmid'); mid.appendChild(el('div', 'admpn', c.title || c.name.replace(/^@/, '')));
+          var ad = ageD(c), lt = c.gone ? 'không còn trên YouTube' : ad >= 60 ? 'ngủ đông ' + ad + ' ngày' : ad >= 0 ? 'phim mới ' + (ad ? ad + ' ngày trước' : 'hôm nay') : '';
+          mid.appendChild(el('div', 'admps', c.name + ' · ' + TY[c.type] + (c.tag ? ' · ' + c.tag : '') + ' · ' + (c.id ? 'có mã' : 'chưa có mã') + (lt ? ' · ' : '')));
+          if (lt) mid.lastChild.appendChild(el('span', c.gone || ad >= 60 ? 'admwarn' : '', lt));
+          r.appendChild(mid);
+          var swi = el('div', 'admsw' + (c.on === false ? '' : ' on'), c.on === false ? 'Tắt' : 'Bật'); r.appendChild(swi);
+          r._ok = function () {
+            if (c.on === false) delete c.on; else c.on = false;
+            swi.className = 'admsw' + (c.on === false ? '' : ' on'); swi.textContent = c.on === false ? 'Tắt' : 'Bật'; r.classList.toggle('off', c.on === false);
+            save((c.on === false ? 'Tắt' : 'Bật') + ' kênh ' + c.name);
+          };
+          lc.appendChild(r);
+        });
+        body.appendChild(lc);
+      }).then(null, fail);
+    } else if (tab === 'music') {
+      call('/a/music').then(function (j) {
+        if (!j.ok) { fail({ status: 'GitHub' }); body.firstChild.textContent = 'Máy chủ chưa nối GitHub (GH_TOKEN, GH_REPO). Xem HUONG-DAN-ADMIN, bước “Nối GitHub”.'; return; }
+        var songs = j.list.songs || [];
+        body.innerHTML = ''; sub.textContent = (em ? em + ' · ' : '') + songs.length + ' bài · music/list.json trên GitHub';
+        var MD = { line: 'Hiện theo câu', word: 'Chạy theo chữ' };
+        body.appendChild(kpis([['Số bài', songs.length, ''], ['Lời canh giờ chuẩn', songs.filter(function (x) { return x.lrcAuto === false; }).length + ' / ' + songs.length, ''], ['Có tóm tắt', songs.filter(function (x) { return x.sum; }).length + ' / ' + songs.length, ''], ['Cân bằng âm lượng', songs.filter(function (x) { return x.gain != null; }).length + ' / ' + songs.length, 'đo trên trang quản trị máy tính']]));
+        var hc = el('div', 'admsegs'); hc.appendChild(UI.button('↶ Lịch sử thay đổi', '', function () { push(HistoryTV('music', call)); })); body.appendChild(hc);
+        var lc = card('Danh sách bài', 'OK = mở bài: chọn kiểu chạy lời, canh lời bằng remote');
+        songs.forEach(function (x, i) {
+          var r = el('div', 'admprow f');
+          r.appendChild(el('div', 'admnum', String(i + 1)));
+          var mid = el('div', 'admpmid'); mid.appendChild(el('div', 'admpn', x.title));
+          mid.appendChild(el('div', 'admps', fmtMin(x.dur || 0) + ' · ' + (x.lrcAuto === false ? 'lời canh giờ chuẩn' : 'lời tự động') + ' · ' + (MD[x.mode] || 'Tô dần cả câu') + (x.sum ? ' · có tóm tắt' : '')));
+          r.appendChild(mid);
+          r._ok = function () { push(AdminSongTV(songs, i, j.sha, call)); };
+          lc.appendChild(r);
+        });
+        body.appendChild(lc);
+      }).then(null, fail);
+    }
+    function normKey(x) { x = String(x || '').toLowerCase(); try { x = x.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) { /* TV cũ */ } return x.replace(/đ/g, 'd').replace(/[^a-z0-9@]/g, ''); }
+    function ytGet(path, q) {
+      return new Promise(function (ok, bad) {
+        q.key = (w.Settings && Settings.get('API_KEY')) || C.API_KEY;
+        var x = new XMLHttpRequest();
+        x.open('GET', 'https://www.googleapis.com/youtube/v3/' + path + '?' + Object.keys(q).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&'));
+        x.onload = function () { try { var r = JSON.parse(x.responseText); if (r.error) bad(r.error); else ok(r); } catch (e) { bad(e); } };
+        x.onerror = function () { bad({ net: true }); }; x.send();
+      });
+    }
     return { name: 'admintv', el: v };
+  }
+
+
+  /* Quản trị trên TV: lịch sử thay đổi Kênh / Nhạc, bấm OK 2 lần để quay về bản cũ */
+  function HistoryTV(kind, call) {
+    var v = UI.view(); v.classList.add('scroller'); v.classList.add('stats'); v.classList.add('admtv');
+    var top = el('div', 'sthead'), tt = el('div', 'sttitle');
+    tt.appendChild(el('div', 'stt1', 'Lịch sử thay đổi · ' + (kind === 'channels' ? 'Kênh' : 'Nhạc')));
+    tt.appendChild(el('div', 'stt2', 'Bấm OK 2 lần ở một dòng để quay về bản đó. Không mất gì: bản hiện tại vẫn nằm trong lịch sử.'));
+    top.appendChild(tt); v.appendChild(top);
+    var row0 = el('div', 'strow'), box = el('div', 'stcard rowwrap wide'); box.appendChild(el('div', 'admps', 'Đang tải…')); row0.appendChild(box); v.appendChild(row0);
+    function when(iso) { var d0 = new Date(iso); return ('0' + d0.getDate()).slice(-2) + '/' + ('0' + (d0.getMonth() + 1)).slice(-2) + ' · ' + (UI.hhmm ? UI.hhmm(d0.getTime()) : d0.toTimeString().slice(0, 5)); }
+    call('/a/history?kind=' + kind).then(function (j) {
+      box.innerHTML = '';
+      if (!j.ok) { box.appendChild(el('div', 'admps', j.error || 'Không tải được')); return; }
+      j.list.forEach(function (h, i) {
+        var r = el('div', 'admprow f');
+        r.appendChild(el('div', 'admhdot' + (i === 0 ? ' now' : '')));
+        var mid = el('div', 'admpmid'); mid.appendChild(el('div', 'admpn', h.msg.replace(/ \(trang quản trị\)$/, '')));
+        mid.appendChild(el('div', 'admps', when(h.at) + ' · ' + (h.by || '') + (i === 0 ? ' · đang dùng' : ''))); r.appendChild(mid);
+        var st = el('div', 'admsw' + (i === 0 ? ' on' : ''), i === 0 ? 'Đang dùng' : 'Quay về'); r.appendChild(st);
+        var armed = 0;
+        r._ok = function () {
+          if (i === 0) return;
+          if (Date.now() - armed > 4000) { armed = Date.now(); st.textContent = 'OK lần nữa'; st.classList.add('arm'); setTimeout(function () { if (st.classList.contains('arm')) { st.textContent = 'Quay về'; st.classList.remove('arm'); } }, 4000); return; }
+          st.classList.remove('arm'); st.textContent = 'Đang quay về…';
+          call('/a/history?kind=' + kind, { sha: h.sha, label: when(h.at) }).then(function (x) {
+            if (!x.ok) throw x; UI.toast('Đã quay về bản lúc ' + when(h.at) + '. 1–2 phút nữa mọi máy sẽ thấy.'); back(); push(HistoryTV(kind, call));
+          }).then(null, function () { st.textContent = 'Lỗi'; UI.toast('Không quay về được'); });
+        };
+        box.appendChild(r);
+      });
+    }).then(null, function () { box.innerHTML = ''; box.appendChild(el('div', 'admps', 'Không tải được lịch sử (kiểm tra mạng, máy chủ quản trị).')); });
+    return { name: 'adminhist', el: v };
+  }
+
+  /* ---------- Quản trị trên TV: một bài nhạc (kiểu chạy lời, âm lượng, canh lời bằng remote) ---------- */
+  function AdminSongTV(songs, i, sha, call) {
+    var x = JSON.parse(JSON.stringify(songs[i])), v = UI.view(), idx0 = -1;
+    (w.Music && Music.S ? Music.S.all() : []).forEach(function (s2, k) { if (s2.file === x.file) idx0 = k; });
+    v.classList.add('scroller'); v.classList.add('stats'); v.classList.add('admtv');
+    var top = el('div', 'sthead'); var tt = el('div', 'sttitle');
+    tt.appendChild(el('div', 'stt1', x.title)); tt.appendChild(el('div', 'stt2', 'Bài ' + (i + 1) + ' / ' + songs.length + ' · ' + Math.floor((x.dur || 0) / 60) + ':' + ('0' + Math.round((x.dur || 0) % 60)).slice(-2) + ' · ' + (x.lyrics || []).length + ' câu'));
+    top.appendChild(tt); v.appendChild(top);
+    var row = el('div', 'strow'), L = el('div', 'stcard rowwrap wide'), R = el('div', 'stcard rowwrap');
+    L.appendChild(el('div', 'stct', 'Lời chạy trên màn hình'));
+    var seg = el('div', 'admsegs');
+    [['line', 'Hiện theo câu'], ['word', 'Chạy theo từng chữ'], ['', 'Tô dần cả câu']].forEach(function (m) {
+      var b = el('div', 'stsegb f' + ((x.mode || '') === m[0] ? ' on' : ''), m[1]);
+      b._ok = function () { x.mode = m[0] || undefined; [].forEach.call(seg.children, function (q) { q.classList.toggle('on', q === b); }); dirty(); };
+      seg.appendChild(b);
+    });
+    L.appendChild(seg);
+    var hasW = (x.lyrics || []).some(function (l) { return l.w; });
+    L.appendChild(el('div', 'admps', hasW ? 'Bài này có giờ từng chữ (từ file .ass).' : 'Chưa có giờ từng chữ: “Chạy theo từng chữ” sẽ chia đều chữ trong câu.'));
+    L.appendChild(el('div', 'stct gap', 'Âm lượng'));
+    var gb = el('div', 'stsegb f' + (x.gain != null ? ' on' : ''), x.gain != null ? 'Cân bằng: Bật (' + (x.gain > 0 ? '+' : '') + x.gain + ' dB)' : 'Cân bằng: chưa đo');
+    gb._ok = function () { if (x.gain != null) { x._g = x.gain; delete x.gain; } else if (x._g != null) x.gain = x._g; gb.className = 'stsegb f' + (x.gain != null ? ' on' : ''); gb.textContent = x.gain != null ? 'Cân bằng: Bật (' + x.gain + ' dB)' : 'Cân bằng: Tắt'; dirty(); };
+    L.appendChild(gb);
+    L.appendChild(el('div', 'stct gap', 'Canh lời theo nhạc'));
+    var acts = el('div', 'admsegs');
+    acts.appendChild(UI.button('Canh lời bằng remote', 'gold', function () { push(LyricSyncTV(x, songs[i], function () { dirty(); })); }));
+    var bSave = UI.button('Lưu lên GitHub', '', function () {
+      delete x._g;
+      call('/a/music', { sha: sha, op: 'update', song: x }).then(function (r) {
+        if (!r.ok) throw r; sha = r.sha; songs[i] = x; UI.toast('Đã lưu. 1–2 phút nữa mọi máy sẽ thấy.'); bSave.classList.add('hidden');
+      }).then(null, function (e) { UI.toast('Không lưu được' + (e && e.j && e.j.error ? ': ' + e.j.error : '')); });
+    });
+    bSave.classList.add('hidden'); acts.appendChild(bSave);
+    L.appendChild(acts);
+    function dirty() { bSave.classList.remove('hidden'); }
+    R.appendChild(el('div', 'stct', 'Trang Nhạc sẽ hiện'));
+    var pv = el('div', 'admsong');
+    pv.appendChild(el('div', 'mvik', 'GIỚI THIỆU BÀI HÁT'));
+    pv.appendChild(el('p', 'mvsp', x.sum || '(chưa có tóm tắt — viết trên trang quản trị ở máy tính)'));
+    if (x.ex && x.ex.length) { var q = el('blockquote', 'mvsq'); q.innerHTML = x.ex.map(function (t) { return String(t).replace(/</g, '&lt;'); }).join('<br>'); pv.appendChild(q); }
+    R.appendChild(pv);
+    var cvs = x.covers || (x.cover ? [x.cover] : []);
+    var fl = x.films || [];
+    R.appendChild(el('div', 'stct gap', 'Ảnh trên trang Nhạc: ' + (cvs.length ? cvs.length + ' ảnh tải lên' : fl.length ? fl.length + ' phim chọn sẵn' : '10 phim tự chọn theo từ khóa “' + (x.keys || [x.title]).join(', ') + '”')));
+    if (cvs.length || fl.length) {
+      var strip = el('div', 'admcovs'), mb = (idx0 >= 0 && Music.S.url ? String(Music.S.url(idx0)) : 'music/x').replace(/[^\/]*$/, '');
+      (cvs.length ? cvs.map(function (c) { return mb + c; }) : fl.map(function (id) { return 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'; })).forEach(function (u) { var t = el('div', 'admcov'); t.style.backgroundImage = 'url("' + u + '")'; strip.appendChild(t); });
+      R.appendChild(strip);
+    }
+    R.appendChild(el('div', 'admps', 'Đổi từ khóa, chọn phim, tải ảnh trên trang quản trị ở máy tính / điện thoại.'));
+    row.appendChild(L); row.appendChild(R); v.appendChild(row);
+    return { name: 'adminsong', el: v };
+  }
+
+  /* Canh lời bằng remote: nghe bài, bấm OK đúng lúc mỗi câu bắt đầu */
+  function LyricSyncTV(x, orig, onDone) {
+    var v = UI.view(); v.classList.add('lsync');
+    var Ls = JSON.parse(JSON.stringify(x.lyrics || [])), tapI = -1, cur = -2, raf = 0;
+    var idx = -1; (w.Music && Music.S ? Music.S.all() : []).forEach(function (s2, k) { if (s2.file === x.file) idx = k; });
+    var au = new Audio(idx >= 0 ? Music.S.url(idx) : 'music/' + encodeURI(x.file)); au.preload = 'auto';
+    var head = el('div', 'lshead'); head.appendChild(el('div', 'lst', 'Canh lời: ' + x.title)); var tm = el('div', 'lstm', '0:00'); head.appendChild(tm); v.appendChild(head);
+    var bar = el('div', 'lsbar'), fill = el('div', 'lsfill'); bar.appendChild(fill);
+    var D = x.dur || 240;
+    Ls.forEach(function (l) { var m = el('div', 'lsmk'); m.style.left = (l.at / D * 100) + '%'; bar.appendChild(m); });
+    v.appendChild(bar);
+    var stage = el('div', 'lsstage'), tg = el('div', 'mvik'), lp = el('div', 'lsl p'), lc = el('div', 'lsl c'), ln = el('div', 'lsl n');
+    stage.appendChild(tg); stage.appendChild(lp); stage.appendChild(lc); stage.appendChild(ln); v.appendChild(stage);
+    var hint = el('div', 'lshint', 'Bấm ▶ để nghe. Muốn canh lại: bấm “Bắt đầu bấm theo nhạc”, rồi mỗi khi một câu bắt đầu hát thì bấm OK.');
+    v.appendChild(hint);
+    var ctl = el('div', 'lsctl rowwrap');
+    var bPlay = UI.button('▶ Phát', 'gold', function () { if (au.paused) au.play(); else au.pause(); });
+    var bTap = UI.button('● Bắt đầu bấm theo nhạc', '', function () {
+      if (tapI >= 0) { tapI = -1; paintTap(); return; }
+      var k = lineAt(au.currentTime); tapI = k < 0 ? 0 : Math.min(Ls.length - 1, k + 1);
+      au.currentTime = Math.max(0, tapI > 0 ? Ls[tapI].at - 3 : 0); au.play(); paintTap(); setTimeout(function () { Nav.focus(bMark); }, 50);
+    });
+    var bMark = UI.button('Câu này bắt đầu  (OK)', 'gold big', function () { mark(); });
+    var bM = UI.button('− 0,1 giây', 'small', function () { nudge(-0.1); });
+    var bP = UI.button('+ 0,1 giây', 'small', function () { nudge(0.1); });
+    var bAgain = UI.button('Nghe lại câu', 'small', function () { var k = Math.max(0, lineAt(au.currentTime)); au.currentTime = Math.max(0, Ls[k].at - 1); au.play(); });
+    var bAll = [UI.button('Cả bài −0,2', 'small', function () { shift(-0.2); }), UI.button('Cả bài +0,2', 'small', function () { shift(0.2); })];
+    var bDone = UI.button('Xong', '', function () { leave(true); });
+    [bPlay, bTap, bMark, bM, bP, bAgain].concat(bAll).concat([bDone]).forEach(function (b) { ctl.appendChild(b); });
+    v.appendChild(ctl);
+    bMark.classList.add('hidden');
+    function lineAt(t) { var r = -1; for (var k = 0; k < Ls.length; k++) { if (Ls[k].at <= t + 0.05) r = k; else break; } return r; }
+    function setAt(k, at) { at = Math.max(0, Math.round(at * 100) / 100); var d0 = at - Ls[k].at; Ls[k].at = at; if (Ls[k].w) Ls[k].w = Ls[k].w.map(function (q) { return [Math.round((q[0] + d0) * 100) / 100, q[1]]; }); bar.children[k + 1].style.left = (at / D * 100) + '%'; cur = -2; }
+    function nudge(dd) { var k = tapI >= 0 ? Math.max(0, tapI - 1) : Math.max(0, lineAt(au.currentTime)); setAt(k, Ls[k].at + dd); au.currentTime = Math.max(0, Ls[k].at - 1); au.play(); UI.toast('Câu ' + (k + 1) + ': ' + fmtT(Ls[k].at)); }
+    function shift(dd) { Ls.forEach(function (l, k) { setAt(k, l.at + dd); }); UI.toast('Cả bài ' + (dd > 0 ? '+' : '') + dd.toFixed(1).replace('.', ',') + ' giây'); }
+    function mark() { if (tapI < 0) return; setAt(tapI, au.currentTime - 0.15); tapI++; if (tapI >= Ls.length) { tapI = -1; UI.toast('Xong ' + Ls.length + ' câu. Nghe lại để kiểm tra.'); } paintTap(); }
+    function paintTap() {
+      bMark.classList.toggle('hidden', tapI < 0); bTap.setLabel(tapI >= 0 ? '■ Dừng bấm' : '● Bắt đầu bấm theo nhạc');
+      hint.textContent = tapI >= 0 ? 'Câu ' + (tapI + 1) + ' / ' + Ls.length + ': “' + Ls[tapI].t + '” — bấm OK đúng lúc câu này bắt đầu hát' : 'Bấm ▶ để nghe. Muốn canh lại: bấm “Bắt đầu bấm theo nhạc”, rồi mỗi khi một câu bắt đầu hát thì bấm OK.';
+      hint.classList.toggle('on', tapI >= 0);
+    }
+    function fmtT(t) { return Math.floor(t / 60) + ':' + ('0' + (t % 60).toFixed(1)).slice(-4).replace('.', ','); }
+    function sweep(k, t) {
+      var l = Ls[k], b = Ls[k + 1] ? Ls[k + 1].at : l.at + 4;
+      if (x.mode === 'line') return 1;
+      if (x.mode === 'word' && l.w && l.w.length) { var tot = 0, dn = 0; l.w.forEach(function (q) { tot += q[1].length + 1; }); for (var q = 0; q < l.w.length; q++) { var n = l.w[q][1].length + 1, s0 = l.w[q][0], s1 = l.w[q + 1] ? l.w[q + 1][0] : Math.min(b, s0 + 1.2); if (t >= s1) dn += n; else { if (t > s0) dn += n * (t - s0) / Math.max(0.05, s1 - s0); break; } } return dn / Math.max(1, tot); }
+      return Math.max(0, Math.min(1, (t - l.at) / Math.max(0.8, Math.min(b - l.at, 8) - 0.3)));
+    }
+    function frame() {
+      var t = au.currentTime || 0, k = lineAt(t);
+      tm.textContent = fmtT(t) + ' / ' + Math.floor(D / 60) + ':' + ('0' + Math.round(D % 60)).slice(-2); fill.style.width = (t / D * 100) + '%';
+      if (k !== cur) {
+        cur = k; var sct = ''; for (var q = Math.max(0, k); q >= 0; q--) if (Ls[q] && Ls[q].s) { sct = Ls[q].s; break; }
+        tg.textContent = k < 0 ? 'NHẠC DẠO' : sct; lp.textContent = Ls[k - 1] ? Ls[k - 1].t : ''; lc.textContent = k >= 0 ? Ls[k].t : (Ls[0] ? '♪ ' + Ls[0].t : ''); ln.textContent = Ls[k + 1] ? Ls[k + 1].t : '';
+        lc.classList.toggle('wait', k < 0);
+        [].forEach.call(bar.querySelectorAll('.lsmk'), function (m, j) { m.classList.toggle('on', j === k); });
+      }
+      lc.style.backgroundSize = (k >= 0 ? sweep(k, t) * 100 : 0).toFixed(1) + '% 100%, 100% 100%';
+      raf = (w.requestAnimationFrame || setTimeout)(frame, 50);
+    }
+    frame();
+    au.addEventListener('play', function () { bPlay.setLabel('❚❚ Dừng'); });
+    au.addEventListener('pause', function () { bPlay.setLabel('▶ Phát'); });
+    function leave(keep) {
+      (w.cancelAnimationFrame || clearTimeout)(raf); au.pause();
+      if (keep) { Ls.sort(function (a, b) { return a.at - b.at; }); if (JSON.stringify(Ls) !== JSON.stringify(x.lyrics)) { x.lyrics = Ls; x.lrcAuto = false; if (onDone) onDone(); } }
+      back();
+    }
+    return { name: 'lyricsync', el: v, onLeave: function () { (w.cancelAnimationFrame || clearTimeout)(raf); au.pause(); } };
   }
 
   /* ---------- Hướng dẫn sử dụng (có hình) ---------- */

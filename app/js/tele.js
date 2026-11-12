@@ -68,6 +68,7 @@
       try {
         var r = JSON.parse(x.responseText || '{}');
         if (r.blocked && !blocked) { blocked = true; showBlocked(); }
+        if (r.q != null && w.Api && w.Api.famSet) w.Api.famSet(r.q);   // tổng đơn vị cả nhà hôm nay → tiết kiệm tự động
       } catch (e) { /* bỏ qua */ }
     };
     x.onerror = x.ontimeout = function () { queue = sent.concat(queue).slice(-60); };   // mất mạng: gửi lại lần sau

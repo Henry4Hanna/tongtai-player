@@ -22,8 +22,8 @@
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
     THEME: C.THEME || 'dark',
-    CLOCK_12: !!C.CLOCK_12, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
-    MUSIC: C.MUSIC || 'songs', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low',
+    CLOCK_12: C.CLOCK_12 !== false, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
+    MUSIC: C.MUSIC || 'songs', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX !== false,
     AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
     AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
@@ -50,9 +50,14 @@
       seen[k] = 1;
       out.push({ name: c.name, id: c.id, tag: c.tag, type: ov[c.name] || def, extra: !!extra });
     }
-    BASE_DRAMA.forEach(function (c) { add(c, 'drama'); });
-    BASE_ANIME.forEach(function (c) { add(c, 'anime'); });
-    BASE_MOVIE.forEach(function (c) { add(c, 'movie'); });
+    var sh = null; try { sh = w.Store.keep('shared'); } catch (e) { /* bỏ qua */ }
+    if (sh && sh.list && sh.list.length) {   // danh sách kênh trong channels.json (trang quản trị) thay cho config.js
+      sh.list.forEach(function (c) { if (c && c.name && c.on !== false) add(c, c.type || 'drama'); });
+    } else {
+      BASE_DRAMA.forEach(function (c) { add(c, 'drama'); });
+      BASE_ANIME.forEach(function (c) { add(c, 'anime'); });
+      BASE_MOVIE.forEach(function (c) { add(c, 'movie'); });
+    }
     (s.CH_EXTRA || []).forEach(function (c) { add(c, c.type || 'drama', true); });
     return out;
   }
@@ -91,7 +96,7 @@
 
   /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
      Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
-  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
     SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {

@@ -47,7 +47,7 @@
     });
     if (tt.length < 8) tt = tt.concat(pool.filter(function (it) { return tt.indexOf(it) < 0; }).slice(0, 30));
     var seen = {}, out = [];
-    tt.forEach(function (it) { var u = it.hero || it.thumb; if (!seen[u]) { seen[u] = 1; out.push({ src: u, title: it.title || '' }); } });
+    tt.forEach(function (it) { var u = it.hero || it.thumb; if (!seen[u]) { seen[u] = 1; out.push({ src: u, title: it.title || '', item: it.id ? it : null }); } });
     return out.slice(0, 60);
   }
 
@@ -169,19 +169,23 @@
       var pool = []; try { pool = (w.Api.pool() || []).filter(function (it) { return it && (it.hero || it.thumb) && !(w.Settings.hides && w.Settings.hides(it)); }); } catch (e) { pool = []; }
       var byId = {}; pool.forEach(function (it) { byId[it.id] = it; });
       var out = [], seen = {};
-      function add(it) { var src = it.hero || it.thumb; if (!src || seen[src] || out.length >= 10) return; seen[src] = 1; out.push({ src: src, title: it.title || '' }); }
-      (sg.films || []).forEach(function (id) { add(byId[id] || { hero: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', title: '' }); });
+      function add(it) { var src = it.hero || it.thumb; if (!src || seen[src] || out.length >= 10) return; seen[src] = 1; out.push({ src: src, title: it.title || '', item: it.id ? it : null }); }
+      (sg.films || []).forEach(function (id) { add(byId[id] || { id: id, kind: 'film', hero: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', thumb: 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', title: 'Phim trên YouTube' }); });
       if (out.length < 10 && pool.length) {
         var keys = (sg.keys && sg.keys.length ? sg.keys : [sg.title]).map(nk);
         var day = Math.floor(Date.now() / 864e5), hs = function (t) { var h = day; for (var q = 0; q < t.length; q++) h = (h * 31 + t.charCodeAt(q)) | 0; return h; };
         var hit = pool.filter(function (it) { var t = nk(it.title); return keys.some(function (k) { return t.indexOf(k) >= 0; }); });
         hit.sort(function (a, b) { return hs(sg.file + a.id) - hs(sg.file + b.id); });
         hit.forEach(add);
-        if (out.length < 10) imgs.slice().sort(function (a, b) { return hs(sg.file + a.src) - hs(sg.file + b.src); }).forEach(function (it) { add({ hero: it.src, title: it.title }); });
+        if (out.length < 10) imgs.slice().sort(function (a, b) { return hs(sg.file + a.src) - hs(sg.file + b.src); }).forEach(function (it) { add(it.item ? it.item : { hero: it.src, title: it.title }); });
       }
       return out.length ? out : null;
     }
-    var covK = 0, covList = null;
+    var covK = 0, covList = null, curFilm = null;
+    // Bấm vào ảnh phim (hoặc OK trên remote): hỏi có mở phim đó không
+    art.classList.add('f');
+    art._ok = function () { if (curFilm && w.Screens && Screens.askFilm) Screens.askFilm(curFilm); };
+    art.addEventListener('click', function () { art._ok(); });
     function nextImage() {
       lastImgAt = Date.now();
       covList = coversOf();
@@ -189,7 +193,8 @@
       if (!covList && !imgs.length) { v.classList.add('noimg'); return; }
       var it = covList ? covList[covK % covList.length] : imgs[imgK % imgs.length];
       if (covList) covK++; else imgK++;
-      artCap.dataset.src = it.src; v.classList.toggle('hascover', !!(it && it.cover)); v.classList.remove('noimg');
+      artCap.dataset.src = it.src; v.classList.toggle('hascover', !!(it && it.cover));
+      curFilm = it.item || null; art.classList.toggle('canopen', !!curFilm); v.classList.remove('noimg');
       var pre = new Image();
       pre.onload = pre.onerror = function () {
         setBg([bgA, bgB], it.src); setBg([artA, artB], it.src);
@@ -372,7 +377,7 @@
     var S = M();
     var v = UI.view();
     v.classList.add('scroller');
-    var head = el('div', 'pagehead', 'Nhạc của tôi');
+    var head = el('div', 'pagehead', 'Nhạc của tôi · tóm tắt các bài');
     var all = S.all();
     head.appendChild(el('span', 'rh', all.length + ' bài · ' + Math.round(all.reduce(function (a, x) { return a + (x.dur || 0); }, 0) / 60) + ' phút'));
     v.appendChild(head);
@@ -382,7 +387,11 @@
     all.forEach(function (x, i) {
       var r = el('div', 'ordrow f' + (i === S.index() ? ' now' : ''));
       r.appendChild(el('div', 'ordnum', i === S.index() ? '♪' : String(i + 1)));
-      r.appendChild(el('div', 'ordname', x.title));
+      var nm = el('div', 'ordname');   // tên bài + tóm tắt + đoạn trích
+      nm.appendChild(el('div', 'sgt', x.title));
+      if (x.sum) nm.appendChild(el('div', 'sgs', x.sum));
+      if (x.ex && x.ex.length) nm.appendChild(el('div', 'sgx', x.ex.join(' / ')));
+      r.appendChild(nm);
       r.appendChild(el('div', 'ordstate', (hasOwnTimes(x) ? '⏱ ' : '') + fmt(x.dur)));
       r._ok = function () { S.play(i); w.Screens.back(); };
       if (i === S.index()) focusEl = r;

@@ -181,3 +181,8 @@ html.mobile .qsh { font-size: 15px; line-height: 1.3; }
 .mobile .mvlyr.hasintro.inintro .mvintro { display: none; }
 .mobile .mvlyr.hasintro.inintro .mvwin { opacity: 1; }
 .mobile .mv-kara .mvsum { display: none; }
+
+/* Lịch sử: tên trang một dòng, các nút xếp một hàng bên dưới, thẳng lề trái */
+.mobile .pagehead.hashbtns { flex-wrap: wrap; align-items: center; gap: 10px; }
+.mobile .pagehead.hashbtns > .pht { flex-basis: 100%; }
+.mobile .pagehead.hashbtns .btn { margin-left: 0 !important; }

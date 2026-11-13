@@ -1255,3 +1255,21 @@ html.sleepy #app::after { content: ''; position: fixed; inset: 0; background: rg
 
 .admcovs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0; }
 .admcov { aspect-ratio: 16 / 9; border-radius: 8px; background: #222 center / cover; }
+/* Trang Nhạc: bấm ảnh phim để mở phim */
+.mvartcap { left: 22px; right: 22px; bottom: 44px; max-width: none; text-align: left; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.mvart.canopen { cursor: pointer; }
+.mvart.canopen .mvartcap::before { content: '▶  '; color: #E8B04B; }
+.mvart.f.focus { box-shadow: 0 0 0 5px #E8B04B, 0 10px 40px rgba(0,0,0,.5); }
+.askfilm .afthumb { width: 560px; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 18px; background: #222 center / cover; margin: 6px auto 4px; }
+.mobile .askfilm .afthumb { width: 100%; }
+/* Danh sách bài: tóm tắt + đoạn trích */
+.songlist .ordrow { align-items: flex-start; }
+.songlist .ordnum { padding-top: 4px; }
+.songlist .sgt { font-size: 1.1em; font-weight: 800; }
+.songlist .sgs { font-size: .78em; font-weight: 400; line-height: 1.5; color: rgba(244,239,230,.75); margin-top: 6px; }
+.songlist .sgx { font-size: .74em; font-weight: 500; font-style: italic; line-height: 1.5; color: #F6DFA8; margin-top: 6px; }
+.songlist .ordstate { padding-top: 4px; }
+.mobile .songlist .sgs { font-size: .86em; } .mobile .songlist .sgx { font-size: .84em; }
+.ordlist.songlist { max-width: 1560px; }
+.songlist .sgt { font-size: 30px; } .songlist .sgs { font-size: 23px; } .songlist .sgx { font-size: 21px; }
+.mobile .songlist .sgt { font-size: 1.05em; } .mobile .songlist .sgs { font-size: .86em; } .mobile .songlist .sgx { font-size: .84em; }

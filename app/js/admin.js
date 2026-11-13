@@ -198,12 +198,20 @@
   function loadMusic() {
     var view = $('view');
     api('/a/music').catch(function () { return null; }).then(function (j) {
-      if (j && j.ok) { MUS.list = j.list; MUS.sha = j.sha; MUS.files = j.files || {}; MUS.branch = j.branch; return; }
+      if (j && j.ok) {
+        MUS.list = j.list; MUS.sha = j.sha; MUS.files = j.files || {}; MUS.branch = j.branch; MUS.src = j.repo + ' · ' + (j.path || 'music/list.json');
+        // Bản trên GitHub thiếu tóm tắt / đoạn trích mà bản app đang chạy có → điền sẵn vào ô để bấm Lưu là ghi lên
+        return fetch('music/list.json?t=' + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (loc) {
+          var by = {}; ((loc && loc.songs) || []).forEach(function (x) { by[x.file] = x; }); MUS.fill = 0;
+          (MUS.list.songs || []).forEach(function (x) { var l = by[x.file]; if (!l) return; ['sum', 'ex', 'keys'].forEach(function (k) { if (l[k] && !x[k]) { x[k] = l[k]; x._fill = 1; } }); if (x._fill) MUS.fill++; });
+        });
+      }
       MUS.gh = j && j.repo === '' ? '' : null;
       return fetch('music/list.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (x) { MUS.list = x; MUS.sha = ''; });
     }).then(function () {
       var songs = MUS.list.songs || [];
       view.innerHTML = '';
+      if (MUS.fill) view.appendChild(el('div', 'gh', '<b>ⓘ</b><div>Bản <b>music/list.json</b> trên GitHub (' + esc(MUS.src) + ') chưa có tóm tắt / đoạn trích cho <b>' + MUS.fill + ' bài</b>. Mình đã điền sẵn từ bản app đang chạy: mở từng bài bấm <b>Lưu lên GitHub</b>, hoặc bấm <b>Lưu tóm tắt cho cả ' + MUS.fill + ' bài</b> bên dưới.</div>'));
       if (!MUS.sha) view.appendChild(el('div', 'gh', '<b>ⓘ</b><div>Chưa nối máy chủ với GitHub nên mới <b>xem</b> được. Muốn lưu bài mới / lời / tóm tắt: làm bước <b>“Nối GitHub”</b> trong HUONG-DAN-ADMIN (5 phút).</div>'));
       var withSum = songs.filter(function (x) { return x.sum; }).length, withL = songs.filter(function (x) { return x.lrcAuto === false; }).length;
       var ks = el('div', 'kpis');
@@ -212,7 +220,7 @@
       view.appendChild(ks);
       var c = card('Danh sách bài', 'Bấm “Sửa” để thay lời, tóm tắt, hoặc file nhạc');
       var add = el('button', 'btn dark sm', '+ Thêm bài'); add.onclick = function () { editSong(-1); };
-      var lv = el('button', 'btn sm', 'Cân bằng âm lượng tất cả'); lv.style.marginLeft = 'auto';
+      var lv = el('button', 'btn sm', 'Cân bằng âm lượng'); lv.style.marginLeft = 'auto';
       lv.onclick = function () {
         if (!MUS.sha) { alert('Chưa nối GitHub nên chưa lưu được.'); return; }
         lv.disabled = true; var gains = {}, k = 0;
@@ -227,6 +235,18 @@
         })();
       };
       var hb = el('button', 'btn sm', '↶ Lịch sử'); hb.onclick = function () { historyView('music'); };
+      if (MUS.fill && MUS.sha) {
+        var fb = el('button', 'btn dark sm', 'Lưu tóm tắt cho cả ' + MUS.fill + ' bài');
+        fb.onclick = function () {
+          fb.disabled = true; var todo = songs.filter(function (x) { return x._fill; }), k = 0;
+          (function step() {
+            if (k >= todo.length) { MUS.fill = 0; alert('Đã lưu tóm tắt cho ' + todo.length + ' bài.'); go('music'); return; }
+            var x = JSON.parse(JSON.stringify(todo[k++])); delete x._fill; fb.textContent = 'Đang lưu ' + k + ' / ' + todo.length + '…';
+            api('/a/music', { method: 'POST', body: JSON.stringify({ sha: MUS.sha, op: 'update', song: x }) }).then(function (j) { if (!j.ok) throw new Error(j.error); MUS.sha = j.sha; delete todo[k - 1]._fill; }).then(step, function (e) { fb.disabled = false; fb.textContent = 'Lỗi: ' + e.message; });
+          })();
+        };
+        c.querySelector('h2').appendChild(fb);
+      }
       c.querySelector('h2').appendChild(lv);
       c.querySelector('h2').appendChild(hb);
       c.querySelector('h2').appendChild(add);
@@ -239,7 +259,9 @@
         var b = el('button', 'btn sm', 'Sửa'); b.onclick = function () { editSong(i); }; r.appendChild(b);
         L.appendChild(r);
       });
-      c.appendChild(L); view.appendChild(c);
+      c.appendChild(L);
+      if (MUS.src) c.appendChild(el('div', 'muted', 'Nguồn: ' + esc(MUS.src)));
+      view.appendChild(c);
     }).catch(function (e) { view.innerHTML = '<div class="empty">Không đọc được music/list.json: ' + esc(e.message) + '</div>'; });
   }
   function editSong(i) {
@@ -266,7 +288,7 @@
       '<div class="imode" data-m="up"><div class="covs" id="e-covs"></div><small class="muted">Ảnh của bạn (tối đa 10). Ảnh ngang 16:9, tự cắt và thu nhỏ còn 1280×720.</small><input type="file" accept="image/*" id="e-covf" multiple hidden></div>' +
       '<span id="e-covn" hidden></span></div>' +
       '<div class="field"><label>Tóm tắt (hiện ở trang Nhạc)</label><textarea id="e-sum" maxlength="400" placeholder="Bài hát … thể hiện …">' + esc(x.sum || '') + '</textarea><small id="e-sumc"></small></div>' +
-      '<div class="field"><label>Đoạn trích ngắn (mỗi câu một dòng, mặc định 3 câu)</label><textarea id="e-ex" style="min-height:90px" placeholder="Báo thù kiêu hãnh, em không cần ai cúi đầu">' + esc((x.ex || []).join('\n')) + '</textarea></div>' +
+      '<div class="field"><label>Đoạn trích ngắn (mỗi câu một dòng, mặc định 3 câu)</label><textarea id="e-ex" style="min-height:120px" placeholder="Báo thù kiêu hãnh, em không cần ai cúi đầu">' + esc((x.ex || []).join('\n')) + '</textarea></div>' +
       '<div class="field"><label>Âm lượng</label><div class="loud" id="e-loud"><div class="lm"><i id="e-lbar"></i><b id="e-lref"></b></div><div class="lt" id="e-lt">Đang đo độ to của bài…</div><label class="chk"><input type="checkbox" id="e-lon" checked> Cân bằng: bài to hơn các bài khác thì tự giảm cho nghe đều nhau</label></div></div>' +
       '<div class="field"><label>Xem trước</label><div class="pv" id="e-pv"></div></div>';
     ed.appendChild(L); ed.appendChild(R); c.appendChild(ed);
@@ -400,7 +422,7 @@
       x.title = $('e-title').value.trim();
       x.sum = $('e-sum').value.trim();
       x.ex = $('e-ex').value.split('\n').map(function (q) { return q.trim(); }).filter(Boolean).slice(0, 6); if (!x.ex.length && x.lyrics && x.lyrics.length) x.ex = pickEx(x.lyrics);
-      if (!x.sum) delete x.sum; if (!x.ex.length) delete x.ex; delete x._loud;
+      if (!x.sum) delete x.sum; if (!x.ex.length) delete x.ex; delete x._loud; delete x._fill;
       if (x.mode === 'word') x.lyrics.forEach(function (l, k) { if (!l.w || !l.w.length) l.w = evenWords(l, x.lyrics[k + 1], x.dur); });
       if (!x.title) { alert('Nhập tên bài.'); return; }
       if (i < 0 && !up.mp3) { alert('Chọn file .mp3 cho bài mới.'); return; }
@@ -658,7 +680,7 @@
     var cbx = el('div', 'idb'); cbx.appendChild(cb1); cbx.appendChild(cb2); chk.appendChild(cbx); chk.appendChild(cm);
     var two = el('div', 'two'); two.appendChild(ac); two.appendChild(chk); view.appendChild(two);
     var c = card('Danh sách kênh', 'Thứ tự ở đây = thứ tự trong app');
-    var hb = el('button', 'btn sm', '↶ Lịch sử thay đổi'); hb.style.marginLeft = 'auto'; hb.onclick = function () { historyView('channels'); };
+    var hb = el('button', 'btn sm', '↶ Lịch sử'); hb.style.marginLeft = 'auto'; hb.onclick = function () { historyView('channels'); };
     c.querySelector('h2').appendChild(hb);
     var add = el('button', 'btn dark sm', '+ Thêm kênh'); add.onclick = function () { editChannel(-1); };
     c.querySelector('h2').appendChild(add);

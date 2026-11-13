@@ -1,941 +1,987 @@
 {
- "note": "Danh sách Nhạc của tôi. Thêm bài: chép file mp3 vào thư mục music/ rồi thêm một dòng { \"title\": \"Tên bài\", \"file\": \"ten-file.mp3\", \"dur\": số giây } vào đây.",
+ "note": "Danh sách Nhạc của tôi. Cách dễ nhất: sửa trong trang quản trị → Nhạc (thêm bài, lời .lrc/.ass, tóm tắt). Mỗi bài: title, file, dur, lyrics, sum (tóm tắt), ex (đoạn trích), mode (line/word), gain (cân bằng âm lượng, dB).",
  "songs": [
   {
    "title": "Chủ Tịch Giả Nghèo",
    "file": "chu-tich-gia-ngheo.mp3",
    "dur": 237,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em bước xuống xe bên con phố quen",
-     "at": 21.43
+     "at": 15.25
     },
     {
      "s": "",
      "t": "Áo sơ mi bạc màu, tay xách túi đen",
-     "at": 25.4
+     "at": 21.61
     },
     {
      "s": "",
      "t": "Anh ngồi quán nhỏ, gọi ly cà phê",
-     "at": 29.86
+     "at": 28.68
     },
     {
      "s": "",
      "t": "Giấu chiếc đồng hồ dưới tay áo mềm",
-     "at": 33.82
-    },
-    {
-     "s": "TIỀN ĐIỆP KHÚC",
-     "t": "Em đâu cần biết anh là ai",
-     "at": 37.79
+     "at": 36.1
     },
     {
      "s": "",
+     "t": "Em đâu cần biết anh là ai",
+     "at": 42.34
+    },
+    {
+     "s": "LỜI 2",
      "t": "Chỉ hỏi hôm nay có mệt không",
-     "at": 44.1
+     "at": 45.49
     },
     {
      "s": "",
      "t": "Câu nói giản đơn mà làm tim anh",
-     "at": 47.57
+     "at": 50.0
     },
     {
      "s": "",
      "t": "Muốn thôi diễn vai người dưng",
-     "at": 51.54
+     "at": 53.81
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Chủ tịch giả nghèo, ngồi bên em chiều mưa",
-     "at": 54.51
+     "at": 56.96
     },
     {
      "s": "",
      "t": "Nghe em kể chuyện, quên cả cuộc đua",
-     "at": 58.97
+     "at": 60.76
     },
     {
      "s": "",
      "t": "Nếu mai em biết anh mang bao nhiêu bí mật",
-     "at": 62.93
+     "at": 64.81
     },
     {
      "s": "",
      "t": "Liệu còn nhìn anh như lúc ban đầu?",
-     "at": 67.89
+     "at": 68.35
     },
     {
      "s": "",
      "t": "Chủ tịch giả nghèo, chẳng mong em ngước nhìn",
-     "at": 71.85
+     "at": 71.28
     },
     {
      "s": "",
      "t": "Chỉ mong một lần được em thương thật tình",
-     "at": 76.31
+     "at": 75.03
     },
     {
      "s": "",
      "t": "Anh có thể mua cả thế gian ngoài kia",
-     "at": 80.77
+     "at": 79.08
     },
     {
      "s": "",
      "t": "Mà chẳng mua nổi một lời em tin",
-     "at": 85.23
+     "at": 82.28
     },
     {
-     "s": "LỜI 2",
+     "s": "CẦU NỐI",
      "t": "Em chia đôi chiếc bánh vừa mua",
-     "at": 93.07
+     "at": 103.05
     },
     {
      "s": "",
      "t": "Nói rằng hôm nay mình ăn cho đủ",
-     "at": 103.31
+     "at": 105.96
     },
     {
      "s": "",
      "t": "Anh cười khẽ, giấu bàn tay quen ký",
-     "at": 107.28
+     "at": 109.75
     },
     {
      "s": "",
      "t": "Những hợp đồng dài hơn cả giấc ngủ",
-     "at": 111.24
-    },
-    {
-     "s": "TIỀN ĐIỆP KHÚC",
-     "t": "Em đâu cần biết anh là ai",
-     "at": 115.2
+     "at": 113.08
     },
     {
      "s": "",
+     "t": "Em đâu cần biết anh là ai",
+     "at": 117.59
+    },
+    {
+     "s": "CẦU NỐI",
      "t": "Chỉ thấy anh luôn đến đúng giờ",
-     "at": 118.67
+     "at": 120.72
     },
     {
      "s": "",
      "t": "Mỗi lần em buồn, anh ngồi bên cạnh",
-     "at": 122.14
+     "at": 125.4
     },
     {
      "s": "",
      "t": "Chẳng cần nói những lời cao xa",
-     "at": 126.1
+     "at": 129.08
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Chủ tịch giả nghèo, ngồi bên em chiều mưa",
-     "at": 129.57
+     "at": 132.25
     },
     {
      "s": "",
      "t": "Nghe em kể chuyện, quên cả cuộc đua",
-     "at": 134.03
+     "at": 135.97
     },
     {
      "s": "",
      "t": "Nếu mai em biết anh mang bao nhiêu bí mật",
-     "at": 138
+     "at": 140.02
     },
     {
      "s": "",
      "t": "Liệu còn nhìn anh như lúc ban đầu?",
-     "at": 142.95
+     "at": 143.54
     },
     {
      "s": "",
      "t": "Chủ tịch giả nghèo, chẳng mong em ngước nhìn",
-     "at": 146.91
+     "at": 146.57
     },
     {
      "s": "",
      "t": "Chỉ mong một lần được em thương thật tình",
-     "at": 151.37
+     "at": 150.24
     },
     {
      "s": "",
      "t": "Anh có thể mua cả thế gian ngoài kia",
-     "at": 155.83
+     "at": 154.34
     },
     {
      "s": "",
      "t": "Mà chẳng mua nổi một lời em tin",
-     "at": 162.82
+     "at": 157.48
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "KẾT",
      "t": "Ngày mai nếu tấm màn kia khép lại",
-     "at": 166.79
+     "at": 163.48
     },
     {
      "s": "",
      "t": "Anh sẽ đứng đây, chẳng trốn thêm lần nào",
-     "at": 170.75
+     "at": 166.64
     },
     {
      "s": "",
      "t": "Không cần em gọi anh bằng danh phận",
-     "at": 175.21
+     "at": 170.6
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi tên anh dịu dàng",
-     "at": 179.17
+     "at": 174.2
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Chủ tịch giả nghèo, giờ thôi không giấu em",
-     "at": 183.14
+     "at": 178.71
     },
     {
      "s": "",
      "t": "Anh vẫn là người chờ em mỗi đêm",
-     "at": 187.6
+     "at": 182.81
     },
     {
      "s": "",
      "t": "Nếu bao bí mật không làm tim em đổi khác",
-     "at": 191.56
+     "at": 186.39
     },
     {
      "s": "",
      "t": "Cho anh được bên em như ban đầu",
-     "at": 196.52
+     "at": 189.92
     },
     {
      "s": "",
      "t": "Chủ tịch giả nghèo, nay chẳng cần vai diễn",
-     "at": 200.48
+     "at": 193.1
     },
     {
      "s": "",
      "t": "Chỉ muốn cùng em đi qua bình yên",
-     "at": 204.94
+     "at": 196.85
     },
     {
      "s": "",
      "t": "Anh có thể trao em cả thế gian ngoài kia",
-     "at": 211.54
+     "at": 200.91
     },
     {
      "s": "",
      "t": "Nhưng điều quý nhất là em chọn anh",
-     "at": 216.5
+     "at": 203.43
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Một chiếc bàn nhỏ, hai ly cà phê",
-     "at": 226.44
+     "at": 211.6
     },
     {
      "s": "",
      "t": "Anh thôi giả nghèo, chỉ xin em ở bên",
-     "at": 230.41
+     "at": 216.99
     }
    ],
-   "gain": -0.1
+   "sum": "Bài hát \"Chủ Tịch Giả Nghèo\" kể về một chủ tịch giấu thân phận, ngồi quán nhỏ bên cô gái bình dị và nhận ra thứ anh khao khát không phải tiền bạc mà là được yêu thật lòng; cuối cùng anh thôi giả nghèo, chỉ mong cô chọn anh vì chính con người anh.",
+   "ex": [
+    "Chủ tịch giả nghèo, ngồi bên em chiều mưa",
+    "Nghe em kể chuyện, quên cả cuộc đua",
+    "Anh có thể mua cả thế gian ngoài kia"
+   ],
+   "gain": -0.1,
+   "keys": [
+    "chủ tịch",
+    "giả nghèo",
+    "thân phận",
+    "thiếu gia"
+   ]
   },
   {
    "title": "Đêm Mưa Trên Mái Nhà Hào Môn",
    "file": "dem-mua-tren-mai-nha-hao-mon.mp3",
    "dur": 248,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Mưa nghiêng qua ô cửa tầng cao",
-     "at": 15.91
+     "at": 17.87
     },
     {
      "s": "",
      "t": "Em đứng lặng nghe phố lao xao",
-     "at": 20.08
+     "at": 23.09
     },
     {
      "s": "",
      "t": "Tấm thiệp chưa kịp trao trong tay",
-     "at": 24.24
+     "at": 28.89
     },
     {
      "s": "",
      "t": "Tên anh còn vương trên trang giấy",
-     "at": 28.41
+     "at": 32.85
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh bước đến, áo còn vương gió",
-     "at": 32.57
+     "at": 39.31
     },
     {
      "s": "",
      "t": "Ánh mắt buồn giấu hết lời chưa ngỏ",
-     "at": 36.73
+     "at": 41.68
     },
     {
      "s": "",
      "t": "Giữa bao điều chẳng thể nói ra",
-     "at": 41.49
+     "at": 46.92
     },
     {
      "s": "",
      "t": "Ta nhìn nhau như chưa từng cách xa",
-     "at": 45.65
+     "at": 50.71
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Đêm mưa trên mái nhà hào môn",
-     "at": 50.41
+     "at": 57.81
     },
     {
      "s": "",
      "t": "Một lời yêu mắc giữa cô đơn",
-     "at": 58.52
+     "at": 61.88
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia bao người ngăn lối",
-     "at": 62.68
+     "at": 65.83
     },
     {
      "s": "",
      "t": "Em vẫn nghe tim gọi tên anh",
-     "at": 66.84
+     "at": 69.4
     },
     {
      "s": "",
      "t": "Đêm mưa rơi ướt bờ vai lạnh",
-     "at": 71.01
+     "at": 72.97
     },
     {
      "s": "",
      "t": "Bao kiêu hãnh cũng hóa mong manh",
-     "at": 75.17
+     "at": 76.74
     },
     {
      "s": "",
      "t": "Nếu mai này giông bão qua nhanh",
-     "at": 82.17
+     "at": 80.95
     },
     {
      "s": "",
      "t": "Xin đừng buông tay em lần nữa",
-     "at": 86.34
+     "at": 84.62
     },
     {
      "s": "LỜI 2",
      "t": "Bàn tiệc xa hoa còn chưa tàn",
-     "at": 90.5
+     "at": 103.45
     },
     {
      "s": "",
      "t": "Tin đồn vây quanh như muôn ngàn",
-     "at": 94.66
+     "at": 107.19
     },
     {
      "s": "",
      "t": "Anh quay lưng với những lời cay",
-     "at": 103.69
+     "at": 111.17
     },
     {
      "s": "",
      "t": "Chỉ để giữ em ở nơi này",
-     "at": 107.85
+     "at": 114.67
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Em từng nghĩ tình yêu là yếu đuối",
-     "at": 112.01
+     "at": 118.68
     },
     {
      "s": "",
      "t": "Nên giấu lòng sau những lần từ chối",
-     "at": 116.77
+     "at": 122.25
     },
     {
      "s": "",
      "t": "Đến khi anh đứng giữa mưa giăng",
-     "at": 121.53
+     "at": 126.28
     },
     {
      "s": "",
      "t": "Mới biết tim mình chưa từng bình an",
-     "at": 125.69
+     "at": 129.78
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Đêm mưa trên mái nhà hào môn",
-     "at": 130.45
+     "at": 135.23
     },
     {
      "s": "",
      "t": "Một lời yêu mắc giữa cô đơn",
-     "at": 137.32
+     "at": 139.25
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia bao người ngăn lối",
-     "at": 141.49
+     "at": 143.25
     },
     {
      "s": "",
      "t": "Em vẫn nghe tim gọi tên anh",
-     "at": 145.65
+     "at": 146.76
     },
     {
      "s": "",
      "t": "Đêm mưa rơi ướt bờ vai lạnh",
-     "at": 149.81
+     "at": 150.31
     },
     {
      "s": "",
      "t": "Bao kiêu hãnh cũng hóa mong manh",
-     "at": 160.04
+     "at": 154.1
     },
     {
      "s": "",
      "t": "Nếu mai này giông bão qua nhanh",
-     "at": 164.2
+     "at": 158.28
     },
     {
      "s": "",
      "t": "Xin đừng buông tay em lần nữa",
-     "at": 168.36
+     "at": 161.91
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu tình yêu phải qua thử thách",
-     "at": 172.53
+     "at": 168.22
     },
     {
      "s": "",
      "t": "Nếu bình yên còn ở phía xa",
-     "at": 176.69
+     "at": 171.93
     },
     {
      "s": "",
      "t": "Em không cần căn phòng dát vàng",
-     "at": 180.85
+     "at": 175.39
     },
     {
      "s": "",
      "t": "Chỉ cần anh thật lòng ở lại",
-     "at": 188.05
+     "at": 178.96
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Đêm mưa trên mái nhà hào môn",
-     "at": 192.21
+     "at": 184.13
     },
     {
      "s": "",
      "t": "Giờ lời yêu đã thôi lạc lối",
-     "at": 196.37
+     "at": 188.11
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia bao người ngăn lối",
-     "at": 202.67
+     "at": 192.12
     },
     {
-     "s": "",
+     "s": "KẾT",
      "t": "Ta vẫn chọn đứng cạnh bên nhau",
-     "at": 210.06
+     "at": 195.92
     },
     {
      "s": "",
      "t": "Đêm mưa rồi cũng qua thật nhanh",
-     "at": 214.22
+     "at": 199.2
     },
     {
      "s": "",
      "t": "Bình minh lên trên khung cửa xanh",
-     "at": 218.39
+     "at": 202.9
     },
     {
      "s": "",
      "t": "Nếu mai này giông bão quay về",
-     "at": 222.55
+     "at": 207.14
     },
     {
      "s": "",
      "t": "Em vẫn nắm tay anh như thế",
-     "at": 226.71
+     "at": 212.75
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Mưa dần tan trên mái nhà cao",
-     "at": 230.88
+     "at": 218.6
     },
     {
      "s": "",
      "t": "Anh gọi tên em, thật khẽ thôi",
-     "at": 235.04
+     "at": 225.65
     }
    ],
-   "gain": 0.1
+   "sum": "Bài hát \"Đêm Mưa Trên Mái Nhà Hào Môn\" là chuyện tình giữa chốn giàu sang đầy tin đồn và ngăn cấm, nơi cô gái kiêu hãnh nhận ra trái tim mình chưa từng bình yên, và cả hai chọn đứng cạnh nhau vượt qua giông bão.",
+   "ex": [
+    "Đêm mưa trên mái nhà hào môn",
+    "Một lời yêu mắc giữa cô đơn",
+    "Dẫu ngoài kia bao người ngăn lối"
+   ],
+   "gain": 0.1,
+   "keys": [
+    "hào môn",
+    "đêm mưa",
+    "gia tộc"
+   ]
   },
   {
    "title": "Một Mái Nhà Có Em",
    "file": "mot-mai-nha-co-em.mp3",
    "dur": 240,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em khép ô cửa, chiều nghiêng trên trang giấy",
-     "at": 14.71
+     "at": 14.37
     },
     {
      "s": "",
      "t": "Một tách trà nguội, anh vẫn chưa về",
-     "at": 19.42
+     "at": 21.85
     },
     {
      "s": "",
      "t": "Tin nhắn chưa gửi nằm yên trong máy",
-     "at": 23.6
+     "at": 28.96
     },
     {
      "s": "",
      "t": "Có những điều gần mà cách xa ghê",
-     "at": 27.79
+     "at": 36.72
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh quen quyết định mọi điều thật nhanh",
-     "at": 31.97
+     "at": 43.94
     },
     {
      "s": "",
      "t": "Riêng một ánh nhìn em, anh chẳng biết làm sao",
-     "at": 36.15
+     "at": 48.0
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Nếu ngày mai thôi những cuộc hẹn vội vàng",
-     "at": 41.38
+     "at": 58.47
     },
     {
      "s": "",
      "t": "Anh muốn bên em qua con đường rất bình thường",
-     "at": 46.09
+     "at": 61.48
     },
     {
      "s": "",
      "t": "Không cần lời hứa đặt trên bàn danh thiếp",
-     "at": 51.31
+     "at": 65.72
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi tên anh, thật khẽ thôi",
-     "at": 58.18
+     "at": 69.33
     },
     {
      "s": "",
      "t": "Nếu ngày mai em chẳng còn đứng đợi",
-     "at": 62.89
+     "at": 73.06
     },
     {
      "s": "",
      "t": "Anh sẽ học cách bước chậm giữa đời",
-     "at": 67.07
+     "at": 76.91
     },
     {
      "s": "",
      "t": "Vì sau tất cả điều anh từng muốn",
-     "at": 71.25
+     "at": 80.49
     },
     {
      "s": "",
      "t": "Là một mái nhà có em mà thôi",
-     "at": 75.43
+     "at": 84.16
     },
     {
      "s": "LỜI 2",
      "t": "Em trả chiếc áo anh quên hôm trước",
-     "at": 79.62
+     "at": 105.96
     },
     {
      "s": "",
      "t": "Nói rằng trời mưa, đường phố đông người",
-     "at": 83.8
+     "at": 109.39
     },
     {
      "s": "",
      "t": "Anh nghe câu ấy như nghe lời nhắc",
-     "at": 87.98
+     "at": 113.24
     },
     {
      "s": "",
      "t": "Có một bờ vai vẫn chờ mình thôi",
-     "at": 92.17
+     "at": 116.26
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh quen giữ khoảng cách giữa bao người",
-     "at": 96.35
+     "at": 120.74
     },
     {
      "s": "",
      "t": "Riêng khi em quay đi, căn phòng hóa chơi vơi",
-     "at": 107.92
+     "at": 124.12
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Nếu ngày mai thôi những cuộc hẹn vội vàng",
-     "at": 113.15
+     "at": 129.43
     },
     {
      "s": "",
      "t": "Anh muốn bên em qua con đường rất bình thường",
-     "at": 117.85
+     "at": 132.37
     },
     {
      "s": "",
      "t": "Không cần lời hứa đặt trên bàn danh thiếp",
-     "at": 123.08
+     "at": 136.62
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi tên anh, thật khẽ thôi",
-     "at": 129.97
+     "at": 140.23
     },
     {
      "s": "",
      "t": "Nếu ngày mai em chẳng còn đứng đợi",
-     "at": 137.26
+     "at": 144.0
     },
     {
      "s": "",
      "t": "Anh sẽ học cách bước chậm giữa đời",
-     "at": 141.45
+     "at": 147.79
     },
     {
      "s": "",
      "t": "Vì sau tất cả điều anh từng muốn",
-     "at": 147.64
+     "at": 151.44
     },
     {
      "s": "",
      "t": "Là một mái nhà có em mà thôi",
-     "at": 153.9
+     "at": 155.1
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Anh chẳng xin em quên những ngày lạnh lẽo",
-     "at": 158.09
+     "at": 162.81
     },
     {
      "s": "",
      "t": "Chỉ xin một lần để nói thật lòng",
-     "at": 168.73
+     "at": 165.98
     },
     {
      "s": "",
      "t": "Sau cánh cửa lớn, sau bao thành công",
-     "at": 172.91
+     "at": 169.59
     },
     {
      "s": "",
      "t": "Anh vẫn là người sợ mất em nhất",
-     "at": 177.1
+     "at": 173.23
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Từ ngày mai thôi những cuộc hẹn vội vàng",
-     "at": 183.86
+     "at": 180.32
     },
     {
      "s": "",
      "t": "Anh sẽ bên em qua con đường rất bình thường",
-     "at": 188.57
+     "at": 183.28
     },
     {
      "s": "",
      "t": "Không cần lời hứa đặt trên bàn danh thiếp",
-     "at": 193.79
+     "at": 187.49
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi tên anh, thật khẽ thôi",
-     "at": 202.51
+     "at": 191.16
     },
     {
      "s": "",
      "t": "Nếu ngày mai em vẫn còn đứng đợi",
-     "at": 207.22
+     "at": 194.86
     },
     {
      "s": "",
      "t": "Anh sẽ nắm tay, chẳng để em rời",
-     "at": 211.4
+     "at": 198.68
     },
     {
      "s": "",
      "t": "Vì sau tất cả điều anh từng muốn",
-     "at": 215.58
-    },
-    {
-     "s": "",
-     "t": "Là một mái nhà có em bên đời",
-     "at": 222.06
+     "at": 202.34
     },
     {
      "s": "KẾT",
+     "t": "Là một mái nhà có em bên đời",
+     "at": 206.0
+    },
+    {
+     "s": "",
      "t": "Một tách trà ấm, chiều thôi nghiêng trên giấy",
-     "at": 226.25
+     "at": 212.81
     },
     {
      "s": "",
      "t": "Anh đã về rồi, em có nghe không",
-     "at": 230.95
+     "at": 222.18
     }
    ],
-   "gain": -0.2
+   "sum": "Bài hát \"Một Mái Nhà Có Em\" là lời tâm sự của người đàn ông thành đạt quen quyết định mọi thứ, nhưng sau tất cả chỉ mong một cuộc sống bình thường và một mái nhà có người mình thương chờ đợi.",
+   "ex": [
+    "Không cần lời hứa đặt trên bàn danh thiếp",
+    "Chỉ cần em gọi tên anh, thật khẽ thôi",
+    "Là một mái nhà có em mà thôi"
+   ],
+   "gain": -0.2,
+   "keys": [
+    "mái nhà",
+    "gia đình",
+    "về nhà"
+   ]
   },
   {
    "title": "Hợp Đồng Hôn Nhân Trăm Tỷ",
    "file": "hop-dong-hon-nhan-tram-ty.mp3",
    "dur": 252,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em ký tên bên ô cửa chiều mưa",
-     "at": 15.19
+     "at": 16.62
     },
     {
      "s": "",
      "t": "Trang giấy trắng nghe lòng mình khẽ động",
-     "at": 19.4
+     "at": 23.82
     },
     {
      "s": "",
      "t": "Anh đứng đó, bình thản như đã biết",
-     "at": 23.6
+     "at": 31.2
     },
     {
      "s": "",
      "t": "Một cuộc hôn nhân đổi lấy bình yên",
-     "at": 27.8
+     "at": 37.16
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ta đặt điều kiện giữa đôi bờ xa lạ",
-     "at": 32.01
+     "at": 44.51
     },
     {
      "s": "",
      "t": "Không hỏi ngày mai, chẳng hứa điều gì",
-     "at": 36.74
+     "at": 48.05
     },
     {
      "s": "",
      "t": "Vậy mà ánh mắt anh khi khép cửa",
-     "at": 40.94
+     "at": 52.05
     },
     {
      "s": "",
      "t": "Làm câu lạnh lùng bỗng hóa từ bi",
-     "at": 45.14
+     "at": 55.47
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 51.21
+     "at": 60.61
     },
     {
      "s": "",
      "t": "Mà tim em chẳng biết tính lời lỗ ra sao",
-     "at": 54.36
+     "at": 63.53
     },
     {
      "s": "",
      "t": "Từ hai người xa lạ chung một mái nhà",
-     "at": 59.61
+     "at": 68.09
     },
     {
      "s": "",
      "t": "Anh gọi tên em dịu dàng đến thế",
-     "at": 64.34
+     "at": 72.03
     },
     {
      "s": "",
      "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 70.5
+     "at": 75.34
     },
     {
      "s": "",
      "t": "Giấy có ngày hết hạn, lòng thì không",
-     "at": 73.66
+     "at": 78.21
     },
     {
      "s": "",
      "t": "Nếu mai này anh thôi cần một vai diễn",
-     "at": 77.86
+     "at": 82.95
     },
     {
      "s": "",
      "t": "Em vẫn muốn là người ở bên anh",
-     "at": 82.59
+     "at": 87.03
     },
     {
      "s": "LỜI 2",
      "t": "Bữa tối nguội bên bàn ăn rộng lớn",
-     "at": 86.79
+     "at": 108.9
     },
     {
      "s": "",
      "t": "Anh lặng im, gắp phần ngon cho em",
-     "at": 90.99
+     "at": 112.57
     },
     {
      "s": "",
      "t": "Chiếc ô nhỏ nghiêng về phía em mãi",
-     "at": 109.5
+     "at": 116.14
     },
     {
      "s": "",
      "t": "Vai áo anh ướt lạnh cả con đường",
-     "at": 113.7
+     "at": 119.62
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ta từng nói tình yêu là điều khoản",
-     "at": 117.9
+     "at": 123.73
     },
     {
      "s": "",
      "t": "Có thể thêm vào, cũng có thể xóa đi",
-     "at": 122.11
+     "at": 126.91
     },
     {
      "s": "",
      "t": "Nhưng bàn tay anh tìm tay em khẽ",
-     "at": 126.84
+     "at": 131.01
     },
     {
      "s": "",
      "t": "Chẳng có dòng nào ghi chuyện ấy đâu",
-     "at": 131.04
+     "at": 134.21
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 135.24
+     "at": 139.39
     },
     {
      "s": "",
      "t": "Mà tim em chẳng biết tính lời lỗ ra sao",
-     "at": 140.48
+     "at": 142.32
     },
     {
      "s": "",
      "t": "Từ hai người xa lạ chung một mái nhà",
-     "at": 145.74
+     "at": 146.83
     },
     {
      "s": "",
      "t": "Anh gọi tên em dịu dàng đến thế",
-     "at": 150.47
+     "at": 150.75
     },
     {
      "s": "",
      "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 154.67
+     "at": 154.05
     },
     {
      "s": "",
      "t": "Giấy có ngày hết hạn, lòng thì không",
-     "at": 157.82
+     "at": 156.95
     },
     {
      "s": "",
      "t": "Nếu mai này anh thôi cần một vai diễn",
-     "at": 162.03
+     "at": 161.82
     },
     {
      "s": "",
      "t": "Em vẫn muốn là người ở bên anh",
-     "at": 166.75
+     "at": 165.83
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu ngày mai những con số khép lại",
-     "at": 177.13
+     "at": 172.78
     },
     {
      "s": "",
      "t": "Nếu chiếc nhẫn không còn lý do mang",
-     "at": 181.33
+     "at": 176.41
     },
     {
      "s": "",
      "t": "Anh có thể chọn em thêm lần nữa",
-     "at": 185.53
+     "at": 180.28
     },
     {
      "s": "",
      "t": "Bằng trái tim, chẳng phải chữ ký nào",
-     "at": 192.32
-    },
-    {
-     "s": "ĐIỆP KHÚC CUỐI",
-     "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 196.52
+     "at": 183.98
     },
     {
      "s": "",
+     "t": "Hợp đồng hôn nhân trăm tỷ",
+     "at": 190.69
+    },
+    {
+     "s": "CẦU NỐI",
      "t": "Mà điều em giữ lại chẳng phải vàng son",
-     "at": 199.67
+     "at": 193.62
     },
     {
      "s": "",
      "t": "Là những đêm anh chờ em về muộn",
-     "at": 204.4
+     "at": 198.15
     },
     {
      "s": "",
      "t": "Là vòng tay chẳng cần điều kiện gì",
-     "at": 208.6
+     "at": 202.05
     },
     {
      "s": "",
      "t": "Hợp đồng hôn nhân trăm tỷ",
-     "at": 212.81
+     "at": 205.33
     },
     {
-     "s": "",
+     "s": "KẾT",
      "t": "Giấy đã cất đi, lòng vẫn gọi tên",
-     "at": 215.96
+     "at": 208.22
     },
     {
      "s": "",
      "t": "Nếu câu chuyện này bắt đầu bằng thỏa thuận",
-     "at": 220.16
+     "at": 213.09
     },
     {
      "s": "",
      "t": "Xin kết thúc bằng một đời bên nhau",
-     "at": 224.89
+     "at": 217.06
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Anh gọi tên em dịu dàng",
-     "at": 232.53
+     "at": 224.03
     },
     {
      "s": "",
      "t": "Em thôi xem đó là vai diễn",
-     "at": 235.69
+     "at": 229.5
     }
    ],
-   "gain": -0.2
+   "sum": "Bài hát \"Hợp Đồng Hôn Nhân Trăm Tỷ\" kể về cuộc hôn nhân bắt đầu bằng một bản thỏa thuận, nhưng qua những cử chỉ quan tâm âm thầm, tình cảm thật dần nảy nở và hai người mong câu chuyện kết thúc bằng một đời bên nhau.",
+   "ex": [
+    "Hợp đồng hôn nhân trăm tỷ",
+    "Giấy có ngày hết hạn, lòng thì không",
+    "Em vẫn muốn là người ở bên anh"
+   ],
+   "gain": -0.2,
+   "keys": [
+    "hợp đồng",
+    "hôn nhân",
+    "kết hôn",
+    "cưới"
+   ]
   },
   {
    "title": "Tổng Tài Lạnh Lùng",
@@ -945,1615 +991,1693 @@
    "lyrics": [
     {
      "s": "LỜI 1",
-     "t": "Em bước vào phòng, mưa còn vương trên vai",
-     "at": 17.35
+     "t": "Em bước vào phòng, mang theo cơn mưa",
+     "at": 14.21
     },
     {
      "s": "",
-     "t": "Anh nhìn hồ sơ, chẳng nhìn em lâu dài",
-     "at": 21.91
+     "t": "Anh vẫn nhìn màn hình như chưa từng nghe",
+     "at": 17.8
     },
     {
      "s": "",
-     "t": "Câu chào lạnh như ly cà phê chưa tan",
-     "at": 26.47
+     "t": "Tách cà phê đen nguội bên trang hồ sơ",
+     "at": 21.89
     },
     {
      "s": "",
-     "t": "Mà sao tim em cứ nghe như có tiếng gọi thầm",
-     "at": 31.03
+     "t": "Một câu hỏi thăm cũng thành điều khó nói",
+     "at": 24.82
     },
     {
      "s": "TIỀN ĐIỆP KHÚC",
-     "t": "Anh quen ra lệnh, quen đứng trên cao",
-     "at": 36.6
+     "t": "Anh quen ra lệnh, quen giữ khoảng cách",
+     "at": 28.98
     },
     {
      "s": "",
-     "t": "Quen giấu những điều chẳng nói thành câu",
-     "at": 40.65
+     "t": "Quen giấu mọi điều sau chiếc áo vest",
+     "at": 32.42
     },
     {
      "s": "",
-     "t": "Nhưng khi em quay lưng đi thật khẽ",
-     "at": 44.71
+     "t": "Nhưng khi em quay đi, căn phòng rộng quá",
+     "at": 35.89
     },
     {
      "s": "",
-     "t": "Bàn tay anh bỗng chẳng biết giữ gì",
-     "at": 48.76
+     "t": "Có điều gì trong anh chẳng thể gọi tên",
+     "at": 38.85
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài lạnh lùng, sao mắt anh buồn",
-     "at": 52.81
+     "at": 43.01
     },
     {
      "s": "",
-     "t": "Giữa bao người, chỉ em làm anh rối đường",
-     "at": 56.86
+     "t": "Giữa bao người, chỉ em làm anh chậm bước",
+     "at": 46.48
     },
     {
      "s": "",
-     "t": "Anh nói: “Đừng yêu”, giọng bình thản thôi",
-     "at": 61.42
+     "t": "Anh nói “đừng chờ”, tay lại giữ tay em",
+     "at": 50.28
     },
     {
      "s": "",
-     "t": "Mà đêm về lại nhớ một người",
-     "at": 65.47
+     "t": "Muốn em rời xa, mà chẳng thể buông",
+     "at": 53.68
     },
     {
      "s": "",
-     "t": "Tổng tài lạnh lùng, đừng khép tim mình",
-     "at": 69.02
+     "t": "Tổng tài lạnh lùng, xin đừng im lặng",
+     "at": 57.34
     },
     {
      "s": "",
-     "t": "Em đâu cần vương miện hay những xa xinh",
-     "at": 73.07
+     "t": "Một lời thật lòng đâu khiến anh yếu mềm",
+     "at": 60.94
     },
     {
      "s": "",
-     "t": "Chỉ cần anh nói thật một lần",
-     "at": 79.5
+     "t": "Nếu sau cánh cửa là trái tim khép kín",
+     "at": 64.54
     },
     {
      "s": "",
-     "t": "Rằng sau vẻ lạnh băng, anh cũng biết cần gần",
-     "at": 83.04
+     "t": "Để em gõ thêm lần nữa, được không?",
+     "at": 68.14
     },
     {
      "s": "LỜI 2",
-     "t": "Bản hợp đồng nằm yên trên bàn kính trong",
-     "at": 88.11
+     "t": "Cuộc họp kéo dài, trời nghiêng về tối",
+     "at": 88.0
     },
     {
      "s": "",
-     "t": "Anh ký tên nhanh, còn em thì chờ mong",
-     "at": 92.67
+     "t": "Anh vẫn nhớ em thích trà đào ít đá",
+     "at": 91.59
     },
     {
      "s": "",
-     "t": "Thang máy khép lại, câu hỏi vẫn chưa thành",
-     "at": 97.23
+     "t": "Tin nhắn chưa gửi nằm yên trên máy",
+     "at": 95.68
     },
     {
      "s": "",
-     "t": "Anh có bao giờ mỏi mệt vì phải mạnh mẽ không anh?",
-     "at": 101.79
+     "t": "“Về đến nhà chưa?” viết rồi xóa đi",
+     "at": 98.61
     },
     {
      "s": "TIỀN ĐIỆP KHÚC",
-     "t": "Anh quen ra lệnh, quen đứng trên cao",
-     "at": 107.86
+     "t": "Anh quen chiến thắng, quen không cần ai",
+     "at": 102.77
     },
     {
      "s": "",
-     "t": "Quen giấu những điều chẳng nói thành câu",
-     "at": 111.92
+     "t": "Quen tự mình đi qua những ngày dài",
+     "at": 106.21
     },
     {
      "s": "",
-     "t": "Nhưng khi em quay lưng đi thật khẽ",
-     "at": 115.97
+     "t": "Nhưng nghe tiếng bước chân em ngoài hành lang",
+     "at": 109.68
     },
     {
      "s": "",
-     "t": "Bàn tay anh bỗng chẳng biết giữ gì",
-     "at": 120.02
+     "t": "Anh bỗng muốn giữ khoảnh khắc bình thường",
+     "at": 112.64
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài lạnh lùng, sao mắt anh buồn",
+     "at": 116.8
+    },
+    {
+     "s": "",
+     "t": "Giữa bao người, chỉ em làm anh chậm bước",
+     "at": 120.27
+    },
+    {
+     "s": "",
+     "t": "Anh nói “đừng chờ”, tay lại giữ tay em",
      "at": 124.07
     },
     {
      "s": "",
-     "t": "Giữa bao người, chỉ em làm anh rối đường",
-     "at": 128.12
+     "t": "Muốn em rời xa, mà chẳng thể buông",
+     "at": 127.47
     },
     {
      "s": "",
-     "t": "Anh nói: “Đừng yêu”, giọng bình thản thôi",
-     "at": 132.68
+     "t": "Tổng tài lạnh lùng, xin đừng im lặng",
+     "at": 131.13
     },
     {
      "s": "",
-     "t": "Mà đêm về lại nhớ một người",
-     "at": 136.73
+     "t": "Một lời thật lòng đâu khiến anh yếu mềm",
+     "at": 134.73
     },
     {
      "s": "",
-     "t": "Tổng tài lạnh lùng, đừng khép tim mình",
-     "at": 140.28
+     "t": "Nếu sau cánh cửa là trái tim khép kín",
+     "at": 138.33
     },
     {
      "s": "",
-     "t": "Em đâu cần vương miện hay những xa xinh",
-     "at": 146.35
+     "t": "Để em gõ thêm lần nữa, được không?",
+     "at": 141.93
+    },
+    {
+     "s": "CẦU NỐI",
+     "t": "Anh không hứa những điều xa xôi",
+     "at": 154.0
     },
     {
      "s": "",
-     "t": "Chỉ cần anh nói thật một lần",
-     "at": 150.91
+     "t": "Chỉ hứa hôm nay sẽ không quay lưng",
+     "at": 158.0
     },
     {
      "s": "",
-     "t": "Rằng sau vẻ lạnh băng, anh cũng biết cần gần",
-     "at": 154.46
-    },
-    {
-     "s": "ĐOẠN CHUYỂN",
-     "t": "Nếu ngày mai em không còn ở đây",
-     "at": 159.52
+     "t": "Nếu em còn đây, anh sẽ học cách",
+     "at": 162.0
     },
     {
      "s": "",
-     "t": "Anh có thôi giả vờ chẳng hề đổi thay?",
-     "at": 163.57
-    },
-    {
-     "s": "",
-     "t": "Gỡ chiếc cà vạt, ngồi xuống bên em",
-     "at": 168.13
-    },
-    {
-     "s": "",
-     "t": "Nói điều anh giữ trong lòng bấy lâu nay",
-     "at": 174.13
+     "t": "Nói rằng anh cần em, dù rất vụng về",
+     "at": 166.0
     },
     {
      "s": "ĐIỆP KHÚC CUỐI",
-     "t": "Tổng tài lạnh lùng, thôi giấu nỗi buồn",
-     "at": 178.69
+     "t": "Tổng tài lạnh lùng, thôi giấu đi anh",
+     "at": 178.0
     },
     {
      "s": "",
-     "t": "Em vẫn ở đây, chẳng cần anh phải hoàn hảo luôn",
-     "at": 182.74
+     "t": "Em đâu cần một người chẳng bao giờ sai",
+     "at": 181.47
     },
     {
      "s": "",
-     "t": "Anh nói: “Ở lại”, khẽ đến bất ngờ",
-     "at": 188.32
+     "t": "Chỉ cần khi em gọi, anh quay lại nhìn",
+     "at": 185.27
     },
     {
      "s": "",
-     "t": "Mà nghe như cả thế giới đợi chờ",
-     "at": 196.04
+     "t": "Chỉ cần bàn tay này đừng buông tay em",
+     "at": 188.67
     },
     {
      "s": "",
-     "t": "Tổng tài lạnh lùng, nay đã mềm lòng",
-     "at": 200.09
+     "t": "Tổng tài lạnh lùng, giờ đã dịu dàng",
+     "at": 192.33
     },
     {
      "s": "",
-     "t": "Không cần vương miện, chỉ cần tay nắm trong",
-     "at": 204.14
+     "t": "Một câu thật lòng còn hơn ngàn món quà",
+     "at": 195.93
     },
     {
      "s": "",
-     "t": "Một câu anh nói thật dịu dàng:",
-     "at": 212.43
+     "t": "Nếu sau cánh cửa là trái tim đang mở",
+     "at": 199.53
     },
     {
      "s": "",
-     "t": "“Đừng đi nữa nhé, ở bên anh.”",
-     "at": 215.98
+     "t": "Em sẽ ở lại, nếu anh cũng muốn",
+     "at": 203.13
     },
     {
      "s": "KẾT",
-     "t": "Anh vẫn ít lời, em vẫn hay cười",
-     "at": 219.52
+     "t": "Tách cà phê nguội, trời vừa hửng sáng",
+     "at": 208.5
     },
     {
      "s": "",
-     "t": "Tổng tài lạnh lùng, giờ đã có người",
-     "at": 223.57
+     "t": "Anh khẽ nói: “Ở lại nhé em.”",
+     "at": 213.2
     }
    ],
-   "gain": 0.2
+   "sum": "Bài hát \"Tổng Tài Lạnh Lùng\" vẽ nên hình ảnh vị tổng tài quen ra lệnh, giấu cảm xúc sau vẻ ngoài băng giá, cho đến khi cô gái khiến anh mềm lòng và dám nói lời giữ cô ở lại.",
+   "ex": [
+    "Tổng tài lạnh lùng, sao mắt anh buồn",
+    "Giữa bao người, chỉ em làm anh chậm bước",
+    "Anh nói “đừng chờ”, tay lại giữ tay em"
+   ],
+   "gain": 0.2,
+   "keys": [
+    "lạnh lùng",
+    "băng giá"
+   ]
   },
   {
    "title": "Chỉ Cần Em Ở Lại",
    "file": "chi-can-em-o-lai.mp3",
    "dur": 227,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em bước qua sảnh lớn, mưa còn vương trên vai",
-     "at": 17.83
+     "at": 15.56
     },
     {
      "s": "",
      "t": "Anh đứng sau khung cửa, chẳng biết nói câu gì",
-     "at": 22.77
+     "at": 22.71
     },
     {
      "s": "",
      "t": "Bản hợp đồng trên bàn bỗng hóa thành xa lạ",
-     "at": 27.71
+     "at": 29.0
     },
     {
      "s": "",
      "t": "Khi đôi mắt em nhìn thẳng vào anh",
-     "at": 32.65
+     "at": 36.47
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh quen ra quyết định thay cho mọi người",
-     "at": 38.73
+     "at": 43.5
     },
     {
      "s": "",
      "t": "Mà chẳng thể gọi tên điều đang đổi thay",
-     "at": 43.17
+     "at": 46.68
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Từ ngày em đến, căn phòng rộng quá",
-     "at": 47.62
+     "at": 50.68
     },
     {
      "s": "",
      "t": "Bỗng thành nơi anh muốn quay về",
-     "at": 51.57
+     "at": 53.65
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Nếu em cho anh một lần được chọn",
-     "at": 55.03
+     "at": 57.6
     },
     {
      "s": "",
      "t": "Anh sẽ chọn em, chẳng chọn ngai vàng",
-     "at": 58.98
+     "at": 60.82
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia cả thế giới chờ anh",
-     "at": 62.93
+     "at": 64.84
     },
     {
      "s": "",
      "t": "Trong tim anh chỉ có một người",
-     "at": 66.88
+     "at": 68.32
     },
     {
      "s": "",
      "t": "Nếu em tin vào bàn tay này",
-     "at": 70.33
+     "at": 71.97
     },
     {
      "s": "",
      "t": "Anh sẽ cùng em đi qua tháng ngày",
-     "at": 73.79
+     "at": 74.96
     },
     {
      "s": "",
      "t": "Sau tất cả những điều anh có",
-     "at": 79.75
+     "at": 79.09
     },
     {
      "s": "",
      "t": "Chỉ cần em ở lại bên anh",
-     "at": 87.27
+     "at": 81.33
     },
     {
      "s": "LỜI 2",
      "t": "Em nói em không cần những món quà đắt tiền",
-     "at": 90.72
+     "at": 100.32
     },
     {
      "s": "",
      "t": "Chỉ cần anh lắng nghe khi ngày dài khép lại",
-     "at": 102.32
+     "at": 103.72
     },
     {
      "s": "",
      "t": "Anh tháo chiếc cà vạt, ngồi bên hiên vắng",
-     "at": 107.26
+     "at": 107.79
     },
     {
      "s": "",
      "t": "Học cách bình yên trong tiếng em cười",
-     "at": 111.7
+     "at": 111.16
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh quen che giấu mọi điều yếu mềm",
-     "at": 115.65
+     "at": 115.15
     },
     {
      "s": "",
      "t": "Mà chẳng thể giấu trái tim này nữa",
-     "at": 119.61
+     "at": 118.34
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Từ ngày em đến, căn phòng rộng quá",
-     "at": 123.56
+     "at": 122.32
     },
     {
      "s": "",
      "t": "Bỗng thành nơi anh muốn quay về",
-     "at": 131.99
+     "at": 125.05
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Nếu em cho anh một lần được chọn",
-     "at": 135.44
+     "at": 129.25
     },
     {
      "s": "",
      "t": "Anh sẽ chọn em, chẳng chọn ngai vàng",
-     "at": 139.39
+     "at": 132.46
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia cả thế giới chờ anh",
-     "at": 143.34
+     "at": 136.52
     },
     {
      "s": "",
      "t": "Trong tim anh chỉ có một người",
-     "at": 147.29
+     "at": 139.98
     },
     {
      "s": "",
      "t": "Nếu em tin vào bàn tay này",
-     "at": 150.75
+     "at": 143.57
     },
     {
      "s": "",
      "t": "Anh sẽ cùng em đi qua tháng ngày",
-     "at": 154.21
+     "at": 146.58
     },
     {
      "s": "",
      "t": "Sau tất cả những điều anh có",
-     "at": 160.94
+     "at": 150.71
     },
     {
      "s": "",
      "t": "Chỉ cần em ở lại bên anh",
-     "at": 164.39
+     "at": 152.94
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Mai nếu con đường mình đi chông chênh",
-     "at": 167.85
+     "at": 157.36
     },
     {
      "s": "",
      "t": "Anh không hứa trời xanh không mây",
-     "at": 171.8
+     "at": 161.53
     },
     {
      "s": "",
      "t": "Chỉ hứa mỗi khi em quay đầu lại",
-     "at": 178.17
+     "at": 164.8
     },
     {
      "s": "",
      "t": "Anh vẫn ở đây, nắm lấy tay em",
-     "at": 182.12
+     "at": 167.63
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Nếu em cho anh một đời để chọn",
-     "at": 186.07
+     "at": 175.83
     },
     {
      "s": "",
      "t": "Anh vẫn chọn em, qua mọi đổi thay",
-     "at": 190.02
+     "at": 179.03
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Dẫu ngoài kia cả thế giới chờ anh",
-     "at": 193.97
+     "at": 183.07
     },
     {
      "s": "",
      "t": "Trong tim anh chỉ có một người",
-     "at": 200.02
+     "at": 186.54
     },
     {
      "s": "",
      "t": "Nếu em tin vào bàn tay này",
-     "at": 203.48
+     "at": 190.16
     },
     {
      "s": "",
      "t": "Anh sẽ cùng em đi qua tháng ngày",
-     "at": 206.93
+     "at": 193.14
     },
     {
      "s": "",
      "t": "Sau tất cả những điều anh có",
-     "at": 210.88
+     "at": 197.23
     },
     {
      "s": "",
      "t": "Chỉ cần em ở lại bên anh",
-     "at": 218.37
+     "at": 199.51
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Chỉ cần em ở lại bên anh",
-     "at": 221.83
+     "at": 210.21
     }
    ],
-   "gain": 0.2
+   "sum": "Bài hát \"Chỉ Cần Em Ở Lại\" là lời bày tỏ của người đàn ông quyền lực sẵn sàng chọn tình yêu thay vì ngai vàng, hứa sẽ nắm tay người mình thương qua mọi đổi thay của cuộc đời.",
+   "ex": [
+    "Nếu em cho anh một lần được chọn",
+    "Anh sẽ chọn em, chẳng chọn ngai vàng",
+    "Chỉ cần em ở lại bên anh"
+   ],
+   "gain": 0.2,
+   "keys": [
+    "ở lại",
+    "đừng đi",
+    "níu"
+   ]
   },
   {
    "title": "Cưng Chiều Vợ Nhỏ",
    "file": "cung-chieu-vo-nho.mp3",
    "dur": 252,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em bước qua cánh cửa, mưa còn vương trên vai",
-     "at": 14.71
+     "at": 14.61
     },
     {
      "s": "",
      "t": "Anh khép trang công việc, chẳng hỏi đúng sai",
-     "at": 20.97
+     "at": 21.86
     },
     {
      "s": "",
      "t": "Một chiếc khăn mềm, một tách trà nóng",
-     "at": 26.59
+     "at": 29.15
     },
     {
      "s": "",
      "t": "Anh nhớ từng điều nhỏ em chưa từng nói",
-     "at": 31.6
+     "at": 36.44
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ngoài kia anh quen quyết định cả thế gian",
-     "at": 37.22
+     "at": 44.15
     },
     {
      "s": "",
      "t": "Về bên em, anh chỉ muốn dịu dàng",
-     "at": 42.85
+     "at": 51.63
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Cưng chiều vợ nhỏ tận trời",
-     "at": 47.85
+     "at": 58.07
     },
     {
      "s": "",
      "t": "Để em cười sáng trong đôi mắt anh",
-     "at": 53.85
+     "at": 61.45
     },
     {
      "s": "",
      "t": "Dẫu cho bão giông ngoài kia vây quanh",
-     "at": 61.27
+     "at": 65.07
     },
     {
      "s": "",
      "t": "Anh vẫn nắm tay em thật gần",
-     "at": 66.28
+     "at": 68.04
     },
     {
      "s": "",
      "t": "Cưng chiều vợ nhỏ mỗi ngày",
-     "at": 73.44
+     "at": 72.63
     },
     {
      "s": "",
      "t": "Gói yêu thương trong những điều giản đơn",
-     "at": 77.19
+     "at": 75.6
     },
     {
      "s": "",
      "t": "Danh vọng bao nhiêu cũng chẳng thể hơn",
-     "at": 82.2
+     "at": 79.57
     },
     {
      "s": "",
      "t": "Một mái nhà có em chờ anh",
-     "at": 87.2
+     "at": 82.53
     },
     {
      "s": "LỜI 2",
      "t": "Em thích con phố cũ, tiệm bánh cuối con đường",
-     "at": 91.57
+     "at": 116.45
     },
     {
      "s": "",
      "t": "Anh dành buổi chiều rảnh, đi cùng em thong dong",
-     "at": 97.83
+     "at": 123.69
     },
     {
      "s": "",
      "t": "Không cần xe hoa, không cần tiệc lớn",
-     "at": 117.68
+     "at": 131.15
     },
     {
      "s": "",
      "t": "Chỉ cần em tựa vai anh lúc hoàng hôn",
-     "at": 122.68
+     "at": 138.85
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Bao năm anh cứ tưởng mình không cần ai",
-     "at": 128.31
+     "at": 145.95
     },
     {
      "s": "",
      "t": "Đến khi em đến, lòng thôi khép lại",
-     "at": 133.93
+     "at": 149.37
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Cưng chiều vợ nhỏ tận trời",
-     "at": 138.94
+     "at": 154.38
     },
     {
      "s": "",
      "t": "Để em cười sáng trong đôi mắt anh",
-     "at": 142.69
+     "at": 157.77
     },
     {
      "s": "",
      "t": "Dẫu cho bão giông ngoài kia vây quanh",
-     "at": 147.69
+     "at": 161.37
     },
     {
      "s": "",
      "t": "Anh vẫn nắm tay em thật gần",
-     "at": 152.69
+     "at": 164.33
     },
     {
      "s": "",
      "t": "Cưng chiều vợ nhỏ mỗi ngày",
-     "at": 157.07
+     "at": 168.87
     },
     {
      "s": "",
      "t": "Gói yêu thương trong những điều giản đơn",
-     "at": 160.82
+     "at": 171.83
     },
     {
      "s": "",
      "t": "Danh vọng bao nhiêu cũng chẳng thể hơn",
-     "at": 167.86
+     "at": 175.8
     },
     {
      "s": "",
      "t": "Một mái nhà có em chờ anh",
-     "at": 172.86
+     "at": 178.77
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu mai này đường xa thêm mỏi mệt",
-     "at": 177.24
+     "at": 184.13
     },
     {
      "s": "",
      "t": "Cứ quay về, anh vẫn ở nơi đây",
-     "at": 182.24
+     "at": 187.66
     },
     {
      "s": "",
      "t": "Không hứa cả thế gian ngừng đổi thay",
-     "at": 187.24
+     "at": 191.4
     },
     {
      "s": "",
      "t": "Chỉ hứa thương em qua từng tháng ngày",
-     "at": 192.24
+     "at": 194.87
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "ĐIỆP KHÚC",
      "t": "Cưng chiều vợ nhỏ tận trời",
-     "at": 197.25
+     "at": 201.44
     },
     {
      "s": "",
      "t": "Để em cười sáng trong đôi mắt anh",
-     "at": 203.75
+     "at": 204.81
     },
     {
      "s": "",
      "t": "Dẫu cho bão giông ngoài kia vây quanh",
-     "at": 208.75
+     "at": 208.42
     },
     {
      "s": "",
      "t": "Anh vẫn nắm tay em thật gần",
-     "at": 213.75
+     "at": 211.34
     },
     {
-     "s": "",
+     "s": "CẦU NỐI",
      "t": "Cưng chiều vợ nhỏ suốt đời",
-     "at": 218.13
+     "at": 215.92
     },
     {
      "s": "",
      "t": "Giữ bình yên trong những điều giản đơn",
-     "at": 221.88
+     "at": 218.85
     },
     {
      "s": "",
      "t": "Người ta gọi anh là người quyền lực",
-     "at": 226.88
+     "at": 222.8
     },
     {
      "s": "",
      "t": "Em gọi anh, anh sẽ về ngay",
-     "at": 236.5
-    },
-    {
-     "s": "KẾT",
-     "t": "Một mái nhà có em chờ anh",
-     "at": 244.52
+     "at": 225.6
     },
     {
      "s": "",
+     "t": "Một mái nhà có em chờ anh",
+     "at": 230.97
+    },
+    {
+     "s": "KẾT",
      "t": "Anh sẽ về ngay",
-     "at": 248.89
+     "at": 239.85
     }
    ],
-   "gain": 0
+   "sum": "Bài hát \"Cưng Chiều Vợ Nhỏ\" là bản tình ca ngọt ngào về người chồng ngoài đời quyết đoán nhưng về nhà chỉ muốn dịu dàng, gói yêu thương trong những điều giản đơn mỗi ngày.",
+   "ex": [
+    "Cưng chiều vợ nhỏ tận trời",
+    "Để em cười sáng trong đôi mắt anh",
+    "Một mái nhà có em chờ anh"
+   ],
+   "gain": 0.1,
+   "keys": [
+    "cưng chiều",
+    "vợ nhỏ",
+    "sủng",
+    "chiều vợ"
+   ]
   },
   {
    "title": "Ly Hôn Rồi Mới Biết",
    "file": "ly-hon-roi-moi-biet.mp3",
    "dur": 275,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
-     "s": "LỜI 1",
+     "s": "ĐIỆP KHÚC",
      "t": "Chiếc chìa khóa cũ nằm im bên thềm",
-     "at": 17.59
+     "at": 17.98
     },
     {
-     "s": "",
+     "s": "LỜI 1",
      "t": "Tờ giấy chia đôi điều ta từng hứa",
-     "at": 24.38
+     "at": 25.54
     },
     {
      "s": "",
      "t": "Em mang mùa đông đi qua cánh cửa",
-     "at": 31.29
+     "at": 32.63
     },
     {
      "s": "",
      "t": "Anh đứng nhìn căn nhà bỗng rộng hơn",
-     "at": 36.04
+     "at": 38.92
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ngày trước gần nhau, chẳng kịp lắng nghe",
-     "at": 40.79
+     "at": 46.21
     },
     {
      "s": "",
      "t": "Đến lúc xa rồi mới thương câu vụng về",
-     "at": 45.54
+     "at": 53.27
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Ly hôn rồi mới biết yêu là gì",
-     "at": 50.88
+     "at": 61.71
     },
     {
      "s": "",
      "t": "Là nhớ một người ngay khi người rời đi",
-     "at": 55.63
+     "at": 68.87
     },
     {
      "s": "",
      "t": "Là trong im lặng nghe tim mình thú nhận",
-     "at": 60.98
+     "at": 75.2
     },
     {
      "s": "",
      "t": "Ta đã từng có nhau, mà chẳng giữ được gì",
-     "at": 68.7
+     "at": 82.37
     },
     {
      "s": "",
      "t": "Ly hôn rồi mới biết thương đến đau",
-     "at": 77.31
+     "at": 90.81
     },
     {
      "s": "",
      "t": "Một bữa cơm quen, một tiếng gọi ban đầu",
-     "at": 82.06
+     "at": 97.29
     },
     {
      "s": "",
      "t": "Nếu ngày ấy mình dịu dàng thêm một chút",
-     "at": 87.4
+     "at": 103.98
     },
     {
      "s": "",
      "t": "Có lẽ hôm nay chẳng lạc mất nhau",
-     "at": 98.3
+     "at": 111.41
     },
     {
-     "s": "LỜI 2",
+     "s": "CẦU NỐI",
      "t": "Em thấy áo anh còn treo sau cửa",
-     "at": 105.01
+     "at": 119.6
     },
     {
      "s": "",
      "t": "Anh vẫn pha cà phê đúng vị em",
-     "at": 109.76
+     "at": 122.35
     },
     {
      "s": "",
      "t": "Những điều nhỏ bé từng quen như thở",
-     "at": 114.51
+     "at": 126.83
     },
     {
      "s": "",
      "t": "Giờ hóa thành điều chẳng thể gọi tên",
-     "at": 119.26
+     "at": 129.59
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ta đã cố quên bằng cách bước đi",
-     "at": 124.01
+     "at": 134.41
     },
     {
      "s": "",
      "t": "Mà mỗi con đường lại đưa về ký ức",
-     "at": 128.76
+     "at": 136.89
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Ly hôn rồi mới biết yêu là gì",
-     "at": 134.1
+     "at": 145.37
     },
     {
      "s": "",
      "t": "Là nhớ một người ngay khi người rời đi",
-     "at": 138.85
+     "at": 149.12
     },
     {
      "s": "",
      "t": "Là trong im lặng nghe tim mình thú nhận",
-     "at": 149.14
+     "at": 152.8
     },
     {
      "s": "",
      "t": "Ta đã từng có nhau, mà chẳng giữ được gì",
-     "at": 160
+     "at": 158.71
     },
     {
      "s": "",
      "t": "Ly hôn rồi mới biết thương đến đau",
-     "at": 173.76
+     "at": 167.14
     },
     {
      "s": "",
      "t": "Một bữa cơm quen, một tiếng gọi ban đầu",
-     "at": 182.55
+     "at": 173.67
     },
     {
      "s": "",
      "t": "Nếu ngày ấy mình dịu dàng thêm một chút",
-     "at": 187.89
+     "at": 180.32
     },
     {
      "s": "",
      "t": "Có lẽ hôm nay chẳng lạc mất nhau",
-     "at": 193.24
+     "at": 187.8
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu gặp lại nhau giữa một chiều mưa",
-     "at": 197.99
+     "at": 194.82
     },
     {
      "s": "",
      "t": "Em sẽ hỏi anh có còn giận nữa",
-     "at": 202.74
+     "at": 198.41
     },
     {
      "s": "",
      "t": "Anh sẽ nói không, chỉ buồn vì biết",
-     "at": 207.49
+     "at": 202.11
     },
     {
      "s": "",
      "t": "Yêu nhau mà ta đã chẳng nói vừa",
-     "at": 216.16
-    },
-    {
-     "s": "ĐIỆP KHÚC CUỐI",
-     "t": "Ly hôn rồi mới biết yêu là gì",
-     "at": 220.91
+     "at": 205.79
     },
     {
      "s": "",
+     "t": "Ly hôn rồi mới biết yêu là gì",
+     "at": 212.65
+    },
+    {
+     "s": "CẦU NỐI",
      "t": "Là chúc người bình yên dù lòng còn nghĩ suy",
-     "at": 225.66
+     "at": 216.41
     },
     {
      "s": "",
      "t": "Là thôi níu giữ điều mình không thể sửa",
-     "at": 231.6
+     "at": 220.1
     },
     {
      "s": "",
      "t": "Và học cách thương nhau từ phía xa",
-     "at": 236.94
+     "at": 224.19
     },
     {
      "s": "",
      "t": "Ly hôn rồi mới biết thương đến đau",
-     "at": 241.69
+     "at": 230.81
     },
     {
-     "s": "",
+     "s": "CẦU NỐI",
      "t": "Nhưng mong ngày mai nỗi đau sẽ qua mau",
-     "at": 246.44
+     "at": 235.08
     },
     {
      "s": "",
      "t": "Nếu kiếp này mình không chung đường nữa",
-     "at": 251.79
+     "at": 238.48
     },
     {
      "s": "",
      "t": "Xin nhớ từng có một người yêu em sâu",
-     "at": 256.54
-    },
-    {
-     "s": "KẾT",
-     "t": "Chiếc chìa khóa cũ nằm im bên thềm",
-     "at": 261.88
+     "at": 244.1
     },
     {
      "s": "",
+     "t": "Chiếc chìa khóa cũ nằm im bên thềm",
+     "at": 252.54
+    },
+    {
+     "s": "KẾT",
      "t": "Ta đã rời xa, vẫn mong người bình yên",
-     "at": 266.63
+     "at": 258.86
     }
    ],
-   "gain": -0.1
+   "sum": "Bài hát \"Ly Hôn Rồi Mới Biết\" là nỗi tiếc nuối của đôi vợ chồng chỉ hiểu giá trị của nhau khi đã chia tay, và học cách chúc người kia bình yên, thương nhau từ phía xa.",
+   "ex": [
+    "Ly hôn rồi mới biết yêu là gì",
+    "Là nhớ một người ngay khi người rời đi",
+    "Ta đã từng có nhau, mà chẳng giữ được gì"
+   ],
+   "gain": 0.0,
+   "keys": [
+    "ly hôn",
+    "chia tay",
+    "hối hận"
+   ]
   },
   {
    "title": "Thiên Kim Thật Trở Về",
    "file": "thien-kim-that-tro-ve.mp3",
    "dur": 268,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Ngày em đi, mưa nghiêng trên phố vắng",
-     "at": 43.27
+     "at": 14.58
     },
     {
      "s": "",
      "t": "Một chiếc tên rơi khỏi những trang đời",
-     "at": 47.24
+     "at": 21.9
     },
     {
      "s": "",
      "t": "Bao năm qua, em gom từng mảnh nhớ",
-     "at": 51.2
+     "at": 29.24
     },
     {
      "s": "",
      "t": "Giấu trong tim lời hẹn chẳng thành lời",
-     "at": 55.16
+     "at": 36.46
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Giờ cánh cửa xưa mở ra lần nữa",
-     "at": 61.42
+     "at": 43.46
     },
     {
      "s": "",
      "t": "Ánh mắt người còn giữ chút dịu dàng",
-     "at": 65.38
+     "at": 47.33
     },
     {
      "s": "",
      "t": "Anh hỏi em có từng đau đến thế",
-     "at": 69.34
+     "at": 51.39
     },
     {
      "s": "",
      "t": "Em mỉm cười, thôi chẳng trách thời gian",
-     "at": 73.3
+     "at": 54.86
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Thiên kim thật trở về giữa bao đổi thay",
-     "at": 77.26
+     "at": 57.47
     },
     {
      "s": "",
      "t": "Mang theo trái tim từng hóa hao gầy",
-     "at": 81.71
+     "at": 63.95
     },
     {
      "s": "",
      "t": "Dẫu bao lời cay nghiệt vây quanh em",
-     "at": 85.67
+     "at": 67.58
     },
     {
      "s": "",
      "t": "Em vẫn đứng thẳng, chẳng cần ai gọi tên",
-     "at": 95.29
+     "at": 70.96
     },
     {
      "s": "",
      "t": "Thiên kim thật trở về, không cúi đầu",
-     "at": 105.77
+     "at": 73.57
     },
     {
      "s": "",
      "t": "Tự viết tương lai qua những thương đau",
-     "at": 109.73
+     "at": 78.5
     },
     {
      "s": "",
      "t": "Nếu anh còn muốn đi cùng em đến cuối",
-     "at": 113.69
+     "at": 81.89
     },
     {
      "s": "",
      "t": "Hãy nắm tay em, đừng buông thêm lần nào",
-     "at": 118.14
+     "at": 85.68
     },
     {
      "s": "LỜI 2",
      "t": "Bữa tiệc sang, bao gương mặt xa lạ",
-     "at": 122.6
+     "at": 107.43
     },
     {
      "s": "",
      "t": "Lời chào nhau che kín những toan tính",
-     "at": 126.56
+     "at": 114.61
     },
     {
      "s": "",
      "t": "Em bước qua, bình yên trong dáng vẻ",
-     "at": 130.52
+     "at": 121.9
     },
     {
      "s": "",
      "t": "Không còn là cô gái dễ lung lay",
-     "at": 134.48
+     "at": 129.16
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh nhận ra sau bao lần lạc mất",
-     "at": 138.44
+     "at": 136.48
     },
     {
      "s": "",
      "t": "Người anh thương chẳng cần chiếc ngai vàng",
-     "at": 142.4
+     "at": 140.28
     },
     {
      "s": "",
      "t": "Chỉ cần một lời chân thành ở lại",
-     "at": 146.36
+     "at": 143.9
     },
     {
      "s": "",
      "t": "Và một bờ vai giữa phút hoang mang",
-     "at": 152.96
+     "at": 147.55
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Thiên kim thật trở về giữa bao đổi thay",
-     "at": 156.92
+     "at": 152.33
     },
     {
      "s": "",
      "t": "Mang theo trái tim từng hóa hao gầy",
-     "at": 161.38
+     "at": 156.67
     },
     {
      "s": "",
      "t": "Dẫu bao lời cay nghiệt vây quanh em",
-     "at": 165.34
+     "at": 160.29
     },
     {
      "s": "",
      "t": "Em vẫn đứng thẳng, chẳng cần ai gọi tên",
-     "at": 171.42
+     "at": 163.67
     },
     {
      "s": "",
      "t": "Thiên kim thật trở về, không cúi đầu",
-     "at": 175.87
+     "at": 166.28
     },
     {
      "s": "",
      "t": "Tự viết tương lai qua những thương đau",
-     "at": 182.13
+     "at": 171.23
     },
     {
      "s": "",
      "t": "Nếu anh còn muốn đi cùng em đến cuối",
-     "at": 186.09
+     "at": 174.6
     },
     {
      "s": "",
      "t": "Hãy nắm tay em, đừng buông thêm lần nào",
-     "at": 190.55
+     "at": 178.4
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Em không trở về để xin ai thương hại",
-     "at": 195.01
+     "at": 185.67
     },
     {
      "s": "",
      "t": "Không cần lời xin lỗi nói muộn màng",
-     "at": 206.18
+     "at": 189.5
     },
     {
      "s": "",
      "t": "Chỉ muốn sống đời mình đã chọn",
-     "at": 210.14
+     "at": 193.18
     },
     {
      "s": "",
      "t": "Và yêu anh bằng trái tim vững vàng",
-     "at": 213.61
+     "at": 196.92
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Thiên kim thật trở về giữa bao đổi thay",
-     "at": 217.57
+     "at": 201.73
     },
     {
      "s": "",
      "t": "Mang theo ánh mắt chẳng còn hao gầy",
-     "at": 222.02
+     "at": 207.59
     },
     {
      "s": "",
      "t": "Dẫu bao lời cay nghiệt vây quanh em",
-     "at": 225.98
+     "at": 211.19
     },
     {
-     "s": "",
+     "s": "CẦU NỐI",
      "t": "Em vẫn đứng thẳng, tự gọi tên mình",
-     "at": 229.94
+     "at": 214.55
     },
     {
      "s": "",
      "t": "Thiên kim thật trở về, bước qua đau",
-     "at": 237.9
+     "at": 217.81
     },
     {
      "s": "",
      "t": "Mở cánh cửa mới, không ngoảnh lại sau",
-     "at": 241.86
+     "at": 222.1
     },
     {
      "s": "",
      "t": "Nếu anh còn muốn đi cùng em đến cuối",
-     "at": 245.82
-    },
-    {
-     "s": "",
-     "t": "Hãy nắm tay em, lần này đi cùng nhau",
-     "at": 250.28
+     "at": 225.52
     },
     {
      "s": "KẾT",
+     "t": "Hãy nắm tay em, lần này đi cùng nhau",
+     "at": 229.34
+    },
+    {
+     "s": "",
      "t": "Thiên kim thật trở về",
-     "at": 258.06
+     "at": 237.83
     },
     {
      "s": "",
      "t": "Và em chọn chính em",
-     "at": 260.54
+     "at": 246.0
     }
    ],
-   "gain": 0.6
+   "sum": "Bài hát \"Thiên Kim Thật Trở Về\" kể về cô gái từng bị lạc mất thân phận nay trở về giữa bao lời cay nghiệt, không cúi đầu, không cầu xin, tự viết tương lai bằng trái tim vững vàng.",
+   "ex": [
+    "Thiên kim thật trở về, không cúi đầu",
+    "Tự viết tương lai qua những thương đau",
+    "Hãy nắm tay em, đừng buông thêm lần nào"
+   ],
+   "gain": 0.6,
+   "keys": [
+    "thiên kim",
+    "tiểu thư",
+    "trở về"
+   ]
   },
   {
    "title": "Tổng Tài Cũng Biết Đau",
    "file": "tong-tai-cung-biet-dau.mp3",
    "dur": 227,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
-     "s": "LỜI 1",
+     "s": "ĐIỆP KHÚC",
      "t": "Em bước qua sảnh lớn, mưa còn đọng trên vai",
-     "at": 20.47
+     "at": 20.38
     },
     {
-     "s": "",
+     "s": "LỜI 1",
      "t": "Anh đứng sau ô cửa, quen ra lệnh hơn hỏi han",
-     "at": 24.74
+     "at": 25.55
     },
     {
      "s": "",
      "t": "Cả tòa nhà im lặng khi anh vừa đặt chân",
-     "at": 29.43
+     "at": 31.05
     },
     {
      "s": "",
      "t": "Mà trước câu em nói, anh chẳng biết đáp lời",
-     "at": 33.7
+     "at": 34.67
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Em bảo đừng dùng tiền mua một ngày bình yên",
-     "at": 37.96
+     "at": 41.02
     },
     {
      "s": "",
      "t": "Anh nghe câu ấy mãi trên đường về riêng",
-     "at": 42.22
+     "at": 46.87
     },
     {
      "s": "",
      "t": "Lần đầu tiên có người nhìn xuyên chiếc áo vest",
-     "at": 48.14
+     "at": 51.74
     },
     {
      "s": "",
      "t": "Thấy một người cô độc chẳng biết cách gần em",
-     "at": 52.41
+     "at": 55.26
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài cũng biết đau khi em quay lưng đi",
-     "at": 56.67
+     "at": 61.73
     },
     {
      "s": "",
      "t": "Cũng thức đến bình minh, đọc lại dòng tin nhắn",
-     "at": 60.94
+     "at": 66.87
     },
     {
      "s": "",
      "t": "Anh có thể mua cả thành phố trong tay",
-     "at": 65.2
+     "at": 72.1
     },
     {
      "s": "",
      "t": "Nhưng không mua được phút em còn ở đây",
-     "at": 69.04
+     "at": 77.22
     },
     {
      "s": "",
      "t": "Nếu trái tim em cần một người bình thường",
-     "at": 72.88
+     "at": 82.39
     },
     {
      "s": "",
      "t": "Anh sẽ học cách yêu, không cần quyền lực",
-     "at": 76.71
+     "at": 87.52
     },
     {
-     "s": "LỜI 2",
+     "s": "CẦU NỐI",
      "t": "Anh nhớ em thích quán nhỏ cuối con đường quen",
-     "at": 80.55
+     "at": 93.78
     },
     {
      "s": "",
      "t": "Ly trà không đường, quyển sách gấp trang bên",
-     "at": 84.82
+     "at": 96.34
     },
     {
      "s": "",
      "t": "Anh từng cho người gửi hoa đến mỗi sáng",
-     "at": 90.53
+     "at": 98.92
     },
     {
      "s": "",
      "t": "Mà quên hỏi em có thật sự thích hoa",
-     "at": 94.36
+     "at": 101.37
     },
     {
      "s": "",
      "t": "Giờ anh tự tay xếp lại căn phòng lạnh",
-     "at": 98.2
+     "at": 103.9
     },
     {
      "s": "",
      "t": "Bỏ lịch họp dày để đón em tan ca",
-     "at": 102.04
+     "at": 106.54
     },
     {
      "s": "",
      "t": "Em cười bảo anh làm gì cũng vụng về",
-     "at": 105.88
+     "at": 108.79
     },
     {
      "s": "",
      "t": "Anh nhận phần thua, chỉ mong em đừng xa",
-     "at": 109.72
+     "at": 111.41
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Em bảo đừng dùng lời hứa để giữ chân nhau",
-     "at": 113.55
+     "at": 113.92
     },
     {
      "s": "",
      "t": "Hãy đứng cạnh em qua những ngày không màu",
-     "at": 117.82
+     "at": 116.57
     },
     {
      "s": "",
      "t": "Anh không còn muốn thắng trong mọi cuộc chơi",
-     "at": 121.66
+     "at": 119.38
     },
     {
      "s": "",
      "t": "Chỉ muốn khi em gọi, anh có mặt kịp thời",
-     "at": 125.5
+     "at": 121.66
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài cũng biết đau khi em quay lưng đi",
-     "at": 131.62
+     "at": 126.26
     },
     {
      "s": "",
      "t": "Cũng thức đến bình minh, đọc lại dòng tin nhắn",
-     "at": 138.16
+     "at": 131.37
     },
     {
      "s": "",
      "t": "Anh có thể mua cả thành phố trong tay",
-     "at": 142.43
+     "at": 136.59
     },
     {
      "s": "",
      "t": "Nhưng không mua được phút em còn ở đây",
-     "at": 148.25
+     "at": 141.69
     },
     {
      "s": "",
      "t": "Nếu trái tim em cần một người bình thường",
-     "at": 154.43
+     "at": 146.89
     },
     {
      "s": "",
      "t": "Anh sẽ học cách yêu, không cần quyền lực",
-     "at": 158.26
+     "at": 152.03
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu mai này em chọn con đường khác",
-     "at": 162.1
+     "at": 157.9
     },
     {
      "s": "",
      "t": "Anh sẽ không dùng danh phận níu em",
-     "at": 165.51
+     "at": 161.0
     },
     {
      "s": "",
      "t": "Chỉ xin một lần được nói thật khẽ",
-     "at": 170.79
+     "at": 163.58
     },
     {
      "s": "",
      "t": "Căn nhà rộng quá, thiếu em thành hoang vắng",
-     "at": 174.21
+     "at": 167.83
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Tổng tài cũng biết đau, cũng biết mình sai",
-     "at": 178.04
+     "at": 172.68
     },
     {
      "s": "",
      "t": "Đã quen đứng trên cao nên quên nhìn em lại",
-     "at": 181.88
+     "at": 177.84
     },
     {
      "s": "",
      "t": "Anh không hứa trao em cả thế giới này",
-     "at": 186.15
+     "at": 183.04
     },
     {
      "s": "",
      "t": "Chỉ hứa khi em buồn, anh sẽ ở nơi đây",
-     "at": 189.99
+     "at": 188.12
     },
     {
      "s": "",
      "t": "Nếu trái tim em còn chừa một khoảng nhỏ",
-     "at": 201.27
+     "at": 193.36
     },
     {
      "s": "",
      "t": "Cho người từng vụng về học cách yêu em",
-     "at": 205.11
-    },
-    {
-     "s": "KẾT",
-     "t": "Em bước qua sảnh lớn, mưa còn đọng trên vai",
-     "at": 208.95
+     "at": 198.46
     },
     {
      "s": "",
+     "t": "Em bước qua sảnh lớn, mưa còn đọng trên vai",
+     "at": 203.69
+    },
+    {
+     "s": "KẾT",
      "t": "Lần này anh đi xuống, đứng cạnh em ngoài hiên",
-     "at": 213.21
+     "at": 208.86
     }
    ],
-   "gain": -0.2
+   "sum": "Bài hát \"Tổng Tài Cũng Biết Đau\" cho thấy phía sau người đàn ông quyền lực là một trái tim cô độc, biết sai, biết đau, và sẵn sàng bước xuống để học cách yêu một cách bình thường.",
+   "ex": [
+    "Tổng tài cũng biết đau khi em quay lưng đi",
+    "Anh có thể mua cả thành phố trong tay",
+    "Nhưng không mua được phút em còn ở đây"
+   ],
+   "gain": -0.2,
+   "keys": [
+    "biết đau",
+    "hối hận",
+    "đau lòng"
+   ]
   },
   {
    "title": "Gặp Lại Sau Năm Năm",
    "file": "gap-lai-sau-nam-nam.mp3",
    "dur": 247,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Ngày em đi, mưa nghiêng qua khung cửa",
-     "at": 17.59
+     "at": 15.06
     },
     {
      "s": "",
      "t": "Anh đứng nhìn thành phố hóa xa xôi",
-     "at": 24.11
+     "at": 22.34
     },
     {
      "s": "",
      "t": "Một chiếc nhẫn nằm im trong ngăn kéo",
-     "at": 27.82
+     "at": 29.67
     },
     {
      "s": "",
      "t": "Và lời hứa chưa kịp nói thành lời",
-     "at": 33.48
+     "at": 37.3
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Năm năm qua, anh quen với những cuộc hẹn",
-     "at": 40.16
+     "at": 44.62
     },
     {
      "s": "",
      "t": "Quen ký tên dưới ánh đèn xa hoa",
-     "at": 47.13
+     "at": 48.27
     },
     {
      "s": "",
      "t": "Chỉ riêng khi nghe tên em bất chợt",
-     "at": 50.83
+     "at": 51.86
     },
     {
      "s": "",
      "t": "Tim lại thôi làm kẻ mạnh kiêu sa",
-     "at": 54.54
+     "at": 55.48
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Gặp lại sau năm năm, em vẫn như ngày ấy",
-     "at": 60.11
+     "at": 60.13
     },
     {
      "s": "",
      "t": "Chỉ ánh mắt dịu dàng làm mọi thứ đổi thay",
-     "at": 64.74
+     "at": 63.73
     },
     {
      "s": "",
      "t": "Anh đã có trong tay bao điều người mơ ước",
-     "at": 69.38
+     "at": 67.38
     },
     {
      "s": "",
      "t": "Mà thiếu em, căn phòng rộng hóa heo may",
-     "at": 74.01
+     "at": 71.06
     },
     {
      "s": "",
      "t": "Gặp lại sau năm năm, xin em đừng quay bước",
-     "at": 78.18
+     "at": 74.71
     },
     {
      "s": "",
      "t": "Cho anh được một lần nói hết những ngày qua",
-     "at": 82.82
+     "at": 78.31
     },
     {
      "s": "",
      "t": "Nếu em còn giữ trong tim một khoảng nhỏ",
-     "at": 87.45
+     "at": 82.4
     },
     {
      "s": "",
      "t": "Anh sẽ dùng cả đời để bù đắp chúng ta",
-     "at": 94.31
+     "at": 85.95
     },
     {
      "s": "LỜI 2",
      "t": "Em bước đến, mang theo mùi hương cũ",
-     "at": 98.94
+     "at": 108.69
     },
     {
      "s": "",
      "t": "Chiếc ô đen khẽ chạm giữa dòng người",
-     "at": 108.98
+     "at": 111.41
     },
     {
      "s": "",
      "t": "Anh định gọi, nhưng tên em mắc lại",
-     "at": 112.69
+     "at": 116.03
     },
     {
      "s": "",
      "t": "Như năm xưa còn nghẹn ở trên môi",
-     "at": 116.4
+     "at": 119.16
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Em hỏi anh dạo này có vui không",
-     "at": 120.1
+     "at": 122.78
     },
     {
      "s": "",
      "t": "Anh mỉm cười, chẳng biết trả lời sao",
-     "at": 123.81
+     "at": 126.4
     },
     {
      "s": "",
      "t": "Bao hợp đồng không mua được một phút",
-     "at": 127.52
+     "at": 130.11
     },
     {
      "s": "",
      "t": "Để quay về nơi ta bắt đầu",
-     "at": 131.23
+     "at": 133.59
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Gặp lại sau năm năm, em vẫn như ngày ấy",
-     "at": 134.47
+     "at": 136.46
     },
     {
      "s": "",
      "t": "Chỉ ánh mắt dịu dàng làm mọi thứ đổi thay",
-     "at": 139.1
+     "at": 140.08
     },
     {
      "s": "",
      "t": "Anh đã có trong tay bao điều người mơ ước",
-     "at": 143.74
+     "at": 143.75
     },
     {
      "s": "",
      "t": "Mà thiếu em, căn phòng rộng hóa heo may",
-     "at": 148.37
+     "at": 147.41
     },
     {
      "s": "",
      "t": "Gặp lại sau năm năm, xin em đừng quay bước",
-     "at": 152.54
+     "at": 151.02
     },
     {
      "s": "",
      "t": "Cho anh được một lần nói hết những ngày qua",
-     "at": 157.18
+     "at": 154.64
     },
     {
      "s": "",
      "t": "Nếu em còn giữ trong tim một khoảng nhỏ",
-     "at": 161.81
+     "at": 158.73
     },
     {
      "s": "",
      "t": "Anh sẽ dùng cả đời để bù đắp chúng ta",
-     "at": 165.98
+     "at": 162.34
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Anh không xin em quên đi ngày cũ",
-     "at": 172.6
+     "at": 170.55
     },
     {
      "s": "",
      "t": "Chỉ xin được đứng cạnh lúc em cần",
-     "at": 176.3
+     "at": 173.08
     },
     {
      "s": "",
      "t": "Lần này nếu em trao anh cơ hội",
-     "at": 180.01
+     "at": 177.36
     },
     {
      "s": "",
      "t": "Anh sẽ yêu bằng những điều thật gần",
-     "at": 185.87
+     "at": 180.85
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Gặp lại sau năm năm, mình thôi đừng xa nữa",
-     "at": 189.58
+     "at": 185.57
     },
     {
      "s": "",
      "t": "Để ánh mắt ngày nào viết tiếp chuyện đôi ta",
-     "at": 194.21
+     "at": 189.19
     },
     {
      "s": "",
      "t": "Anh có thể buông bao danh vọng ngoài cửa",
-     "at": 198.85
+     "at": 193.23
     },
     {
      "s": "",
      "t": "Chỉ cần em còn muốn trở về nhà",
-     "at": 203.02
+     "at": 196.85
     },
     {
      "s": "",
      "t": "Gặp lại sau năm năm, xin em tin lần nữa",
-     "at": 206.72
+     "at": 200.13
     },
     {
      "s": "",
      "t": "Rằng bàn tay này sẽ chẳng buông tay em",
-     "at": 211.36
+     "at": 203.66
     },
     {
      "s": "",
      "t": "Nếu em còn giữ trong tim một khoảng nhỏ",
-     "at": 215.53
-    },
-    {
-     "s": "",
-     "t": "Anh sẽ dùng cả đời để gọi đó là bình yên",
-     "at": 222.53
+     "at": 207.82
     },
     {
      "s": "KẾT",
+     "t": "Anh sẽ dùng cả đời để gọi đó là bình yên",
+     "at": 211.42
+    },
+    {
+     "s": "",
      "t": "Năm năm rồi, anh vẫn chờ câu trả lời",
-     "at": 233.16
+     "at": 218.78
     },
     {
      "s": "",
      "t": "Lần này, cho anh được đi bên em",
-     "at": 237.33
+     "at": 226.46
     }
    ],
-   "gain": 0
+   "sum": "Bài hát \"Gặp Lại Sau Năm Năm\" là cuộc hội ngộ sau 5 năm xa cách, khi người đàn ông có tất cả vẫn thấy thiếu một người, và xin thêm một cơ hội để bù đắp bằng cả cuộc đời.",
+   "ex": [
+    "Gặp lại sau năm năm, em vẫn như ngày ấy",
+    "Anh đã có trong tay bao điều người mơ ước",
+    "Mà thiếu em, căn phòng rộng hóa heo may"
+   ],
+   "gain": 0.0,
+   "keys": [
+    "gặp lại",
+    "5 năm",
+    "năm năm",
+    "tái hợp"
+   ]
   },
   {
    "title": "Báo Thù Kiêu Hãnh",
@@ -2562,3367 +2686,2142 @@
    "lrcAuto": false,
    "lyrics": [
     {
-     "s": "",
+     "s": "LỜI 1",
      "t": "Em bước qua cánh cửa, bình yên khép sau lưng",
-     "at": 17.5,
-     "w": [
-      [
-       17.5,
-       "Em"
-      ],
-      [
-       17.9,
-       "bước"
-      ],
-      [
-       18.57,
-       "qua"
-      ],
-      [
-       19.1,
-       "cánh"
-      ],
-      [
-       19.77,
-       "cửa,"
-      ],
-      [
-       20.43,
-       "bình"
-      ],
-      [
-       21.1,
-       "yên"
-      ],
-      [
-       21.63,
-       "khép"
-      ],
-      [
-       22.3,
-       "sau"
-      ],
-      [
-       22.83,
-       "lưng"
-      ]
-     ]
+     "at": 17.5
     },
     {
      "s": "",
      "t": "Tên anh còn trên giấy, lạnh như một lời phân trần",
-     "at": 25.05,
-     "w": [
-      [
-       25.05,
-       "Tên"
-      ],
-      [
-       25.58,
-       "anh"
-      ],
-      [
-       26.11,
-       "còn"
-      ],
-      [
-       26.63,
-       "trên"
-      ],
-      [
-       27.29,
-       "giấy,"
-      ],
-      [
-       28.09,
-       "lạnh"
-      ],
-      [
-       28.75,
-       "như"
-      ],
-      [
-       29.27,
-       "một"
-      ],
-      [
-       29.8,
-       "lời"
-      ],
-      [
-       30.33,
-       "phân"
-      ],
-      [
-       30.99,
-       "trần"
-      ]
-     ]
+     "at": 25.05
     },
     {
      "s": "",
      "t": "Chiếc nhẫn nằm im lặng bên tách trà chưa nguội",
-     "at": 32.46,
-     "w": [
-      [
-       32.46,
-       "Chiếc"
-      ],
-      [
-       33.23,
-       "nhẫn"
-      ],
-      [
-       33.86,
-       "nằm"
-      ],
-      [
-       34.37,
-       "im"
-      ],
-      [
-       34.76,
-       "lặng"
-      ],
-      [
-       35.4,
-       "bên"
-      ],
-      [
-       35.91,
-       "tách"
-      ],
-      [
-       36.55,
-       "trà"
-      ],
-      [
-       37.06,
-       "chưa"
-      ],
-      [
-       37.69,
-       "nguội"
-      ]
-     ]
+     "at": 32.46
     },
     {
      "s": "",
      "t": "Em thôi chờ một câu xin lỗi đến muộn màng",
-     "at": 39.98,
-     "w": [
-      [
-       39.98,
-       "Em"
-      ],
-      [
-       40.41,
-       "thôi"
-      ],
-      [
-       41.12,
-       "chờ"
-      ],
-      [
-       41.69,
-       "một"
-      ],
-      [
-       42.27,
-       "câu"
-      ],
-      [
-       42.84,
-       "xin"
-      ],
-      [
-       43.41,
-       "lỗi"
-      ],
-      [
-       43.98,
-       "đến"
-      ],
-      [
-       44.55,
-       "muộn"
-      ],
-      [
-       45.27,
-       "màng"
-      ]
-     ]
+     "at": 39.98
     },
     {
      "s": "",
      "t": "Anh tưởng em sẽ gục giữa những điều anh sắp đặt",
-     "at": 48.71,
-     "w": [
-      [
-       48.71,
-       "Anh"
-      ],
-      [
-       49,
-       "tưởng"
-      ],
-      [
-       49.43,
-       "em"
-      ],
-      [
-       49.65,
-       "sẽ"
-      ],
-      [
-       49.86,
-       "gục"
-      ],
-      [
-       50.15,
-       "giữa"
-      ],
-      [
-       50.51,
-       "những"
-      ],
-      [
-       50.94,
-       "điều"
-      ],
-      [
-       51.31,
-       "anh"
-      ],
-      [
-       51.59,
-       "sắp"
-      ],
-      [
-       51.88,
-       "đặt"
-      ]
-     ]
+     "at": 48.71
     },
     {
      "s": "",
      "t": "Nhưng từng vết xước dạy em đứng thẳng hơn",
-     "at": 52.47,
-     "w": [
-      [
-       52.47,
-       "Nhưng"
-      ],
-      [
-       52.86,
-       "từng"
-      ],
-      [
-       53.18,
-       "vết"
-      ],
-      [
-       53.43,
-       "xước"
-      ],
-      [
-       53.76,
-       "dạy"
-      ],
-      [
-       54.01,
-       "em"
-      ],
-      [
-       54.21,
-       "đứng"
-      ],
-      [
-       54.53,
-       "thẳng"
-      ],
-      [
-       54.91,
-       "hơn"
-      ]
-     ]
+     "at": 52.47
     },
     {
      "s": "",
      "t": "Ngày anh quay lại tìm người xưa đã mất",
-     "at": 55.47,
-     "w": [
-      [
-       55.47,
-       "Ngày"
-      ],
-      [
-       55.92,
-       "anh"
-      ],
-      [
-       56.28,
-       "quay"
-      ],
-      [
-       56.72,
-       "lại"
-      ],
-      [
-       57.08,
-       "tìm"
-      ],
-      [
-       57.44,
-       "người"
-      ],
-      [
-       57.98,
-       "xưa"
-      ],
-      [
-       58.33,
-       "đã"
-      ],
-      [
-       58.6,
-       "mất"
-      ]
-     ]
+     "at": 55.47
     },
     {
      "s": "",
      "t": "Em nhìn anh, không còn thấy mình ngày trước",
-     "at": 59.26,
-     "w": [
-      [
-       59.26,
-       "Em"
-      ],
-      [
-       59.61,
-       "nhìn"
-      ],
-      [
-       60.19,
-       "anh,"
-      ],
-      [
-       60.76,
-       "không"
-      ],
-      [
-       61.46,
-       "còn"
-      ],
-      [
-       61.92,
-       "thấy"
-      ],
-      [
-       62.5,
-       "mình"
-      ],
-      [
-       63.08,
-       "ngày"
-      ],
-      [
-       63.66,
-       "trước"
-      ]
-     ]
+     "at": 59.26
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Báo thù kiêu hãnh, em không cần ai cúi đầu",
-     "at": 64.65,
-     "w": [
-      [
-       64.65,
-       "Báo"
-      ],
-      [
-       65.21,
-       "thù"
-      ],
-      [
-       65.77,
-       "kiêu"
-      ],
-      [
-       66.46,
-       "hãnh,"
-      ],
-      [
-       67.3,
-       "em"
-      ],
-      [
-       67.72,
-       "không"
-      ],
-      [
-       68.56,
-       "cần"
-      ],
-      [
-       69.12,
-       "ai"
-      ],
-      [
-       69.53,
-       "cúi"
-      ],
-      [
-       70.09,
-       "đầu"
-      ]
-     ]
+     "at": 64.65
     },
     {
      "s": "",
      "t": "Em chỉ lấy lại những gì anh từng cướp mất",
-     "at": 72.01,
-     "w": [
-      [
-       72.01,
-       "Em"
-      ],
-      [
-       72.44,
-       "chỉ"
-      ],
-      [
-       73.01,
-       "lấy"
-      ],
-      [
-       73.58,
-       "lại"
-      ],
-      [
-       74.15,
-       "những"
-      ],
-      [
-       75.01,
-       "gì"
-      ],
-      [
-       75.44,
-       "anh"
-      ],
-      [
-       76.01,
-       "từng"
-      ],
-      [
-       76.72,
-       "cướp"
-      ],
-      [
-       77.44,
-       "mất"
-      ]
-     ]
+     "at": 72.01
     },
     {
      "s": "",
      "t": "Báo thù kiêu hãnh, bước qua giông bão thật lâu",
-     "at": 79.54,
-     "w": [
-      [
-       79.54,
-       "Báo"
-      ],
-      [
-       80.05,
-       "thù"
-      ],
-      [
-       80.56,
-       "kiêu"
-      ],
-      [
-       81.2,
-       "hãnh,"
-      ],
-      [
-       81.97,
-       "bước"
-      ],
-      [
-       82.6,
-       "qua"
-      ],
-      [
-       83.11,
-       "giông"
-      ],
-      [
-       83.88,
-       "bão"
-      ],
-      [
-       84.39,
-       "thật"
-      ],
-      [
-       85.03,
-       "lâu"
-      ]
-     ]
+     "at": 79.54
     },
     {
      "s": "",
      "t": "Để anh hiểu trái tim này không còn thuộc về anh",
-     "at": 86.71,
-     "w": [
-      [
-       86.71,
-       "Để"
-      ],
-      [
-       87.12,
-       "anh"
-      ],
-      [
-       87.67,
-       "hiểu"
-      ],
-      [
-       88.36,
-       "trái"
-      ],
-      [
-       89.05,
-       "tim"
-      ],
-      [
-       89.6,
-       "này"
-      ],
-      [
-       90.15,
-       "không"
-      ],
-      [
-       90.97,
-       "còn"
-      ],
-      [
-       91.52,
-       "thuộc"
-      ],
-      [
-       92.35,
-       "về"
-      ],
-      [
-       92.76,
-       "anh"
-      ]
-     ]
+     "at": 86.71
     },
     {
-     "s": "",
+     "s": "LỜI 2",
      "t": "Bản hợp đồng cũ nằm yên trên bàn gỗ",
-     "at": 109.47,
-     "w": [
-      [
-       109.47,
-       "Bản"
-      ],
-      [
-       109.82,
-       "hợp"
-      ],
-      [
-       110.17,
-       "đồng"
-      ],
-      [
-       110.6,
-       "cũ"
-      ],
-      [
-       110.87,
-       "nằm"
-      ],
-      [
-       111.21,
-       "yên"
-      ],
-      [
-       111.56,
-       "trên"
-      ],
-      [
-       112,
-       "bàn"
-      ],
-      [
-       112.35,
-       "gỗ"
-      ]
-     ]
+     "at": 109.47
     },
     {
      "s": "",
      "t": "Dấu mực phai mà ký ức vẫn còn nguyên",
-     "at": 112.91,
-     "w": [
-      [
-       112.91,
-       "Dấu"
-      ],
-      [
-       113.3,
-       "mực"
-      ],
-      [
-       113.69,
-       "phai"
-      ],
-      [
-       114.18,
-       "mà"
-      ],
-      [
-       114.48,
-       "ký"
-      ],
-      [
-       114.77,
-       "ức"
-      ],
-      [
-       115.06,
-       "vẫn"
-      ],
-      [
-       115.45,
-       "còn"
-      ],
-      [
-       115.85,
-       "nguyên"
-      ]
-     ]
+     "at": 112.91
     },
     {
      "s": "",
      "t": "Anh nói có thể cho em cả thế giới",
-     "at": 116.83,
-     "w": [
-      [
-       116.83,
-       "Anh"
-      ],
-      [
-       117.13,
-       "nói"
-      ],
-      [
-       117.42,
-       "có"
-      ],
-      [
-       117.65,
-       "thể"
-      ],
-      [
-       117.94,
-       "cho"
-      ],
-      [
-       118.24,
-       "em"
-      ],
-      [
-       118.46,
-       "cả"
-      ],
-      [
-       118.68,
-       "thế"
-      ],
-      [
-       118.98,
-       "giới"
-      ]
-     ]
+     "at": 116.83
     },
     {
      "s": "",
      "t": "Em mỉm cười, em đã tự dựng thế giới riêng",
-     "at": 119.65,
-     "w": [
-      [
-       119.65,
-       "Em"
-      ],
-      [
-       120.01,
-       "mỉm"
-      ],
-      [
-       120.48,
-       "cười,"
-      ],
-      [
-       121.19,
-       "em"
-      ],
-      [
-       121.55,
-       "đã"
-      ],
-      [
-       121.91,
-       "tự"
-      ],
-      [
-       122.26,
-       "dựng"
-      ],
-      [
-       122.86,
-       "thế"
-      ],
-      [
-       123.33,
-       "giới"
-      ],
-      [
-       123.93,
-       "riêng"
-      ]
-     ]
+     "at": 119.65
     },
     {
      "s": "",
      "t": "Anh tưởng em sẽ quay về khi anh gọi",
-     "at": 124.94,
-     "w": [
-      [
-       124.94,
-       "Anh"
-      ],
-      [
-       125.23,
-       "tưởng"
-      ],
-      [
-       125.67,
-       "em"
-      ],
-      [
-       125.89,
-       "sẽ"
-      ],
-      [
-       126.1,
-       "quay"
-      ],
-      [
-       126.47,
-       "về"
-      ],
-      [
-       126.69,
-       "khi"
-      ],
-      [
-       126.98,
-       "anh"
-      ],
-      [
-       127.27,
-       "gọi"
-      ]
-     ]
+     "at": 124.94
     },
     {
      "s": "",
      "t": "Nhưng cánh cửa ấy khép từ lâu rồi",
-     "at": 127.86,
-     "w": [
-      [
-       127.86,
-       "Nhưng"
-      ],
-      [
-       128.42,
-       "cánh"
-      ],
-      [
-       128.89,
-       "cửa"
-      ],
-      [
-       129.26,
-       "ấy"
-      ],
-      [
-       129.54,
-       "khép"
-      ],
-      [
-       130,
-       "từ"
-      ],
-      [
-       130.28,
-       "lâu"
-      ],
-      [
-       130.66,
-       "rồi"
-      ]
-     ]
+     "at": 127.86
     },
     {
      "s": "",
      "t": "Em không cần thắng bằng lời cay đắng",
-     "at": 131.33,
-     "w": [
-      [
-       131.33,
-       "Em"
-      ],
-      [
-       131.55,
-       "không"
-      ],
-      [
-       131.99,
-       "cần"
-      ],
-      [
-       132.28,
-       "thắng"
-      ],
-      [
-       132.72,
-       "bằng"
-      ],
-      [
-       133.08,
-       "lời"
-      ],
-      [
-       133.37,
-       "cay"
-      ],
-      [
-       133.67,
-       "đắng"
-      ]
-     ]
+     "at": 131.33
     },
     {
      "s": "",
      "t": "Chỉ cần sống tốt hơn ngày anh rời xa",
-     "at": 134.33,
-     "w": [
-      [
-       134.33,
-       "Chỉ"
-      ],
-      [
-       134.91,
-       "cần"
-      ],
-      [
-       135.5,
-       "sống"
-      ],
-      [
-       136.23,
-       "tốt"
-      ],
-      [
-       136.81,
-       "hơn"
-      ],
-      [
-       137.39,
-       "ngày"
-      ],
-      [
-       138.12,
-       "anh"
-      ],
-      [
-       138.71,
-       "rời"
-      ],
-      [
-       139.29,
-       "xa"
-      ]
-     ]
+     "at": 134.33
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Báo thù kiêu hãnh, em không cần ai cúi đầu",
-     "at": 140.65,
-     "w": [
-      [
-       140.65,
-       "Báo"
-      ],
-      [
-       141.21,
-       "thù"
-      ],
-      [
-       141.77,
-       "kiêu"
-      ],
-      [
-       142.46,
-       "hãnh,"
-      ],
-      [
-       143.3,
-       "em"
-      ],
-      [
-       143.72,
-       "không"
-      ],
-      [
-       144.56,
-       "cần"
-      ],
-      [
-       145.12,
-       "ai"
-      ],
-      [
-       145.53,
-       "cúi"
-      ],
-      [
-       146.09,
-       "đầu"
-      ]
-     ]
+     "at": 140.65
     },
     {
      "s": "",
      "t": "Em chỉ lấy lại những gì anh từng cướp mất",
-     "at": 147.93,
-     "w": [
-      [
-       147.93,
-       "Em"
-      ],
-      [
-       148.36,
-       "chỉ"
-      ],
-      [
-       148.93,
-       "lấy"
-      ],
-      [
-       149.5,
-       "lại"
-      ],
-      [
-       150.07,
-       "những"
-      ],
-      [
-       150.93,
-       "gì"
-      ],
-      [
-       151.36,
-       "anh"
-      ],
-      [
-       151.93,
-       "từng"
-      ],
-      [
-       152.64,
-       "cướp"
-      ],
-      [
-       153.36,
-       "mất"
-      ]
-     ]
+     "at": 147.93
     },
     {
      "s": "",
      "t": "Báo thù kiêu hãnh, bước qua giông bão thật lâu",
-     "at": 155.38,
-     "w": [
-      [
-       155.38,
-       "Báo"
-      ],
-      [
-       155.89,
-       "thù"
-      ],
-      [
-       156.4,
-       "kiêu"
-      ],
-      [
-       157.04,
-       "hãnh,"
-      ],
-      [
-       157.81,
-       "bước"
-      ],
-      [
-       158.44,
-       "qua"
-      ],
-      [
-       158.95,
-       "giông"
-      ],
-      [
-       159.72,
-       "bão"
-      ],
-      [
-       160.23,
-       "thật"
-      ],
-      [
-       160.87,
-       "lâu"
-      ]
-     ]
+     "at": 155.38
     },
     {
      "s": "",
      "t": "Để anh hiểu trái tim này không còn thuộc về anh",
-     "at": 162.46,
-     "w": [
-      [
-       162.46,
-       "Để"
-      ],
-      [
-       162.87,
-       "anh"
-      ],
-      [
-       163.42,
-       "hiểu"
-      ],
-      [
-       164.11,
-       "trái"
-      ],
-      [
-       164.8,
-       "tim"
-      ],
-      [
-       165.35,
-       "này"
-      ],
-      [
-       165.9,
-       "không"
-      ],
-      [
-       166.72,
-       "còn"
-      ],
-      [
-       167.27,
-       "thuộc"
-      ],
-      [
-       168.1,
-       "về"
-      ],
-      [
-       168.51,
-       "anh"
-      ]
-     ]
+     "at": 162.46
     },
     {
-     "s": "",
+     "s": "KẾT",
      "t": "Nếu mai này anh thấy em rạng rỡ",
-     "at": 170.91,
-     "w": [
-      [
-       170.91,
-       "Nếu"
-      ],
-      [
-       171.23,
-       "mai"
-      ],
-      [
-       171.55,
-       "này"
-      ],
-      [
-       171.87,
-       "anh"
-      ],
-      [
-       172.19,
-       "thấy"
-      ],
-      [
-       172.59,
-       "em"
-      ],
-      [
-       172.83,
-       "rạng"
-      ],
-      [
-       173.23,
-       "rỡ"
-      ]
-     ]
+     "at": 170.91
     },
     {
      "s": "",
      "t": "Xin đừng gọi đó là món quà anh trao",
-     "at": 173.77,
-     "w": [
-      [
-       173.77,
-       "Xin"
-      ],
-      [
-       174.23,
-       "đừng"
-      ],
-      [
-       174.81,
-       "gọi"
-      ],
-      [
-       175.27,
-       "đó"
-      ],
-      [
-       175.61,
-       "là"
-      ],
-      [
-       175.96,
-       "món"
-      ],
-      [
-       176.42,
-       "quà"
-      ],
-      [
-       176.88,
-       "anh"
-      ],
-      [
-       177.34,
-       "trao"
-      ]
-     ]
+     "at": 173.77
     },
     {
      "s": "",
      "t": "Em đã gom từng mảnh đời đổ vỡ",
-     "at": 178.21,
-     "w": [
-      [
-       178.21,
-       "Em"
-      ],
-      [
-       178.46,
-       "đã"
-      ],
-      [
-       178.7,
-       "gom"
-      ],
-      [
-       179.03,
-       "từng"
-      ],
-      [
-       179.44,
-       "mảnh"
-      ],
-      [
-       179.85,
-       "đời"
-      ],
-      [
-       180.18,
-       "đổ"
-      ],
-      [
-       180.42,
-       "vỡ"
-      ]
-     ]
+     "at": 178.21
     },
     {
      "s": "",
      "t": "Tự khâu thành một giấc mơ lớn lao",
-     "at": 180.97,
-     "w": [
-      [
-       180.97,
-       "Tự"
-      ],
-      [
-       181.39,
-       "khâu"
-      ],
-      [
-       182.1,
-       "thành"
-      ],
-      [
-       182.95,
-       "một"
-      ],
-      [
-       183.51,
-       "giấc"
-      ],
-      [
-       184.22,
-       "mơ"
-      ],
-      [
-       184.64,
-       "lớn"
-      ],
-      [
-       185.21,
-       "lao"
-      ]
-     ]
+     "at": 180.97
     },
     {
      "s": "",
      "t": "Báo thù kiêu hãnh, em chẳng cần ai cúi đầu",
-     "at": 188.42,
-     "w": [
-      [
-       188.42,
-       "Báo"
-      ],
-      [
-       188.98,
-       "thù"
-      ],
-      [
-       189.54,
-       "kiêu"
-      ],
-      [
-       190.23,
-       "hãnh,"
-      ],
-      [
-       191.07,
-       "em"
-      ],
-      [
-       191.49,
-       "chẳng"
-      ],
-      [
-       192.33,
-       "cần"
-      ],
-      [
-       192.89,
-       "ai"
-      ],
-      [
-       193.3,
-       "cúi"
-      ],
-      [
-       193.86,
-       "đầu"
-      ]
-     ]
+     "at": 188.42
     },
     {
      "s": "",
      "t": "Em đã lấy lại tên mình và ngày tháng",
-     "at": 195.71,
-     "w": [
-      [
-       195.71,
-       "Em"
-      ],
-      [
-       196.08,
-       "đã"
-      ],
-      [
-       196.45,
-       "lấy"
-      ],
-      [
-       196.94,
-       "lại"
-      ],
-      [
-       197.43,
-       "tên"
-      ],
-      [
-       197.92,
-       "mình"
-      ],
-      [
-       198.53,
-       "và"
-      ],
-      [
-       198.9,
-       "ngày"
-      ],
-      [
-       199.51,
-       "tháng"
-      ]
-     ]
+     "at": 195.71
     },
     {
      "s": "",
      "t": "Báo thù kiêu hãnh, không còn níu giữ phía sau",
-     "at": 200.55,
-     "w": [
-      [
-       200.55,
-       "Báo"
-      ],
-      [
-       201.07,
-       "thù"
-      ],
-      [
-       201.59,
-       "kiêu"
-      ],
-      [
-       202.25,
-       "hãnh,"
-      ],
-      [
-       203.03,
-       "không"
-      ],
-      [
-       203.81,
-       "còn"
-      ],
-      [
-       204.33,
-       "níu"
-      ],
-      [
-       204.85,
-       "giữ"
-      ],
-      [
-       205.38,
-       "phía"
-      ],
-      [
-       206.03,
-       "sau"
-      ]
-     ]
+     "at": 200.55
     },
     {
      "s": "",
      "t": "Anh nhìn em đi, em đã bước qua anh",
-     "at": 210.5,
-     "w": [
-      [
-       210.5,
-       "Anh"
-      ],
-      [
-       211.12,
-       "nhìn"
-      ],
-      [
-       211.89,
-       "em"
-      ],
-      [
-       212.35,
-       "đi,"
-      ],
-      [
-       212.97,
-       "em"
-      ],
-      [
-       213.43,
-       "đã"
-      ],
-      [
-       213.89,
-       "bước"
-      ],
-      [
-       214.67,
-       "qua"
-      ],
-      [
-       215.28,
-       "anh"
-      ]
-     ]
+     "at": 210.5
     },
     {
      "s": "",
      "t": "Em bước qua cánh cửa",
-     "at": 219.54,
-     "w": [
-      [
-       219.54,
-       "Em"
-      ],
-      [
-       219.97,
-       "bước"
-      ],
-      [
-       220.68,
-       "qua"
-      ],
-      [
-       221.25,
-       "cánh"
-      ],
-      [
-       221.97,
-       "cửa"
-      ]
-     ]
+     "at": 219.54
     },
     {
      "s": "",
      "t": "Lần này, không ngoảnh lại",
-     "at": 224.14,
-     "w": [
-      [
-       224.14,
-       "Lần"
-      ],
-      [
-       224.6,
-       "này,"
-      ],
-      [
-       225.18,
-       "không"
-      ],
-      [
-       225.87,
-       "ngoảnh"
-      ],
-      [
-       226.68,
-       "lại"
-      ]
-     ]
+     "at": 224.14
     }
    ],
-   "gain": 0.4,
-   "mode": "line",
+   "sum": "Bài hát \"Báo Thù Kiêu Hãnh\" thể hiện sự mạnh mẽ, tự lập và hành trình vươn lên của người phụ nữ sau đổ vỡ tình cảm, quyết định buông bỏ quá khứ để tự xây dựng cuộc sống riêng.",
    "ex": [
     "Báo thù kiêu hãnh, em không cần ai cúi đầu",
     "Em chỉ lấy lại những gì anh từng cướp mất",
     "Báo thù kiêu hãnh, bước qua giông bão thật lâu"
+   ],
+   "mode": "line",
+   "gain": 0.4,
+   "keys": [
+    "báo thù",
+    "trả thù",
+    "vợ cũ"
    ]
   },
   {
    "title": "Tim Em Vẫn Chọn Anh",
    "file": "tim-em-van-chon-anh.mp3",
    "dur": 277,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Ngày em đi, mưa nghiêng bên hiên",
-     "at": 18.79
+     "at": 16.84
     },
     {
      "s": "",
      "t": "Tách trà nguội vẫn còn nguyên",
-     "at": 24.17
+     "at": 21.69
     },
     {
      "s": "",
      "t": "Anh cất chiếc khăn màu xanh",
-     "at": 28.78
+     "at": 26.19
     },
     {
      "s": "",
      "t": "Như cất lời chưa kịp nói",
-     "at": 33.4
+     "at": 29.64
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Con đường quen bỗng dài hơn",
-     "at": 38.01
+     "at": 34.96
     },
     {
      "s": "",
      "t": "Tên em khẽ chạm môi",
-     "at": 42.62
+     "at": 38.81
     },
     {
      "s": "",
      "t": "Nếu thời gian quay lại",
-     "at": 46.46
+     "at": 42.15
     },
     {
      "s": "",
      "t": "Em có nghe tim mình?",
-     "at": 53.45
+     "at": 44.4
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Dẫu mai này ta cách xa",
-     "at": 59.52
+     "at": 49.62
     },
     {
      "s": "",
      "t": "Xin giữ giùm nhau phút ban đầu",
-     "at": 64.13
+     "at": 56.98
     },
     {
      "s": "",
      "t": "Ánh mắt ấy, bàn tay ấy",
-     "at": 69.51
+     "at": 64.68
     },
     {
      "s": "",
      "t": "Vẫn ở đây qua bao mùa đau",
-     "at": 76.37
+     "at": 69.91
     },
     {
      "s": "",
      "t": "Nếu còn một lần gặp lại",
-     "at": 81.75
+     "at": 77.93
     },
     {
      "s": "",
      "t": "Em sẽ nói điều ngày xưa giấu kín",
-     "at": 86.36
+     "at": 80.91
     },
     {
      "s": "",
      "t": "Rằng giữa muôn người đi qua",
-     "at": 92.51
+     "at": 84.78
     },
     {
      "s": "",
      "t": "Tim em vẫn chọn anh",
-     "at": 97.12
+     "at": 89.3
     },
     {
      "s": "LỜI 2",
      "t": "Ga chiều nay chuyến tàu vừa qua",
-     "at": 100.96
+     "at": 98.49
     },
     {
      "s": "",
      "t": "Ghế bên em vẫn để trống",
-     "at": 106.34
+     "at": 105.54
     },
     {
      "s": "",
      "t": "Một cơn gió lật trang thư",
-     "at": 110.95
+     "at": 112.62
     },
     {
      "s": "",
      "t": "Nét mực nhòe theo năm tháng",
-     "at": 115.56
+     "at": 116.27
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Em từng nghĩ sẽ quên thôi",
-     "at": 120.17
+     "at": 119.76
     },
     {
      "s": "",
      "t": "Chỉ cần bước thật xa",
-     "at": 124.78
+     "at": 122.37
     },
     {
      "s": "",
      "t": "Nhưng mỗi nơi em đến",
-     "at": 128.63
+     "at": 126.76
     },
     {
      "s": "",
      "t": "Lại thấy anh trong lòng",
-     "at": 136.12
+     "at": 129.05
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Dẫu mai này ta cách xa",
-     "at": 143.02
+     "at": 134.3
     },
     {
      "s": "",
      "t": "Xin giữ giùm nhau phút ban đầu",
-     "at": 147.63
+     "at": 141.7
     },
     {
      "s": "",
      "t": "Ánh mắt ấy, bàn tay ấy",
-     "at": 153.01
+     "at": 149.38
     },
     {
      "s": "",
      "t": "Vẫn ở đây qua bao mùa đau",
-     "at": 157.62
+     "at": 154.64
     },
     {
      "s": "",
      "t": "Nếu còn một lần gặp lại",
-     "at": 163
+     "at": 162.64
     },
     {
      "s": "",
      "t": "Em sẽ nói điều ngày xưa giấu kín",
-     "at": 167.61
+     "at": 165.51
     },
     {
      "s": "",
      "t": "Rằng giữa muôn người đi qua",
-     "at": 173.76
+     "at": 169.43
     },
     {
      "s": "",
      "t": "Tim em vẫn chọn anh",
-     "at": 178.37
+     "at": 174.09
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Có những lời chưa thành câu",
-     "at": 185.88
+     "at": 183.77
     },
     {
      "s": "",
      "t": "Mà theo ta suốt một đời",
-     "at": 190.49
+     "at": 186.84
     },
     {
      "s": "",
      "t": "Nếu nước mắt rơi ngày ấy",
-     "at": 195.1
+     "at": 190.87
     },
     {
      "s": "",
      "t": "Xin cho em được nói lời yêu",
-     "at": 204.37
+     "at": 193.71
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Dẫu mai này ta cách xa",
-     "at": 209.75
+     "at": 201.43
     },
     {
      "s": "",
      "t": "Em vẫn nhớ phút ban đầu",
-     "at": 214.36
+     "at": 209.21
     },
     {
      "s": "",
      "t": "Ánh mắt ấy, bàn tay ấy",
-     "at": 218.97
+     "at": 216.43
     },
     {
      "s": "",
      "t": "Sưởi ấm em qua bao mùa đau",
-     "at": 229.73
+     "at": 221.57
     },
     {
      "s": "",
      "t": "Nếu còn một lần gặp lại",
-     "at": 235.11
+     "at": 229.74
     },
     {
      "s": "",
      "t": "Em sẽ chẳng để ngày mai lặng im",
-     "at": 239.72
+     "at": 232.5
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Rằng giữa muôn người đi qua",
-     "at": 245.87
+     "at": 236.23
     },
     {
      "s": "",
      "t": "Tim em vẫn chọn anh",
-     "at": 250.48
+     "at": 242.65
+    },
+    {
+     "s": "",
+     "t": "Tim em vẫn chọn anh",
+     "at": 251.22
     },
     {
      "s": "KẾT",
-     "t": "Tim em vẫn chọn anh",
-     "at": 257.63
-    },
-    {
-     "s": "",
      "t": "Dẫu tháng năm trôi thật xa",
-     "at": 266.98
+     "at": 258.62
     }
    ],
-   "gain": -0.2
+   "sum": "Bài hát \"Tim Em Vẫn Chọn Anh\" là nỗi nhớ day dứt của người con gái sau chia xa, dù đi đến đâu vẫn thấy hình bóng người cũ, và thừa nhận giữa muôn người, trái tim vẫn chọn anh.",
+   "ex": [
+    "Nếu còn một lần gặp lại",
+    "Rằng giữa muôn người đi qua",
+    "Tim em vẫn chọn anh"
+   ],
+   "gain": -0.2,
+   "keys": [
+    "chọn anh",
+    "tim em",
+    "yêu anh"
+   ]
   },
   {
    "title": "Trùng Sinh Giữa Hào Môn",
    "file": "trung-sinh-giua-hao-mon.mp3",
    "dur": 212,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Ngày em quay về, mưa nghiêng ngoài hiên",
-     "at": 15.19
+     "at": 16.2
     },
     {
      "s": "",
      "t": "Chiếc nhẫn năm xưa nằm im trong tay",
-     "at": 19.29
+     "at": 23.58
     },
     {
      "s": "",
      "t": "Anh đứng trên cao, quen nhìn người cúi",
-     "at": 23.39
+     "at": 30.99
     },
     {
      "s": "",
      "t": "Nào hay lòng mình đã hóa tro bay",
-     "at": 27.49
+     "at": 37.69
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Một lần tin anh, em mất thanh xuân",
-     "at": 31.59
+     "at": 44.55
     },
     {
      "s": "",
      "t": "Một lần tỉnh giấc, em đổi số phận",
-     "at": 35.69
+     "at": 48.23
     },
     {
      "s": "",
      "t": "Bàn cờ ngày cũ, em đi nước cuối",
-     "at": 39.78
+     "at": 51.95
     },
     {
      "s": "",
      "t": "Lần này đến lượt anh phải phân vân",
-     "at": 43.88
+     "at": 55.17
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Trùng sinh, em trở về giữa hào môn",
-     "at": 47.98
+     "at": 59.59
     },
     {
      "s": "",
      "t": "Mang theo vết đau, giấu sau nụ cười",
-     "at": 52.08
+     "at": 64.03
     },
     {
      "s": "",
      "t": "Báo thù, không cần lời hứa xa xôi",
-     "at": 56.18
+     "at": 66.39
     },
     {
      "s": "",
      "t": "Chỉ cần anh nhìn em mà nhận ra",
-     "at": 60.27
+     "at": 70.68
     },
     {
      "s": "",
      "t": "Người từng bị anh bỏ rơi năm ấy",
-     "at": 64.37
+     "at": 74.12
     },
     {
      "s": "",
      "t": "Giờ khiến tim anh chẳng thể yên lành",
-     "at": 68.47
+     "at": 77.42
     },
     {
      "s": "LỜI 2",
      "t": "Tiệc vàng sáng lên, em bước qua anh",
-     "at": 72.57
+     "at": 94.44
     },
     {
      "s": "",
      "t": "Mọi ánh mắt dừng trên màu son lạnh",
-     "at": 76.67
+     "at": 98.3
     },
     {
      "s": "",
      "t": "Anh hỏi vì sao em không còn khóc",
-     "at": 80.77
+     "at": 101.81
     },
     {
      "s": "",
      "t": "Em chỉ mỉm cười: chuyện cũ qua nhanh",
-     "at": 92.87
+     "at": 105.46
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Từng trang hồ sơ, từng con dấu đỏ",
-     "at": 96.97
+     "at": 109.21
     },
     {
      "s": "",
      "t": "Từng lời dối trá em nhớ chẳng quên",
-     "at": 101.07
+     "at": 112.89
     },
     {
      "s": "",
      "t": "Nhưng sâu trong mắt, còn điều chưa nói",
-     "at": 105.17
+     "at": 116.54
     },
     {
      "s": "",
      "t": "Nếu anh thật lòng, hãy đứng về bên em",
-     "at": 109.27
+     "at": 119.68
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Trùng sinh, em trở về giữa hào môn",
-     "at": 113.88
+     "at": 124.21
     },
     {
      "s": "",
      "t": "Mang theo vết đau, giấu sau nụ cười",
-     "at": 117.97
+     "at": 128.58
     },
     {
      "s": "",
      "t": "Báo thù, không cần lời hứa xa xôi",
-     "at": 122.07
+     "at": 131.04
     },
     {
      "s": "",
      "t": "Chỉ cần anh nhìn em mà nhận ra",
-     "at": 131.97
+     "at": 135.25
     },
     {
      "s": "",
      "t": "Người từng bị anh bỏ rơi năm ấy",
-     "at": 136.07
+     "at": 138.71
     },
     {
      "s": "",
      "t": "Giờ khiến tim anh chẳng thể yên lành",
-     "at": 144.77
+     "at": 141.96
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu đổi được ngày xưa, anh có chọn em?",
-     "at": 148.87
+     "at": 147.74
     },
     {
      "s": "",
      "t": "Hay vẫn để tham vọng che đôi mắt?",
-     "at": 153.48
+     "at": 151.42
     },
     {
      "s": "",
      "t": "Em không còn là cô gái năm nào",
-     "at": 157.57
+     "at": 155.79
     },
     {
      "s": "",
      "t": "Nhưng trái tim này vẫn đau rất thật",
-     "at": 169.48
-    },
-    {
-     "s": "ĐIỆP KHÚC CUỐI",
-     "t": "Trùng sinh, em trở về giữa hào môn",
-     "at": 173.58
+     "at": 158.55
     },
     {
      "s": "",
+     "t": "Trùng sinh, em trở về giữa hào môn",
+     "at": 166.62
+    },
+    {
+     "s": "KẾT",
      "t": "Tự tay khép lại những tháng năm buồn",
-     "at": 177.68
+     "at": 171.08
     },
     {
      "s": "",
      "t": "Báo thù, rồi em sẽ bước qua anh",
-     "at": 183.76
+     "at": 174.11
     },
     {
      "s": "",
      "t": "Không cần ai ban cho em công bằng",
-     "at": 189.79
+     "at": 177.65
     },
     {
      "s": "",
      "t": "Nếu còn yêu, hãy yêu em bằng thật",
-     "at": 193.89
+     "at": 181.41
     },
     {
      "s": "",
      "t": "Nếu không, xin đừng níu bước chân em",
-     "at": 197.99
+     "at": 184.43
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Cánh cửa khép rồi, trời vừa hửng sáng",
-     "at": 202.09
+     "at": 188.15
     },
     {
      "s": "",
      "t": "Em chọn đời mình, không chọn ngày xưa",
-     "at": 206.19
+     "at": 195.9
     }
    ],
-   "gain": 0.4
+   "sum": "Bài hát \"Trùng Sinh Giữa Hào Môn\" kể về người phụ nữ được sống lại sau khi mất cả thanh xuân vì tin nhầm, trở về chốn hào môn để đòi lại công bằng và tự chọn số phận của mình.",
+   "ex": [
+    "Trùng sinh, em trở về giữa hào môn",
+    "Mang theo vết đau, giấu sau nụ cười",
+    "Báo thù, không cần lời hứa xa xôi"
+   ],
+   "gain": 0.4,
+   "keys": [
+    "trùng sinh",
+    "sống lại",
+    "hào môn"
+   ]
   },
   {
    "title": "Vợ Yêu Đừng Chạy",
    "file": "vo-yeu-dung-chay.mp3",
    "dur": 302,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em khép cửa, con đường còn mưa",
-     "at": 43.27
+     "at": 28.7
     },
     {
      "s": "",
      "t": "Chiếc khăn ngày xưa anh vẫn giữ",
-     "at": 47.61
+     "at": 35.4
     },
     {
      "s": "",
      "t": "Một câu chưa nói mắc bên hiên",
-     "at": 51.95
+     "at": 43.12
     },
     {
      "s": "",
      "t": "Một người quay bước, một người đứng yên",
-     "at": 56.29
+     "at": 46.71
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh đã quen đi qua giông gió",
-     "at": 61.25
+     "at": 50.77
     },
     {
      "s": "",
      "t": "Chỉ sợ một ngày chẳng thấy em",
-     "at": 65.58
+     "at": 54.17
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Nếu còn nghe tiếng lòng anh gọi",
-     "at": 69.92
+     "at": 58.53
     },
     {
      "s": "",
      "t": "Xin đừng xa đến cuối con đường",
-     "at": 74.26
+     "at": 64.66
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Vợ yêu đừng chạy, đừng rời xa anh",
-     "at": 78.6
+     "at": 71.64
     },
     {
      "s": "",
      "t": "Nhà mình còn đó, bữa cơm còn xanh",
-     "at": 83.55
+     "at": 75.39
     },
     {
      "s": "",
      "t": "Bao điều vụng dại, anh xin nhận hết",
-     "at": 88.51
+     "at": 79.06
     },
     {
      "s": "",
      "t": "Chỉ mong em ở lại bên anh",
-     "at": 93.47
+     "at": 82.78
     },
     {
      "s": "",
      "t": "Vợ yêu đừng chạy, nhìn vào mắt anh",
-     "at": 97.81
+     "at": 86.05
     },
     {
      "s": "",
      "t": "Dẫu đời thay đổi, tay vẫn tìm tay",
-     "at": 104.93
+     "at": 89.83
     },
     {
      "s": "",
      "t": "Nếu em còn thương, xin cho anh sửa",
-     "at": 109.89
+     "at": 93.66
     },
     {
      "s": "",
      "t": "Mình đi tiếp nhé, qua những tháng ngày",
-     "at": 114.85
+     "at": 97.05
     },
     {
      "s": "LỜI 2",
      "t": "Anh nhớ buổi chiều con ngủ ngoan",
-     "at": 135.07
+     "at": 134.27
     },
     {
      "s": "",
      "t": "Em cười bên khung cửa nắng vàng",
-     "at": 139.4
+     "at": 141.03
     },
     {
      "s": "",
      "t": "Ta từng hẹn dẫu đời nghiêng ngả",
-     "at": 143.74
+     "at": 147.85
     },
     {
      "s": "",
      "t": "Sẽ cùng nhau đi hết đường xa",
-     "at": 148.08
+     "at": 154.91
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh không hứa đời thôi giông gió",
-     "at": 152.42
+     "at": 163.12
     },
     {
      "s": "",
      "t": "Chỉ hứa chẳng để em một mình",
-     "at": 158.86
+     "at": 169.82
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Nếu còn nghe tiếng lòng anh gọi",
-     "at": 163.19
+     "at": 176.7
     },
     {
      "s": "",
      "t": "Xin đừng xa đến cuối con đường",
-     "at": 167.53
+     "at": 183.77
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Vợ yêu đừng chạy, đừng rời xa anh",
-     "at": 171.87
+     "at": 190.69
     },
     {
      "s": "",
      "t": "Nhà mình còn đó, bữa cơm còn xanh",
-     "at": 176.83
+     "at": 194.44
     },
     {
      "s": "",
      "t": "Bao điều vụng dại, anh xin nhận hết",
-     "at": 181.78
+     "at": 198.11
     },
     {
      "s": "",
      "t": "Chỉ mong em ở lại bên anh",
-     "at": 186.74
+     "at": 201.9
     },
     {
      "s": "",
      "t": "Vợ yêu đừng chạy, nhìn vào mắt anh",
-     "at": 191.08
+     "at": 205.16
     },
     {
      "s": "",
      "t": "Dẫu đời thay đổi, tay vẫn tìm tay",
-     "at": 196.04
+     "at": 208.93
     },
     {
      "s": "",
      "t": "Nếu em còn thương, xin cho anh sửa",
-     "at": 200.99
+     "at": 212.77
     },
     {
      "s": "",
      "t": "Mình đi tiếp nhé, qua những tháng ngày",
-     "at": 205.95
+     "at": 216.15
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Có những lời xin lỗi nói quá muộn",
-     "at": 210.91
+     "at": 223.55
     },
     {
      "s": "",
      "t": "Có những yêu thương giấu phía sau",
-     "at": 215.87
+     "at": 227.22
     },
     {
      "s": "",
      "t": "Anh đứng đây, không mong em quên hết",
-     "at": 220.2
+     "at": 230.99
     },
     {
      "s": "",
      "t": "Chỉ mong mình bắt đầu lại từ đầu",
-     "at": 227.45
+     "at": 234.13
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "ĐIỆP KHÚC",
      "t": "Vợ yêu đừng chạy, đừng rời xa anh",
-     "at": 232.41
+     "at": 239.48
     },
     {
      "s": "",
      "t": "Nhà mình còn đó, bữa cơm còn xanh",
-     "at": 237.37
+     "at": 243.16
     },
     {
      "s": "",
      "t": "Bao điều vụng dại, anh xin nhận hết",
-     "at": 242.32
+     "at": 246.82
     },
     {
      "s": "",
      "t": "Chỉ mong em ở lại bên anh",
-     "at": 247.28
+     "at": 250.6
     },
     {
      "s": "",
      "t": "Vợ yêu đừng chạy, mình về nhà nhé",
-     "at": 251.62
+     "at": 253.89
     },
     {
      "s": "",
      "t": "Ngoài kia mưa tạnh, trời đã lên mây",
-     "at": 259.88
+     "at": 257.61
     },
     {
      "s": "",
      "t": "Nếu em còn thương, xin cho anh sửa",
-     "at": 264.83
-    },
-    {
-     "s": "",
-     "t": "Mình đi tiếp nhé, nắm tay tháng ngày",
-     "at": 269.79
+     "at": 261.47
     },
     {
      "s": "KẾT",
+     "t": "Mình đi tiếp nhé, nắm tay tháng ngày",
+     "at": 264.87
+    },
+    {
+     "s": "",
      "t": "Em khép cửa, anh vẫn chờ đây",
-     "at": 277.14
+     "at": 274.07
     },
     {
      "s": "",
      "t": "Vợ yêu, mình về nhà nhé",
-     "at": 284.49
+     "at": 281.72
     }
+   ],
+   "sum": "Bài hát \"Vợ Yêu Đừng Chạy\" là lời níu kéo chân thành của người chồng nhận hết lỗi lầm, mong vợ ở lại để cùng bắt đầu lại và đi tiếp những tháng ngày bên nhau.",
+   "ex": [
+    "Vợ yêu đừng chạy, đừng rời xa anh",
+    "Nhà mình còn đó, bữa cơm còn xanh",
+    "Chỉ mong em ở lại bên anh"
+   ],
+   "gain": -0.3,
+   "keys": [
+    "đừng chạy",
+    "vợ yêu",
+    "bỏ trốn"
    ]
   },
   {
    "title": "Thư Ký Nhỏ Của Tổng Tài",
    "file": "thu-ky-nho-cua-tong-tai.mp3",
    "dur": 235,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Sáng nay em ôm xấp hồ sơ",
-     "at": 15.19
+     "at": 14.87
     },
     {
      "s": "",
      "t": "Chạy qua hành lang còn thơm mùi cà phê",
-     "at": 18.12
+     "at": 17.92
     },
     {
      "s": "",
      "t": "Anh bước ra, trời như chậm lại",
-     "at": 21.89
+     "at": 21.59
     },
     {
      "s": "",
      "t": "Cây bút trên tay rơi xuống chẳng hay",
-     "at": 24.82
+     "at": 25.3
     },
     {
      "s": "",
      "t": "Em quen ghi lịch, quen lo từng cuộc hẹn",
-     "at": 28.16
+     "at": 28.9
     },
     {
      "s": "",
      "t": "Quen nhắc anh ăn đúng bữa mỗi ngày",
-     "at": 31.93
+     "at": 32.57
     },
     {
      "s": "",
      "t": "Chỉ riêng một việc em chưa ghi nổi",
-     "at": 35.27
+     "at": 36.16
     },
     {
      "s": "",
      "t": "Là tim mình cứ lạc nhịp vì ai",
-     "at": 38.62
+     "at": 39.87
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh nói: “Cô thư ký, hôm nay em bận không?”",
-     "at": 41.97
+     "at": 44.02
     },
     {
      "s": "",
      "t": "Em nhìn trang giấy, giấu nụ cười trong lòng",
-     "at": 46.15
+     "at": 47.69
     },
     {
      "s": "",
      "t": "Một câu hỏi thôi mà nghe như lời hẹn",
-     "at": 49.91
+     "at": 50.54
     },
     {
      "s": "",
      "t": "Làm cả buổi chiều bỗng hóa dịu dàng",
-     "at": 53.68
+     "at": 54.5
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Thư ký nhỏ của tổng tài",
-     "at": 59.06
+     "at": 59.28
     },
     {
      "s": "",
      "t": "Giữ bao bí mật, chẳng giữ nổi lòng mình",
-     "at": 61.57
+     "at": 61.41
     },
     {
      "s": "",
      "t": "Giữa hàng trăm cuộc gọi đến",
-     "at": 68.01
+     "at": 66.54
     },
     {
      "s": "",
      "t": "Chỉ mong anh gọi tên em dịu dàng",
-     "at": 70.52
+     "at": 69.09
     },
     {
      "s": "",
      "t": "Thư ký nhỏ của tổng tài",
-     "at": 75.72
+     "at": 73.91
     },
     {
      "s": "",
      "t": "Sổ tay kín chữ, còn trang cuối để dành",
-     "at": 78.23
+     "at": 75.96
     },
     {
      "s": "",
      "t": "Nếu ngày mai anh thôi làm sếp",
-     "at": 84.63
+     "at": 81.17
     },
     {
      "s": "",
      "t": "Em có thể gọi anh là người thương không?",
-     "at": 87.56
+     "at": 83.68
     },
     {
      "s": "LỜI 2",
      "t": "Bản hợp đồng xếp ngay ngắn trên bàn",
-     "at": 91.32
+     "at": 89.23
     },
     {
      "s": "",
      "t": "Anh ký nhầm vào tờ giấy em ghi lời chúc",
-     "at": 94.67
+     "at": 92.34
     },
     {
      "s": "",
      "t": "“Nhớ ăn trưa, đừng làm đến quá muộn”",
-     "at": 98.85
+     "at": 96.52
     },
     {
      "s": "",
      "t": "Anh đọc xong rồi cười rất lâu",
-     "at": 102.2
+     "at": 100.16
     },
     {
      "s": "",
      "t": "Em đâu cần chiếc xe đưa về nhà",
-     "at": 105.13
+     "at": 103.76
     },
     {
      "s": "",
      "t": "Chỉ cần anh đi chậm cùng em một đoạn",
-     "at": 108.47
+     "at": 106.93
     },
     {
      "s": "",
      "t": "Dưới mái hiên, mưa nghiêng ngoài cửa",
-     "at": 112.24
+     "at": 111.05
     },
     {
      "s": "",
      "t": "Anh đưa áo khoác, chẳng nói thành lời",
-     "at": 115.16
+     "at": 114.74
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh nói: “Cô thư ký, tối nay em rảnh không?”",
-     "at": 118.51
+     "at": 118.83
     },
     {
      "s": "",
      "t": "Em khép cuốn sổ, tim vui như trẻ con",
-     "at": 122.69
+     "at": 122.56
     },
     {
      "s": "",
      "t": "Một câu hỏi thôi mà nghe như lời hẹn",
-     "at": 126.46
+     "at": 126.37
     },
     {
      "s": "",
      "t": "Làm cả thành phố bỗng hóa dịu dàng",
-     "at": 130.22
+     "at": 129.28
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Thư ký nhỏ của tổng tài",
-     "at": 135.56
+     "at": 134.07
     },
     {
      "s": "",
      "t": "Giữ bao bí mật, chẳng giữ nổi lòng mình",
-     "at": 138.07
+     "at": 136.2
     },
     {
      "s": "",
      "t": "Giữa hàng trăm cuộc gọi đến",
-     "at": 145.06
+     "at": 141.32
     },
     {
      "s": "",
      "t": "Chỉ mong anh gọi tên em dịu dàng",
-     "at": 147.57
+     "at": 143.88
     },
     {
      "s": "",
      "t": "Thư ký nhỏ của tổng tài",
-     "at": 150.92
+     "at": 148.66
     },
     {
      "s": "",
      "t": "Sổ tay kín chữ, còn trang cuối để dành",
-     "at": 156.63
+     "at": 150.77
     },
     {
      "s": "",
      "t": "Nếu ngày mai anh thôi làm sếp",
-     "at": 160.39
+     "at": 155.96
     },
     {
      "s": "",
      "t": "Em có thể gọi anh là người thương không?",
-     "at": 163.32
+     "at": 158.46
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Ngày mai nếu chẳng còn lịch trình",
-     "at": 167.09
+     "at": 163.93
     },
     {
      "s": "",
      "t": "Nếu chẳng còn ai nhắc anh đúng giờ",
-     "at": 170.02
+     "at": 167.59
     },
     {
      "s": "",
      "t": "Em vẫn muốn ngồi bên anh thật gần",
-     "at": 173.36
+     "at": 171.2
     },
     {
      "s": "",
      "t": "Nghe anh kể chuyện không cần báo cáo",
-     "at": 176.71
-    },
-    {
-     "s": "ĐIỆP KHÚC CUỐI",
-     "t": "Thư ký nhỏ của tổng tài",
-     "at": 182.14
+     "at": 174.91
     },
     {
      "s": "",
+     "t": "Thư ký nhỏ của tổng tài",
+     "at": 179.61
+    },
+    {
+     "s": "CẦU NỐI",
      "t": "Từ bao công việc thành một chuyện của hai người",
-     "at": 184.65
+     "at": 181.71
     },
     {
      "s": "",
      "t": "Giữa muôn điều cần ghi nhớ",
-     "at": 191.16
+     "at": 186.87
     },
     {
      "s": "",
      "t": "Em nhớ nhất ánh mắt anh hôm nào",
-     "at": 196.26
+     "at": 189.43
     },
     {
      "s": "",
      "t": "Thư ký nhỏ của tổng tài",
-     "at": 199.6
+     "at": 194.22
     },
     {
      "s": "",
      "t": "Trang cuối cuốn sổ nay viết hai cái tên",
-     "at": 204.11
+     "at": 196.3
     },
     {
      "s": "",
      "t": "Nếu ngày mai anh thôi làm sếp",
-     "at": 209.89
-    },
-    {
-     "s": "",
-     "t": "Em sẽ gọi anh là người thương nhé",
-     "at": 216
+     "at": 201.48
     },
     {
      "s": "KẾT",
+     "t": "Em sẽ gọi anh là người thương nhé",
+     "at": 203.94
+    },
+    {
+     "s": "",
      "t": "Em khép cuốn sổ, anh nắm tay em",
-     "at": 219.34
+     "at": 209.43
     },
     {
      "s": "",
      "t": "Ngày mai mình cùng đến muộn một lần",
-     "at": 222.69
+     "at": 215.94
     }
    ],
-   "gain": 0.4
+   "sum": "Bài hát \"Thư Ký Nhỏ Của Tổng Tài\" là câu chuyện tình công sở dễ thương, nơi cô thư ký lo từng lịch hẹn cho sếp nhưng không giữ nổi trái tim mình, và trang cuối cuốn sổ nay viết tên cả hai.",
+   "ex": [
+    "Thư ký nhỏ của tổng tài",
+    "Giữ bao bí mật, chẳng giữ nổi lòng mình",
+    "Chỉ mong anh gọi tên em dịu dàng"
+   ],
+   "gain": 0.4,
+   "keys": [
+    "thư ký",
+    "trợ lý",
+    "công sở"
+   ]
   },
   {
    "title": "Tổng Tài Ở Rể",
    "file": "tong-tai-o-re.mp3",
    "dur": 226,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Ngày anh bước qua căn nhà xa lạ",
-     "at": 15.91
+     "at": 15.44
     },
     {
      "s": "",
      "t": "Mang đôi tay trắng, giấu chuyện riêng mình",
-     "at": 19.84
+     "at": 22.57
     },
     {
      "s": "",
      "t": "Em nhìn anh như người dưng ghé lại",
-     "at": 23.73
+     "at": 29.61
     },
     {
      "s": "",
      "t": "Nào biết phía sau là cả chân tình",
-     "at": 27.62
+     "at": 36.23
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Ngoài kia lời đời như mưa gió",
-     "at": 31.51
+     "at": 40.2
     },
     {
      "s": "",
      "t": "Trong này một ánh mắt chưa yên",
-     "at": 34.91
+     "at": 44.45
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Anh chẳng cần ai gọi tên mình",
-     "at": 38.31
+     "at": 49.6
     },
     {
      "s": "",
      "t": "Chỉ mong em tin một lần",
-     "at": 41.72
+     "at": 52.31
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Tổng tài ở rể, giấu bao điều chưa nói",
-     "at": 44.64
+     "at": 56.61
     },
     {
      "s": "",
      "t": "Đứng phía sau em qua những tháng ngày giông",
-     "at": 49.01
+     "at": 60.01
     },
     {
      "s": "",
      "t": "Dẫu người đời cười anh tay trắng",
-     "at": 53.39
+     "at": 64.06
     },
     {
      "s": "",
      "t": "Anh vẫn chọn ở bên em đến cùng",
-     "at": 66.5
+     "at": 66.68
     },
     {
      "s": "",
      "t": "Tổng tài ở rể, chẳng cần ngai vàng lộng lẫy",
-     "at": 70.39
+     "at": 70.7
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi khẽ một tiếng người thương",
-     "at": 75.26
+     "at": 74.06
     },
     {
      "s": "",
      "t": "Khi bức màn kia rơi xuống",
-     "at": 79.63
+     "at": 78.22
     },
     {
      "s": "",
      "t": "Anh vẫn là người em muốn nắm tay",
-     "at": 85.09
+     "at": 79.63
     },
     {
      "s": "LỜI 2",
      "t": "Bữa cơm tối có đôi lần im lặng",
-     "at": 88.98
+     "at": 100.11
     },
     {
      "s": "",
      "t": "Chiếc áo sờn vai, câu chuyện chưa thành",
-     "at": 92.87
+     "at": 103.34
     },
     {
      "s": "",
      "t": "Em gom mệt nhoài vào trong ngăn kéo",
-     "at": 99.47
+     "at": 106.89
     },
     {
      "s": "",
      "t": "Anh gom dịu dàng đặt cạnh bên em",
-     "at": 103.36
+     "at": 109.98
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Bao phen hiểu lầm làm ta xa cách",
-     "at": 107.25
+     "at": 114.35
     },
     {
      "s": "",
      "t": "Bao lời cay nghiệt cứa qua tim",
-     "at": 111.14
+     "at": 117.86
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Anh chẳng cần ai gọi tên mình",
-     "at": 114.55
+     "at": 120.48
     },
     {
      "s": "",
      "t": "Chỉ mong em tin một lần",
-     "at": 117.95
+     "at": 122.7
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Tổng tài ở rể, giấu bao điều chưa nói",
-     "at": 120.87
+     "at": 126.94
     },
     {
      "s": "",
      "t": "Đứng phía sau em qua những tháng ngày giông",
-     "at": 125.25
+     "at": 130.33
     },
     {
      "s": "",
      "t": "Dẫu người đời cười anh tay trắng",
-     "at": 132.68
+     "at": 134.33
     },
     {
      "s": "",
      "t": "Anh vẫn chọn ở bên em đến cùng",
-     "at": 136.09
+     "at": 136.95
     },
     {
      "s": "",
      "t": "Tổng tài ở rể, chẳng cần ngai vàng lộng lẫy",
-     "at": 139.98
+     "at": 141.01
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi khẽ một tiếng người thương",
-     "at": 144.84
+     "at": 144.36
     },
     {
      "s": "",
      "t": "Khi bức màn kia rơi xuống",
-     "at": 149.22
+     "at": 148.47
     },
     {
      "s": "",
      "t": "Anh vẫn là người em muốn nắm tay",
-     "at": 152.14
+     "at": 149.86
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu ngày mai em biết hết mọi điều",
-     "at": 156.03
+     "at": 155.76
     },
     {
      "s": "",
      "t": "Nếu ánh mắt em không còn như trước",
-     "at": 159.92
+     "at": 159.25
     },
     {
      "s": "",
      "t": "Anh vẫn đứng nơi hiên nhà hôm ấy",
-     "at": 163.81
+     "at": 162.77
     },
     {
      "s": "",
      "t": "Chờ em chọn anh, chẳng chọn giàu sang",
-     "at": 167.7
+     "at": 165.83
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Tổng tài ở rể, giờ không còn che giấu",
-     "at": 173.43
+     "at": 170.69
     },
     {
      "s": "",
      "t": "Anh trao em sự thật, trao cả trái tim",
-     "at": 177.8
+     "at": 174.13
     },
     {
      "s": "",
      "t": "Dẫu ngoài kia đổi thay bao lần",
-     "at": 182.18
+     "at": 178.02
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Anh vẫn chọn ở bên em đến cùng",
-     "at": 185.59
+     "at": 180.66
     },
     {
      "s": "",
      "t": "Tổng tài ở rể, chẳng cần ngai vàng lộng lẫy",
-     "at": 189.48
+     "at": 184.75
     },
     {
      "s": "",
      "t": "Chỉ cần em gọi khẽ một tiếng người thương",
-     "at": 194.34
+     "at": 188.05
     },
     {
      "s": "",
      "t": "Khi bức màn kia rơi xuống",
-     "at": 198.72
+     "at": 192.15
     },
     {
      "s": "",
      "t": "Anh vẫn là người em muốn nắm tay",
-     "at": 201.63
+     "at": 193.62
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Trong căn nhà nhỏ, qua bao mùa gió",
-     "at": 205.52
+     "at": 199.02
     },
     {
      "s": "",
      "t": "Anh vẫn là người em muốn nắm tay",
-     "at": 209.41
+     "at": 206.32
     }
    ],
-   "gain": 0
+   "sum": "Bài hát \"Tổng Tài Ở Rể\" kể về người đàn ông giấu thân phận, chịu lời đời cười chê để âm thầm đứng sau che chở người vợ, chỉ mong cô chọn anh vì tình yêu chứ không vì giàu sang.",
+   "ex": [
+    "Tổng tài ở rể, giấu bao điều chưa nói",
+    "Đứng phía sau em qua những tháng ngày giông",
+    "Anh vẫn chọn ở bên em đến cùng"
+   ],
+   "gain": 0.0,
+   "keys": [
+    "ở rể",
+    "con rể",
+    "chàng rể"
+   ]
   },
   {
    "title": "Tổng Tài Bá Đạo Yêu Em",
    "file": "tong-tai-ba-dao-yeu-em.mp3",
    "dur": 238,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em bước qua sảnh lớn trong chiều mưa rất khẽ",
-     "at": 16.15
+     "at": 15.96
     },
     {
      "s": "",
      "t": "Tay ôm hồ sơ, mắt chẳng ngước nhìn ai",
-     "at": 21.24
+     "at": 23.78
     },
     {
      "s": "",
      "t": "Anh quen ra lệnh cho cả căn phòng rộng",
-     "at": 25.81
+     "at": 30.99
     },
     {
      "s": "",
      "t": "Lại lúng túng khi em nói: “Để em tự làm”",
-     "at": 30.38
+     "at": 37.11
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Một chiếc ô nghiêng về phía em",
-     "at": 35.46
+     "at": 43.87
     },
     {
      "s": "",
      "t": "Một câu hỏi han chưa từng quen",
-     "at": 39.02
+     "at": 47.78
     },
     {
      "s": "",
      "t": "Giữa bao hợp đồng và con số",
-     "at": 44.67
+     "at": 51.44
     },
     {
      "s": "",
      "t": "Anh nghe tim mình đổi thay",
-     "at": 50.49
+     "at": 54.41
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài bá đạo, sao lại yêu em",
-     "at": 53.54
+     "at": 58.36
     },
     {
      "s": "",
      "t": "Người luôn lạnh lùng nay đứng chờ bên thềm",
-     "at": 57.61
+     "at": 62.07
     },
     {
      "s": "",
      "t": "Bao nhiêu nguyên tắc anh đều quên hết",
-     "at": 62.18
+     "at": 66.04
     },
     {
      "s": "",
      "t": "Chỉ mong mỗi ngày được đón em về",
-     "at": 66.25
+     "at": 69.35
     },
     {
      "s": "",
      "t": "Tổng tài bá đạo, xin đừng giấu thêm",
-     "at": 70.31
+     "at": 72.93
     },
     {
      "s": "",
      "t": "Nếu thương em rồi, hãy nói dịu êm",
-     "at": 74.37
+     "at": 76.48
     },
     {
      "s": "",
      "t": "Em chẳng cần lâu đài hay lời hứa lớn",
-     "at": 81.06
+     "at": 80.23
     },
     {
      "s": "",
      "t": "Chỉ cần bàn tay anh nắm tay em",
-     "at": 85.63
+     "at": 84.12
     },
     {
      "s": "LỜI 2",
      "t": "Em để phần ăn trên bàn anh đã nguội",
-     "at": 92.95
+     "at": 105.09
     },
     {
      "s": "",
      "t": "Anh gửi chiếc áo vì trời trở gió đêm",
-     "at": 106.91
+     "at": 108.04
     },
     {
      "s": "",
      "t": "Hai người chẳng giỏi nói lời mềm mỏng",
-     "at": 111.48
+     "at": 112.3
     },
     {
      "s": "",
      "t": "Mà vẫn âm thầm giữ chỗ cho nhau",
-     "at": 115.55
+     "at": 115.34
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Một lần anh đứng về phía em",
-     "at": 119.61
+     "at": 118.69
     },
     {
      "s": "",
      "t": "Dẫu bao ánh mắt nhìn không quen",
-     "at": 123.17
+     "at": 122.32
     },
     {
      "s": "",
      "t": "Giữa những cuộc họp và danh tiếng",
-     "at": 126.73
+     "at": 125.99
     },
     {
      "s": "",
      "t": "Anh chọn lắng nghe trái tim",
-     "at": 130.28
+     "at": 128.94
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài bá đạo, sao lại yêu em",
-     "at": 133.33
+     "at": 132.92
     },
     {
      "s": "",
      "t": "Người luôn lạnh lùng nay đứng chờ bên thềm",
-     "at": 137.4
+     "at": 136.62
     },
     {
      "s": "",
      "t": "Bao nhiêu nguyên tắc anh đều quên hết",
-     "at": 141.97
+     "at": 140.58
     },
     {
      "s": "",
      "t": "Chỉ mong mỗi ngày được đón em về",
-     "at": 148.03
+     "at": 143.9
     },
     {
      "s": "",
      "t": "Tổng tài bá đạo, xin đừng giấu thêm",
-     "at": 154.87
+     "at": 147.42
     },
     {
      "s": "",
      "t": "Nếu thương em rồi, hãy nói dịu êm",
-     "at": 158.94
+     "at": 151.03
     },
     {
      "s": "",
      "t": "Em chẳng cần lâu đài hay lời hứa lớn",
-     "at": 163
+     "at": 154.78
     },
     {
      "s": "",
      "t": "Chỉ cần bàn tay anh nắm tay em",
-     "at": 167.57
+     "at": 158.69
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Ngày mai nếu giông gió ghé qua",
-     "at": 171.64
+     "at": 164.66
     },
     {
      "s": "",
      "t": "Mình cùng đi, chẳng cần ai dẫn lối",
-     "at": 175.19
+     "at": 168.0
     },
     {
      "s": "",
      "t": "Anh có thể thôi làm người chiến thắng",
-     "at": 182.56
+     "at": 171.5
     },
     {
      "s": "",
      "t": "Khi về bên em, chỉ cần là anh",
-     "at": 186.62
+     "at": 175.0
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Tổng tài bá đạo, giờ đã biết yêu",
-     "at": 190.69
+     "at": 181.98
     },
     {
      "s": "",
      "t": "Người từng kiêu hãnh nay nói một điều",
-     "at": 194.75
+     "at": 185.71
     },
     {
      "s": "",
      "t": "Bao nhiêu con đường anh đều có thể chọn",
-     "at": 198.82
+     "at": 189.64
     },
     {
      "s": "",
      "t": "Nhưng muốn cùng em đi hết mai sau",
-     "at": 203.39
+     "at": 192.76
     },
     {
      "s": "",
      "t": "Tổng tài bá đạo, đừng buông tay em",
-     "at": 207.46
+     "at": 196.54
     },
     {
      "s": "",
      "t": "Cứ bước bên nhau qua những dịu êm",
-     "at": 211.52
+     "at": 200.15
     },
     {
-     "s": "",
+     "s": "ĐIỆP KHÚC",
      "t": "Em chẳng cần lâu đài hay lời hứa lớn",
-     "at": 215.59
+     "at": 203.83
     },
     {
      "s": "",
      "t": "Chỉ cần bình yên trong cánh tay anh",
-     "at": 221.96
+     "at": 207.73
+    },
+    {
+     "s": "",
+     "t": "Chỉ cần bình yên trong cánh tay anh",
+     "at": 213.17
     },
     {
      "s": "KẾT",
-     "t": "Chỉ cần bình yên trong cánh tay anh",
-     "at": 226.03
-    },
-    {
-     "s": "",
      "t": "Từ nay câu chuyện mình cùng viết tiếp",
-     "at": 232.34
+     "at": 222.11
     }
    ],
-   "gain": 0
+   "sum": "Bài hát \"Tổng Tài Bá Đạo Yêu Em\" là chuyện tình giữa vị tổng tài quen ra lệnh và cô gái độc lập, khi anh quên hết nguyên tắc chỉ để mỗi ngày được đón cô về.",
+   "ex": [
+    "Tổng tài bá đạo, sao lại yêu em",
+    "Người luôn lạnh lùng nay đứng chờ bên thềm",
+    "Chỉ mong mỗi ngày được đón em về"
+   ],
+   "gain": 0.0,
+   "keys": [
+    "bá đạo",
+    "tổng tài"
+   ]
   },
   {
    "title": "Tổng Tài Yếu Lòng Vì Em",
    "file": "tong-tai-yeu-long-vi-em.mp3",
    "dur": 237,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em bước qua sảnh đá, mưa còn vương trên vai",
-     "at": 14.23
+     "at": 14.12
     },
     {
      "s": "",
      "t": "Anh khép cuốn hồ sơ, quên cả cuộc họp dài",
-     "at": 18.92
+     "at": 21.38
     },
     {
      "s": "",
      "t": "Một câu chào rất khẽ, mà lòng anh chợt nghiêng",
-     "at": 23.6
+     "at": 28.7
     },
     {
      "s": "",
      "t": "Giữa bao điều tính toán, em là điều dịu hiền",
-     "at": 28.28
+     "at": 36.41
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh quen ra quyết định, quen đứng giữa hơn thua",
-     "at": 32.96
+     "at": 43.71
     },
     {
      "s": "",
      "t": "Chưa từng biết chờ ai dưới hiên chiều đón mưa",
-     "at": 37.65
+     "at": 47.33
     },
     {
      "s": "",
      "t": "Rồi em nhìn anh, chẳng vì chiếc ghế cao",
-     "at": 47.76
+     "at": 51.2
     },
     {
      "s": "",
      "t": "Chỉ hỏi: hôm nay anh có mệt không nào?",
-     "at": 51.97
+     "at": 54.38
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài cũng biết yếu lòng vì em",
-     "at": 56.19
+     "at": 59.72
     },
     {
      "s": "",
      "t": "Bao nhiêu thành công chẳng đổi được một đêm",
-     "at": 59.93
+     "at": 63.55
     },
     {
      "s": "",
      "t": "Được ngồi bên em, nghe em kể chuyện thường",
-     "at": 64.15
+     "at": 67.15
     },
     {
      "s": "",
      "t": "Anh xin gác lại cả thế giới ngoài kia",
-     "at": 68.36
+     "at": 70.76
     },
     {
      "s": "",
      "t": "Tổng tài cũng muốn có một mái nhà",
-     "at": 72.57
+     "at": 74.29
     },
     {
      "s": "",
      "t": "Có em chờ anh qua những ngày phong ba",
-     "at": 76.32
+     "at": 78.07
     },
     {
      "s": "",
      "t": "Nếu tình yêu là điều anh chưa từng điều khiển",
-     "at": 80.53
+     "at": 81.91
     },
     {
      "s": "",
      "t": "Thì xin để trái tim dẫn lối về em",
-     "at": 85.22
+     "at": 85.28
     },
     {
      "s": "LỜI 2",
      "t": "Em để tách trà nóng bên ô cửa phòng anh",
-     "at": 92.97
+     "at": 107.35
     },
     {
      "s": "",
      "t": "Nói rằng người mạnh mẽ cũng cần phút mong manh",
-     "at": 97.65
+     "at": 110.94
     },
     {
      "s": "",
      "t": "Anh thôi giấu đôi mắt sau hàng mi lạnh lùng",
-     "at": 102.33
+     "at": 114.62
     },
     {
      "s": "",
      "t": "Lần đầu nghe im lặng mà thấy lòng bao dung",
-     "at": 109.58
+     "at": 118.06
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "",
      "t": "Anh từng tin mọi thứ đều có thể định đoạt",
-     "at": 114.26
+     "at": 121.86
     },
     {
      "s": "",
      "t": "Trừ nụ cười em làm ngày dài hóa ngọt ngào",
-     "at": 118.94
+     "at": 125.52
     },
     {
      "s": "",
      "t": "Nếu mai ngoài kia có đổi thay thế nào",
-     "at": 123.62
+     "at": 129.18
     },
     {
      "s": "",
      "t": "Chỉ cần em còn muốn đi cùng anh thôi",
-     "at": 127.84
+     "at": 132.54
     },
     {
      "s": "ĐIỆP KHÚC",
      "t": "Tổng tài cũng biết yếu lòng vì em",
-     "at": 132.05
+     "at": 136.12
     },
     {
      "s": "",
      "t": "Bao nhiêu thành công chẳng đổi được một đêm",
-     "at": 135.8
+     "at": 139.88
     },
     {
      "s": "",
      "t": "Được ngồi bên em, nghe em kể chuyện thường",
-     "at": 140.01
+     "at": 143.54
     },
     {
      "s": "",
      "t": "Anh xin gác lại cả thế giới ngoài kia",
-     "at": 144.22
+     "at": 147.13
     },
     {
      "s": "",
      "t": "Tổng tài cũng muốn có một mái nhà",
-     "at": 148.44
+     "at": 150.62
     },
     {
      "s": "",
      "t": "Có em chờ anh qua những ngày phong ba",
-     "at": 152.18
+     "at": 154.4
     },
     {
      "s": "",
      "t": "Nếu tình yêu là điều anh chưa từng điều khiển",
-     "at": 156.4
+     "at": 158.27
     },
     {
      "s": "",
      "t": "Thì xin để trái tim dẫn lối về em",
-     "at": 161.08
+     "at": 161.67
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Mai này tóc bạc, anh vẫn muốn nghe",
-     "at": 169.7
+     "at": 169.17
     },
     {
      "s": "",
      "t": "Em gọi tên anh qua căn bếp thân quen",
-     "at": 173.45
+     "at": 172.78
     },
     {
      "s": "",
      "t": "Không cần lời hứa lấp lánh xa xôi",
-     "at": 177.66
+     "at": 176.36
     },
     {
      "s": "",
      "t": "Chỉ cần mỗi sớm còn thấy em thôi",
-     "at": 181.41
+     "at": 179.83
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Tổng tài cũng biết yếu lòng vì em",
      "at": 185.16
     },
     {
      "s": "",
      "t": "Bao nhiêu thành công chẳng đổi được một đêm",
-     "at": 188.9
+     "at": 188.99
     },
     {
-     "s": "",
+     "s": "CẦU NỐI",
      "t": "Được nắm tay em qua con đường bình thường",
-     "at": 193.12
+     "at": 192.6
     },
     {
      "s": "",
      "t": "Anh thấy đời mình hóa thành điều phi thường",
-     "at": 197.33
+     "at": 196.21
     },
     {
      "s": "",
      "t": "Tổng tài giờ đã có một mái nhà",
-     "at": 203.8
+     "at": 199.72
     },
     {
      "s": "",
      "t": "Có em bên anh qua những ngày phong ba",
-     "at": 207.55
+     "at": 203.53
     },
     {
      "s": "",
      "t": "Nếu tình yêu là điều anh chưa từng điều khiển",
-     "at": 211.76
-    },
-    {
-     "s": "",
-     "t": "Thì xin để trái tim thuộc về em",
-     "at": 218.71
+     "at": 207.33
     },
     {
      "s": "KẾT",
+     "t": "Thì xin để trái tim thuộc về em",
+     "at": 210.74
+    },
+    {
+     "s": "",
      "t": "Giữa bao cuộc đời, anh chọn ở bên em",
-     "at": 222.45
+     "at": 218.21
     }
    ],
-   "gain": 0
+   "sum": "Bài hát \"Tổng Tài Yếu Lòng Vì Em\" kể về người đàn ông quen tính toán và chiến thắng, nhưng trước sự dịu dàng của cô gái, anh sẵn sàng gác lại thế giới ngoài kia để có một mái nhà.",
+   "ex": [
+    "Tổng tài cũng biết yếu lòng vì em",
+    "Bao nhiêu thành công chẳng đổi được một đêm",
+    "Được ngồi bên em, nghe em kể chuyện thường"
+   ],
+   "gain": 0.0,
+   "keys": [
+    "yếu lòng",
+    "dịu dàng",
+    "tổng tài"
+   ]
   },
   {
    "title": "Vợ Cũ Kiêu Hãnh",
    "file": "vo-cu-kieu-hanh.mp3",
    "dur": 237,
-   "lrcAuto": true,
+   "lrcAuto": false,
    "lyrics": [
     {
      "s": "LỜI 1",
      "t": "Em gấp chiếc váy cũ, cất vào ngăn tủ sâu",
-     "at": 17.11
+     "at": 17.01
     },
     {
      "s": "",
      "t": "Tờ đơn nằm im lặng, chẳng giữ được gì đâu",
-     "at": 22.24
+     "at": 24.01
     },
     {
      "s": "",
      "t": "Anh quen nhìn mọi thứ bằng con số trên tay",
-     "at": 27.36
+     "at": 31.05
     },
     {
      "s": "",
      "t": "Còn em từng tin mãi, một lời hứa đổi thay",
-     "at": 35.35
+     "at": 38.28
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "ĐIỆP KHÚC",
      "t": "Ngày bước qua cánh cửa, trời nghiêng một phía",
-     "at": 40.46
+     "at": 44.53
     },
     {
      "s": "",
      "t": "Em không ngoảnh lại, dù tim còn chia lìa",
-     "at": 45.07
+     "at": 51.89
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Vợ cũ kiêu hãnh, em đi bằng đôi chân mình",
-     "at": 53.97
+     "at": 58.75
     },
     {
      "s": "",
      "t": "Không cần hào quang, chẳng cần ai chứng minh",
-     "at": 59.09
+     "at": 62.62
     },
     {
      "s": "",
      "t": "Anh có cả thế giới, nhưng đã đánh mất em",
-     "at": 63.69
+     "at": 66.1
     },
     {
      "s": "",
      "t": "Từ nay em chọn lấy bình yên ở bên thềm",
-     "at": 68.81
+     "at": 69.7
     },
     {
      "s": "",
      "t": "Vợ cũ kiêu hãnh, chẳng cúi đầu thêm đâu",
-     "at": 73.93
+     "at": 73.25
     },
     {
      "s": "",
      "t": "Nước mắt đã cạn rồi, xin đừng tìm nhau",
-     "at": 78.53
+     "at": 77.07
     },
     {
      "s": "LỜI 2",
      "t": "Con phố quen vẫn đó, tiệm hoa vừa thay tên",
-     "at": 90.55
+     "at": 97.68
     },
     {
      "s": "",
      "t": "Em mua nhành mẫu đơn, tự chúc mình bình yên",
-     "at": 101.14
+     "at": 104.78
     },
     {
      "s": "",
      "t": "Bạn bè hỏi có tiếc những ngày tháng xa hoa",
-     "at": 106.26
+     "at": 110.04
     },
     {
      "s": "",
      "t": "Em cười: điều đáng tiếc là quên mình từng là ai",
-     "at": 111.38
+     "at": 118.63
     },
     {
-     "s": "TIỀN ĐIỆP KHÚC",
+     "s": "ĐIỆP KHÚC",
      "t": "Ngày bước qua cánh cửa, trời nghiêng một phía",
-     "at": 117.01
+     "at": 125.07
     },
     {
      "s": "",
      "t": "Em không ngoảnh lại, dù tim còn chia lìa",
-     "at": 121.61
+     "at": 132.52
     },
     {
-     "s": "ĐIỆP KHÚC",
+     "s": "",
      "t": "Vợ cũ kiêu hãnh, em đi bằng đôi chân mình",
-     "at": 126.22
+     "at": 139.32
     },
     {
      "s": "",
      "t": "Không cần hào quang, chẳng cần ai chứng minh",
-     "at": 134.76
+     "at": 143.24
     },
     {
      "s": "",
      "t": "Anh có cả thế giới, nhưng đã đánh mất em",
-     "at": 141.81
+     "at": 146.66
     },
     {
      "s": "",
      "t": "Từ nay em chọn lấy bình yên ở bên thềm",
-     "at": 146.92
+     "at": 150.28
     },
     {
      "s": "",
      "t": "Vợ cũ kiêu hãnh, chẳng cúi đầu thêm đâu",
-     "at": 152.04
+     "at": 153.86
     },
     {
      "s": "",
      "t": "Nước mắt đã cạn rồi, xin đừng tìm nhau",
-     "at": 156.65
+     "at": 157.7
     },
     {
-     "s": "ĐOẠN CHUYỂN",
+     "s": "CẦU NỐI",
      "t": "Nếu một ngày anh hiểu, tình yêu không phải quyền sở hữu",
-     "at": 161.25
+     "at": 163.88
     },
     {
      "s": "",
      "t": "Đừng gọi em quay lại, em đã khác ngày xưa",
-     "at": 167.39
+     "at": 167.49
     },
     {
      "s": "",
      "t": "Em đã học cách đứng lên từ điều mình đổ vỡ",
-     "at": 172.51
+     "at": 170.8
     },
     {
      "s": "",
      "t": "Và không còn cần ai để thấy mình đáng yêu",
-     "at": 178.14
+     "at": 174.44
     },
     {
-     "s": "ĐIỆP KHÚC CUỐI",
+     "s": "",
      "t": "Vợ cũ kiêu hãnh, em đi bằng đôi chân mình",
-     "at": 185.19
+     "at": 180.5
     },
     {
      "s": "",
      "t": "Ánh nhìn hôm nay chẳng còn gì lung linh giả hình",
-     "at": 190.31
+     "at": 184.49
     },
     {
      "s": "",
      "t": "Anh có cả thế giới, em có lại chính em",
-     "at": 195.94
+     "at": 187.86
     },
     {
      "s": "",
      "t": "Từ nay em chọn lấy bình yên ở bên thềm",
-     "at": 203.1
+     "at": 191.45
     },
     {
-     "s": "",
+     "s": "KẾT",
      "t": "Vợ cũ kiêu hãnh, giờ đã biết yêu mình",
-     "at": 208.22
+     "at": 195.08
     },
     {
      "s": "",
      "t": "Cánh cửa khép lại, đời em vừa bình minh",
-     "at": 212.83
+     "at": 198.81
     },
     {
-     "s": "KẾT",
+     "s": "",
      "t": "Em đi bằng đôi chân mình",
-     "at": 217.43
+     "at": 207.34
     },
     {
      "s": "",
      "t": "Vợ cũ kiêu hãnh, và em bình yên",
-     "at": 220.5
+     "at": 212.91
     }
+   ],
+   "sum": "Bài hát \"Vợ Cũ Kiêu Hãnh\" là hành trình người vợ bước ra khỏi cuộc hôn nhân không còn tình yêu, không cúi đầu, không ngoảnh lại, học cách yêu chính mình và tìm lại bình yên.",
+   "ex": [
+    "Vợ cũ kiêu hãnh, em đi bằng đôi chân mình",
+    "Không cần hào quang, chẳng cần ai chứng minh",
+    "Anh có cả thế giới, nhưng đã đánh mất em"
+   ],
+   "gain": 0.4,
+   "keys": [
+    "vợ cũ",
+    "ly hôn",
+    "kiêu hãnh"
    ]
   }
  ]

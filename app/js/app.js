@@ -286,6 +286,7 @@
     if (!boot) { afterBoot(); return; }
     bootOn = true;
     var C = w.APP_CONFIG, msgE = d.getElementById('bootmsg'), fill = d.getElementById('bootfill'), hint = d.getElementById('boothint');
+    var bv = d.getElementById('bootver'); if (bv && C.VERSION) bv.textContent = 'phiên bản ' + C.VERSION + ' · Ryan Nguyen';   // số phiên bản luôn đúng theo config
     var need = (C.CHANNELS || []).length + (C.SHOW_ANIME !== false ? (C.ANIME_CHANNELS || []).length : 0) + (C.SHOW_MOVIE !== false ? (C.MOVIE_CHANNELS || []).length : 0);
     var t0 = Date.now();
     function paint(n) {

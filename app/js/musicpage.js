@@ -23,7 +23,8 @@
     full: svg('<path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>'),
     split: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/>'),
     list: svg('<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>'),
-    sync: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')
+    sync: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    moon: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>')
   };
 
   // Giờ từng câu: đã chỉnh tay (lưu trong prefs.lrc, đồng bộ các máy) hoặc ước lượng tự động
@@ -49,6 +50,72 @@
     var seen = {}, out = [];
     tt.forEach(function (it) { var u = it.hero || it.thumb; if (!seen[u]) { seen[u] = 1; out.push({ src: u, title: it.title || '', item: it.id ? it : null }); } });
     return out.slice(0, 60);
+  }
+
+  function nk0(x) { x = String(x || '').toLowerCase(); try { x = x.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) { /* TV cũ */ } return x.replace(/đ/g, 'd'); }
+  function dayNo() { var n = new Date(); return Math.floor((n.getTime() - n.getTimezoneOffset() * 60000) / 864e5); }
+  // Bài hát của ngày: mỗi ngày một bài, đi lần lượt cả danh sách theo một thứ tự trộn cố định
+  function songOfDay() {
+    var all = M() ? M().all() : []; if (!all.length) return -1;
+    var n = all.length, d0 = dayNo(), round = Math.floor(d0 / n), k = d0 % n;
+    var ord = all.map(function (_, i) { return i; });
+    var s0 = round * 7919 + 13; ord.sort(function (a, b) { return ((a * 2654435761 + s0) % 1009) - ((b * 2654435761 + s0) % 1009); });
+    return ord[k];
+  }
+  // Nhạc hợp phim: bài có từ khóa nằm trong tên phim (bỏ từ chung như "tổng tài")
+  var GENERIC = { 'tong tai': 1, 'yeu anh': 1, 'tim em': 1, 'tro ve': 1, 'dau long': 1, 'dich dang': 1 };
+  function songForFilm(item) {
+    var all = M() ? M().all() : []; if (!all.length || !item) return -1;
+    var t = nk0(item.title) + ' ' + nk0(item.desc || '').slice(0, 300), best = -1, bs = 0;
+    all.forEach(function (sg, i) {
+      var sc = 0;
+      (sg.keys || []).forEach(function (k) { k = nk0(k).trim(); if (k.length >= 4 && !GENERIC[k] && t.indexOf(k) >= 0) sc += k.length; });
+      if (sc > bs) { bs = sc; best = i; }
+    });
+    return best;
+  }
+  // Ảnh nền cho bài (dùng ở Trang chủ): ảnh tải lên > phim chọn sẵn > phim trong kho có tên khớp từ khóa > phim tổng tài bất kỳ
+  function songImage(i) {
+    var S = M(), sg = S && S.song(i); if (!sg) return '';
+    if ((sg.covers || []).length) return String(S.url(i)).replace(/[^\/]*$/, '') + sg.covers[dayNo() % sg.covers.length];
+    if ((sg.films || []).length) return 'https://i.ytimg.com/vi/' + sg.films[dayNo() % sg.films.length] + '/hqdefault.jpg';
+    var pool = []; try { pool = (w.Api.pool() || []).filter(function (it) { return it && (it.hero || it.thumb); }); } catch (e) { pool = []; }
+    var keys = (sg.keys || []).map(nk0), hit = pool.filter(function (it) { var tt = nk0(it.title); return keys.some(function (k) { return k && tt.indexOf(k) >= 0; }); });
+    var src = hit.length ? hit[dayNo() % hit.length] : images()[dayNo() % Math.max(1, images().length)];
+    return src ? (src.hero || src.thumb || src.src || '') : '';
+  }
+  // Mở trang Nhạc và phát bài i
+  function openSong(i) {
+    if (!w.Music || i < 0) return;
+    w.Music.playSong(i);
+    if (w.Screens && w.Screens.goTab) w.Screens.goTab('music');
+  }
+  // Hộp hẹn giờ tắt nhạc
+  function SleepSheet() {
+    var UI2 = w.UI, S = M();
+    var v = UI2.view(); v.classList.add('glogin');
+    var box = el('div', 'gbox sleepbox');
+    box.appendChild(el('div', 'gt', '🌙 Hẹn giờ tắt nhạc'));
+    box.appendChild(el('div', 'gnote', 'Hết giờ: nhạc nhỏ dần trong 30 giây rồi tắt.'));
+    var info = S.sleepInfo ? S.sleepInfo() : null, cur = !info ? 0 : info.end ? 'end' : -1, first = null;
+    var col = el('div', 'sleepopts');
+    [[0, 'Tắt hẹn giờ'], [15, '15 phút'], [30, '30 phút'], [60, '60 phút'], ['end', 'Hết bài này']].forEach(function (o) {
+      var b = UI2.button(o[1] + (o[0] === cur ? '  ✓' : ''), o[0] === cur ? 'on' : '', function () {
+        S.sleep(o[0]);
+        UI2.toast(o[0] === 0 ? 'Đã tắt hẹn giờ' : o[0] === 'end' ? '🌙 Tắt nhạc khi hết bài này' : '🌙 Tắt nhạc sau ' + o[1]);
+        w.Screens.back();
+      });
+      if (o[0] === cur || (cur === -1 && o[0] === 30)) first = b;
+      col.appendChild(b);
+    });
+    box.appendChild(col); v.appendChild(box);
+    return { name: 'sleep', el: v, focus: first || col.firstChild };
+  }
+  function sleepText() {
+    var S = M(), i = S && S.sleepInfo ? S.sleepInfo() : null; if (!i) return '';
+    if (i.end) return '🌙 Tắt nhạc khi hết bài';
+    if (i.fading) return '🌙 Đang tắt nhạc…';
+    return '🌙 Tắt nhạc sau ' + fmt(i.left / 1000);
   }
 
   function readMode() { return w.Settings.get('MUSIC_VIEW') === 'karaoke' ? 'karaoke' : 'split'; }
@@ -109,7 +176,8 @@
     var bMode = cbtn('sm', mode === 'karaoke' ? IC.split : IC.full, mode === 'karaoke' ? 'Kiểu A: chia đôi' : 'Kiểu B: toàn màn hình', function () { setMode(mode === 'karaoke' ? 'split' : 'karaoke'); });
     var bSync = cbtn('sm', IC.sync, 'Chỉnh lời theo nhạc', function () { var i = S.index(); if (i >= 0) w.Screens.push(LrcSync(i)); });
     var bList = cbtn('sm', IC.list, 'Tất cả bài', function () { w.Screens.push(SongList()); });
-    [bShuf, bPrev, bPlay, bNext, bMode, bSync, bList].forEach(function (b) { ctr.appendChild(b); });
+    var bSleep = cbtn('sm', IC.moon, 'Hẹn giờ tắt nhạc', function () { w.Screens.push(SleepSheet()); });
+    [bShuf, bPrev, bPlay, bNext, bMode, bSync, bList, bSleep].forEach(function (b) { ctr.appendChild(b); });
     left.appendChild(ctr);
     v.appendChild(left);
 
@@ -137,6 +205,7 @@
     var clk = el('div', 'mvclock'), clkT = el('div', 'mvct', ''), clkD = el('div', 'mvcd', '');
     clk.appendChild(clkT); clk.appendChild(clkD);
     v.appendChild(top); v.appendChild(clk);
+    var slp = el('div', 'mvsleep hidden', ''); v.appendChild(slp);   // đồng hồ đếm ngược hẹn giờ tắt nhạc
 
     // Kiểu A: hàng "Tiếp theo"
     var qwrap = el('div', 'mvqueue');
@@ -301,7 +370,7 @@
         var a = times[k], b = times[k + 1] != null ? times[k + 1] : a + 4;
         var p = Math.max(0, Math.min(1, (t - a) / Math.max(0.8, Math.min(b - a, 8) - 0.3)));
         var L = song.lyrics[k], ws = L && L.w;
-        if (song.mode === 'line') p = 1;                       // hiện cả câu
+        if (!song.mode || song.mode === 'line') p = 1;        // mặc định: hiện cả câu
         else if (song.mode === 'word' && ws && ws.length) {     // chạy theo từng chữ (giờ từng chữ từ file .ass)
           var sh = a - (L.at || a), tot = 0, done = 0;           // sh: lệch khi người dùng tự chỉnh giờ câu
           ws.forEach(function (x) { tot += String(x[1]).length + 1; });
@@ -341,6 +410,7 @@
       if (!v.parentNode) { clearInterval(timer); return; }
       if (v.style.display === 'none') return;
       if (S.index() !== curIdx) renderSong();
+      var stx = sleepText(); if (slp.textContent !== stx) slp.textContent = stx; slp.classList.toggle('hidden', !stx); bSleep.classList.toggle('on', !!stx);
       var t = S.time(), du = S.duration();
       fill.style.width = du ? (t / du * 100).toFixed(2) + '%' : '0';
       tNow.textContent = fmt(t); tTot.textContent = fmt(du);
@@ -459,5 +529,5 @@
     return { name: 'lrcsync', el: v };
   }
 
-  w.MusicPage = { open: MusicPage, list: SongList, sync: LrcSync, times: lineTimes };
+  w.MusicPage = { open: MusicPage, list: SongList, sync: LrcSync, times: lineTimes, songOfDay: songOfDay, songForFilm: songForFilm, songImage: songImage, openSong: openSong, sleep: function () { w.Screens.push(SleepSheet()); }, sleepText: sleepText };
 })(window, document);

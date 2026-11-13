@@ -40,7 +40,7 @@
     {
      "s": "",
      "t": "Câu nói giản đơn mà làm tim anh",
-     "at": 50
+     "at": 50.0
     },
     {
      "s": "",
@@ -250,7 +250,8 @@
     "giả nghèo",
     "thân phận",
     "thiếu gia"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Đêm Mưa Trên Mái Nhà Hào Môn",
@@ -500,7 +501,8 @@
     "hào môn",
     "đêm mưa",
     "gia tộc"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Một Mái Nhà Có Em",
@@ -536,7 +538,7 @@
     {
      "s": "",
      "t": "Riêng một ánh nhìn em, anh chẳng biết làm sao",
-     "at": 48
+     "at": 48.0
     },
     {
      "s": "ĐIỆP KHÚC",
@@ -631,7 +633,7 @@
     {
      "s": "",
      "t": "Nếu ngày mai em chẳng còn đứng đợi",
-     "at": 144
+     "at": 144.0
     },
     {
      "s": "",
@@ -706,7 +708,7 @@
     {
      "s": "KẾT",
      "t": "Là một mái nhà có em bên đời",
-     "at": 206
+     "at": 206.0
     },
     {
      "s": "",
@@ -730,7 +732,8 @@
     "mái nhà",
     "gia đình",
     "về nhà"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Hợp Đồng Hôn Nhân Trăm Tỷ",
@@ -981,7 +984,8 @@
     "hôn nhân",
     "kết hôn",
     "cưới"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Tổng Tài Lạnh Lùng",
@@ -1072,7 +1076,7 @@
     {
      "s": "LỜI 2",
      "t": "Cuộc họp kéo dài, trời nghiêng về tối",
-     "at": 88
+     "at": 88.0
     },
     {
      "s": "",
@@ -1152,27 +1156,27 @@
     {
      "s": "CẦU NỐI",
      "t": "Anh không hứa những điều xa xôi",
-     "at": 154
+     "at": 154.0
     },
     {
      "s": "",
      "t": "Chỉ hứa hôm nay sẽ không quay lưng",
-     "at": 158
+     "at": 158.0
     },
     {
      "s": "",
      "t": "Nếu em còn đây, anh sẽ học cách",
-     "at": 162
+     "at": 162.0
     },
     {
      "s": "",
      "t": "Nói rằng anh cần em, dù rất vụng về",
-     "at": 166
+     "at": 166.0
     },
     {
      "s": "ĐIỆP KHÚC CUỐI",
      "t": "Tổng tài lạnh lùng, thôi giấu đi anh",
-     "at": 178
+     "at": 178.0
     },
     {
      "s": "",
@@ -1230,7 +1234,8 @@
    "keys": [
     "lạnh lùng",
     "băng giá"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Chỉ Cần Em Ở Lại",
@@ -1251,7 +1256,7 @@
     {
      "s": "",
      "t": "Bản hợp đồng trên bàn bỗng hóa thành xa lạ",
-     "at": 29
+     "at": 29.0
     },
     {
      "s": "",
@@ -1475,7 +1480,8 @@
     "ở lại",
     "đừng đi",
     "níu"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Cưng Chiều Vợ Nhỏ",
@@ -1700,13 +1706,14 @@
     "Để em cười sáng trong đôi mắt anh",
     "Một mái nhà có em chờ anh"
    ],
-   "gain": 0,
+   "gain": 0.1,
    "keys": [
     "cưng chiều",
     "vợ nhỏ",
     "sủng",
     "chiều vợ"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Ly Hôn Rồi Mới Biết",
@@ -1931,12 +1938,13 @@
     "Là nhớ một người ngay khi người rời đi",
     "Ta đã từng có nhau, mà chẳng giữ được gì"
    ],
-   "gain": -0.1,
+   "gain": 0.0,
    "keys": [
     "ly hôn",
     "chia tay",
     "hối hận"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Thiên Kim Thật Trở Về",
@@ -2172,7 +2180,7 @@
     {
      "s": "",
      "t": "Và em chọn chính em",
-     "at": 246
+     "at": 246.0
     }
    ],
    "sum": "Bài hát \"Thiên Kim Thật Trở Về\" kể về cô gái từng bị lạc mất thân phận nay trở về giữa bao lời cay nghiệt, không cúi đầu, không cầu xin, tự viết tương lai bằng trái tim vững vàng.",
@@ -2186,7 +2194,8 @@
     "thiên kim",
     "tiểu thư",
     "trở về"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Tổng Tài Cũng Biết Đau",
@@ -2362,7 +2371,7 @@
     {
      "s": "",
      "t": "Anh sẽ không dùng danh phận níu em",
-     "at": 161
+     "at": 161.0
     },
     {
      "s": "",
@@ -2426,7 +2435,8 @@
     "biết đau",
     "hối hận",
     "đau lòng"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Gặp Lại Sau Năm Năm",
@@ -2671,13 +2681,14 @@
     "Anh đã có trong tay bao điều người mơ ước",
     "Mà thiếu em, căn phòng rộng hóa heo may"
    ],
-   "gain": 0,
+   "gain": 0.0,
    "keys": [
     "gặp lại",
     "5 năm",
     "năm năm",
     "tái hợp"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Báo Thù Kiêu Hãnh",
@@ -3118,7 +3129,8 @@
     "chọn anh",
     "tim em",
     "yêu anh"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Trùng Sinh Giữa Hào Môn",
@@ -3338,7 +3350,8 @@
     "trùng sinh",
     "sống lại",
     "hào môn"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Vợ Yêu Đừng Chạy",
@@ -3588,7 +3601,8 @@
     "đừng chạy",
     "vợ yêu",
     "bỏ trốn"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Thư Ký Nhỏ Của Tổng Tài",
@@ -3878,7 +3892,8 @@
     "thư ký",
     "trợ lý",
     "công sở"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Tổng Tài Ở Rể",
@@ -4123,12 +4138,13 @@
     "Đứng phía sau em qua những tháng ngày giông",
     "Anh vẫn chọn ở bên em đến cùng"
    ],
-   "gain": 0,
+   "gain": 0.0,
    "keys": [
     "ở rể",
     "con rể",
     "chàng rể"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Tổng Tài Bá Đạo Yêu Em",
@@ -4304,7 +4320,7 @@
     {
      "s": "",
      "t": "Mình cùng đi, chẳng cần ai dẫn lối",
-     "at": 168
+     "at": 168.0
     },
     {
      "s": "",
@@ -4314,7 +4330,7 @@
     {
      "s": "",
      "t": "Khi về bên em, chỉ cần là anh",
-     "at": 175
+     "at": 175.0
     },
     {
      "s": "",
@@ -4373,11 +4389,12 @@
     "Người luôn lạnh lùng nay đứng chờ bên thềm",
     "Chỉ mong mỗi ngày được đón em về"
    ],
-   "gain": 0,
+   "gain": 0.0,
    "keys": [
     "bá đạo",
     "tổng tài"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Tổng Tài Yếu Lòng Vì Em",
@@ -4617,12 +4634,13 @@
     "Bao nhiêu thành công chẳng đổi được một đêm",
     "Được ngồi bên em, nghe em kể chuyện thường"
    ],
-   "gain": 0,
+   "gain": 0.0,
    "keys": [
     "yếu lòng",
     "dịu dàng",
     "tổng tài"
-   ]
+   ],
+   "mode": "line"
   },
   {
    "title": "Vợ Cũ Kiêu Hãnh",
@@ -4822,7 +4840,8 @@
     "vợ cũ",
     "ly hôn",
     "kiêu hãnh"
-   ]
+   ],
+   "mode": "line"
   }
  ]
 }

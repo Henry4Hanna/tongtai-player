@@ -347,6 +347,49 @@
       return true;
     }
     var heroResumed = heroResume();
+    // Bài hát của ngày: banner đổi qua lại giữa phim và bài hát mỗi 12 giây
+    var songOn = false, songLayer = null, heroDots = el('div', 'hero-dots'), heroSongI = -1;
+    function buildSong() {
+      if (!w.MusicPage || !w.Music || !w.Music.S || !w.MusicPage.songOfDay) return null;
+      var i = w.MusicPage.songOfDay(), sg = i >= 0 ? w.Music.S.song(i) : null; if (!sg) return null;
+      heroSongI = i;
+      var L = el('div', 'hero-song hidden');
+      var bg = el('div', 'thumb hero-img'), src = w.MusicPage.songImage(i);
+      if (src) bg.style.backgroundImage = 'url("' + src.replace(/"/g, '%22') + '")';
+      L.appendChild(bg); L.appendChild(el('div', 'hero-shade'));
+      var box = el('div', 'hero-box'), chips = el('div', 'chips'), n = new Date();
+      chips.appendChild(el('span', 'chip gold', '♪ Bài hát của ngày'));
+      chips.appendChild(el('span', 'chip', ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][n.getDay()] + ' ' + n.getDate() + '/' + (n.getMonth() + 1)));
+      box.appendChild(chips);
+      box.appendChild(el('h1', 'hero-title', sg.title));
+      var sum = String(sg.sum || '').replace(/^Bài hát\s+["“][^"”]+["”]\s*/, '');
+      if (sum) box.appendChild(el('div', 'hero-meta hero-ssum', sum.charAt(0).toUpperCase() + sum.slice(1)));
+      var ex = (sg.ex || []).slice(0, 3);
+      if (ex.length) { var q = el('div', 'hero-sex'); ex.forEach(function (x) { q.appendChild(el('div', 'hero-quote', x)); }); box.appendChild(q); }
+      var btns = el('div', 'btns');
+      btns.appendChild(UI.button('Nghe ngay' + (sg.dur ? ' · ' + Math.floor(sg.dur / 60) + ':' + ('0' + sg.dur % 60).slice(-2) : ''), 'gold', function () { w.MusicPage.openSong(i); }, UI.ICON_PLAY));
+      btns.appendChild(UI.button('Mở trang Nhạc', '', function () { goTab('music'); }));
+      box.appendChild(btns); L.appendChild(box);
+      return L;
+    }
+    function applySong(moveFocus) {
+      if (!songLayer) return;
+      if (songLayer.parentNode !== hero) hero.appendChild(songLayer);
+      if (heroDots.parentNode !== hero) hero.appendChild(heroDots);
+      var had = Nav.cur && hero.contains(Nav.cur);
+      Array.prototype.forEach.call(hero.children, function (c) { if (c !== songLayer && c !== heroDots) c.classList.toggle('hidden', songOn); });
+      songLayer.classList.toggle('hidden', !songOn);
+      heroDots.innerHTML = ''; heroDots.appendChild(el('i', songOn ? '' : 'on')); heroDots.appendChild(el('i', songOn ? 'on' : ''));
+      if (had && moveFocus) { var fb = (songOn ? songLayer : hero).querySelector('.btn:not(.hidden)'); var vis = Array.prototype.filter.call(hero.querySelectorAll('.btn'), function (b) { return b.getClientRects().length && !b.closest('.hidden'); })[0]; if (vis || fb) Nav.focus(vis || fb, true); }
+    }
+    var songT = setInterval(function () {
+      if (!d.body.contains(v)) { clearInterval(songT); return; }
+      if (d.hidden || C.SONG_OF_DAY === false || current() && current().el !== v) return;
+      if (Date.now() - (w.lastKeyAt || 0) < 6000) return;   // đang bấm remote: đứng yên
+      if (!songLayer) { songLayer = buildSong(); if (!songLayer) return; }
+      if (!hero.querySelector('.hero-box')) return;   // banner phim chưa tải xong
+      songOn = !songOn; applySong(true);
+    }, 12000);
     function setHero(item, week) {
       if (item && Store.isFavCh(item.chId)) heroFav = true;
       hero.innerHTML = '';
@@ -383,6 +426,7 @@
       box.appendChild(btns);
       hero.appendChild(box);
       if (Nav.cur && Nav.cur.dataset && Nav.cur.dataset.tab === 'home' && current() && current().el === v) Nav.focus(b1, true);
+      if (songLayer) { songOn = false; applySong(false); }
     }
 
     function fail(r, e) { r.msg(Api.explain(e)); }
@@ -967,6 +1011,23 @@
     info.appendChild(btns);
     top.appendChild(info);
     v.appendChild(top);
+    // Nhạc hợp phim: bài hát có từ khóa khớp tên phim
+    (function () {
+      var si = w.MusicPage && w.MusicPage.songForFilm && w.Music && w.Music.S ? w.MusicPage.songForFilm(item) : -1, sg = si >= 0 ? w.Music.S.song(si) : null;
+      if (!sg || C.SONG_FOR_FILM === false) return;
+      var c = el('div', 'dsong f');
+      c.appendChild(el('div', 'dsdisc'));
+      var tx = el('div', 'dstx');
+      tx.appendChild(el('div', 'dsk', '♪ NGHE BÀI HÁT HỢP PHIM NÀY'));
+      tx.appendChild(el('div', 'dst', sg.title));
+      tx.appendChild(el('div', 'dsw', 'Nhạc của tôi' + (sg.dur ? ' · ' + Math.floor(sg.dur / 60) + ':' + ('0' + sg.dur % 60).slice(-2) : '')));
+      if ((sg.ex || [])[1] || (sg.ex || [])[0]) tx.appendChild(el('div', 'dsx', '“' + (sg.ex[1] || sg.ex[0]) + '”'));
+      c.appendChild(tx);
+      c.appendChild(el('div', 'dsgo', '▶ Nghe'));
+      c._ok = function () { w.MusicPage.openSong(si); };
+      c.onclick = function () { c._ok(); };
+      v.appendChild(c);
+    })();
 
     function favLabel() {
       var on = Store.isFav(item);
@@ -1398,6 +1459,10 @@
       var n = w.Music && w.Music.songs ? w.Music.songs().length : 0;
       return { t: n ? n + ' bài · Mở' : 'Mở', on: n > 0 };
     }, function () { push(SongPick()); });
+    row('Hẹn giờ tắt nhạc', 'Nghe nhạc 15, 30, 60 phút hoặc hết bài rồi tự tắt (nhạc nhỏ dần trong 30 giây). Nút 🌙 cũng có ở trang Nhạc', function () {
+      var t = w.MusicPage && w.MusicPage.sleepText ? w.MusicPage.sleepText() : '';
+      return t ? { t: t.replace('🌙 ', ''), on: true } : { t: 'Tắt · Đặt giờ' };
+    }, function () { if (w.MusicPage) w.MusicPage.sleep(); });
     opt('MUSIC_LEVEL', 'Cân bằng âm lượng các bài', 'Bài nào cũng nghe to như nhau, ở Trang chủ, trang Nhạc và màn hình chờ', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
         opt('MUSIC_VOL', 'Âm lượng nhạc nền', 'Ngưỡng: rất nhỏ, vừa đủ nghe (nhỏ hơn mức Nhỏ)', [{ v: 'min', t: 'Ngưỡng', on: true }, { v: 'low', t: 'Nhỏ', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'To', on: true }]);
 
@@ -3295,7 +3360,7 @@
       var ic = el('div', 'qsic', '🎯'); wrap.appendChild(ic);
       var t = el('div', 'qst');
       t.appendChild(el('div', 'qsk', 'CÂU ĐỐ TỔNG TÀI · HÔM NAY'));
-      t.appendChild(el('div', 'qsh', 'Điền chữ còn thiếu trong câu thoại'));
+      t.appendChild(el('div', 'qsh', 'Điền chữ còn thiếu trong câu thoại · hoặc đoán tên bài hát'));
       var pv = el('div', 'qsq'); pv.appendChild(d.createTextNode('“' + z.before)); pv.appendChild(el('b', '', '___')); pv.appendChild(d.createTextNode(z.after + '”'));
       t.appendChild(pv);
       wrap.appendChild(t);
@@ -3307,12 +3372,14 @@
         wrap.appendChild(lb);
       }
       wrap.appendChild(UI.button('▶ Chơi ngay', 'gold', function () { push(Quiz()); }));
+      if (w.Music && w.Music.S && w.Music.S.all().length >= 4) wrap.appendChild(UI.button('♪ Đoán bài hát', '', function () { push(Quiz('song')); }));
     }
     paint();
     return { wrap: wrap, hide: function () { wrap.classList.add('hidden'); }, show: function () { wrap.classList.remove('hidden'); }, refresh: paint };
   }
-  function Quiz() {
-    var v = UI.view(); v.classList.add('quizv');
+  function Quiz(kind) {
+    var SONG = kind === 'song', MS = w.Music && w.Music.S, songUsed = {}, snipT = 0;
+    var v = UI.view(); v.classList.add('quizv'); if (SONG) v.classList.add('songquiz');
     var me = profileOf(Store.profile()) || { id: 'guest', name: 'Guest' };
     var ROUNDS = 10, round = 0, score = 0, marks = [], used = {}, tmr = 0, left = 15, z = null, done = false;
     var head = el('div', 'qzhead'), card = el('div', 'qzcard'), grid = el('div', 'qzgrid'), foot = el('div', 'qzfoot');
@@ -3320,7 +3387,7 @@
     function paintHead() {
       head.innerHTML = '';
       head.appendChild(avatar(me, 'qzav'));
-      var t = el('div', 'qzht'); t.appendChild(el('div', 'qzh1', 'Câu đố tổng tài · ' + me.name)); t.appendChild(el('div', 'qzh2', 'Câu ' + Math.min(round + 1, ROUNDS) + ' / ' + ROUNDS)); head.appendChild(t);
+      var t = el('div', 'qzht'); t.appendChild(el('div', 'qzh1', (SONG ? 'Đoán tên bài hát · ' : 'Câu đố tổng tài · ') + me.name)); t.appendChild(el('div', 'qzh2', 'Câu ' + Math.min(round + 1, ROUNDS) + ' / ' + ROUNDS)); head.appendChild(t);
       var mk = el('div', 'qzmarks');
       for (var i = 0; i < ROUNDS; i++) mk.appendChild(el('i', i < marks.length ? (marks[i] ? 'ok' : 'bad') : i === round ? 'now' : ''));
       head.appendChild(mk);
@@ -3329,12 +3396,20 @@
     function next() {
       clearInterval(tmr);
       if (round >= ROUNDS) { finish(); return; }
-      var i; do { i = Math.floor(Math.random() * w.Quotes.count); } while (used[i]); used[i] = 1;
-      z = w.Quotes.quiz(i); done = false; left = 15;
+      if (SONG) { z = songQ(); left = 20; }
+      else { var i; do { i = Math.floor(Math.random() * w.Quotes.count); } while (used[i]); used[i] = 1; z = w.Quotes.quiz(i); left = 15; }
+      done = false;
       paintHead();
       card.innerHTML = '';
-      var top = el('div', 'qzct'); top.appendChild(el('div', 'qzk', 'ĐIỀN CHỮ CÒN THIẾU')); top.appendChild(el('div', 'qzcat', 'Chủ đề: ' + z.cat + ' · #' + ('00' + z.n).slice(-3))); card.appendChild(top);
-      var qt = el('div', 'qzq'); qt.appendChild(d.createTextNode('“' + z.before)); var bl = el('span', 'qzblank', '?'); qt.appendChild(bl); qt.appendChild(d.createTextNode(z.after + '”')); card.appendChild(qt);
+      var top = el('div', 'qzct');
+      if (SONG) { top.appendChild(el('div', 'qzk', 'NGHE ĐOẠN NHẠC · CÂU HÁT NÀY THUỘC BÀI NÀO?')); top.appendChild(el('div', 'qzcat', '♪ ' + z.sec)); }
+      else { top.appendChild(el('div', 'qzk', 'ĐIỀN CHỮ CÒN THIẾU')); top.appendChild(el('div', 'qzcat', 'Chủ đề: ' + z.cat + ' · #' + ('00' + z.n).slice(-3))); }
+      card.appendChild(top);
+      var qt = el('div', 'qzq');
+      if (SONG) { qt.appendChild(d.createTextNode('“' + z.line + '”')); var eq = el('div', 'qzeq'); for (var e6 = 0; e6 < 6; e6++) eq.appendChild(el('i')); qt.appendChild(eq); }
+      else { qt.appendChild(d.createTextNode('“' + z.before)); var bl = el('span', 'qzblank', '?'); qt.appendChild(bl); qt.appendChild(d.createTextNode(z.after + '”')); }
+      card.appendChild(qt);
+      if (SONG) { clearTimeout(snipT); MS.playAt(z.idx, z.at); snipT = setTimeout(function () { if (current() === view) MS.stop(); qt.classList.add('qzstop'); }, 10000); }
       var st = el('div', 'qzst', ''); card.appendChild(st);
       grid.innerHTML = ''; foot.innerHTML = '';
       var first = null;
@@ -3346,7 +3421,7 @@
       });
       var ld = quizLeaders();
       foot.appendChild(el('div', 'qzlb', ld.length ? 'Bảng điểm hôm nay: ' + ld.map(function (x) { return x.p.name + ' ' + x.n; }).join(' · ') : 'Mỗi câu đúng +10 điểm · điểm cộng vào bảng điểm hôm nay'));
-      function tick() { st.textContent = done ? '' : 'Chọn chữ đúng rồi bấm OK · còn ' + left + ' giây'; }
+      function tick() { st.textContent = done ? '' : (SONG ? 'Chọn tên bài rồi bấm OK · còn ' : 'Chọn chữ đúng rồi bấm OK · còn ') + left + ' giây'; }
       tick();
       tmr = setInterval(function () { if (!d.body.contains(v)) { clearInterval(tmr); return; } left--; if (left <= 0) { answer(null, null); return; } tick(); }, 1000);
       setTimeout(function () { if (current() === view) Nav.focus(first, true); }, 30);
@@ -3359,7 +3434,7 @@
         var wv = b.querySelector('.qzw').textContent;
         b.classList.add(wv === z.answer ? 'right' : b === btn ? 'wrong' : 'dim');
       });
-      var bl = card.querySelector('.qzblank'); bl.textContent = z.answer; bl.classList.add(ok ? 'ok' : 'bad');
+      var bl = card.querySelector('.qzblank'); if (bl) { bl.textContent = z.answer; bl.classList.add(ok ? 'ok' : 'bad'); }
       card.querySelector('.qzst').textContent = ok ? '✓ Đúng rồi! +10 điểm' : (o ? '✗ Chưa đúng. Đáp án: “' + z.answer + '”' : '⏰ Hết giờ. Đáp án: “' + z.answer + '”');
       card.querySelector('.qzst').className = 'qzst ' + (ok ? 'ok' : 'bad');
       round++; paintHead();
@@ -3367,14 +3442,16 @@
       var bx = el('div', 'btns center');
       var bn = UI.button(round >= ROUNDS ? 'Xem kết quả ▶' : 'Câu tiếp theo ▶', 'gold', next);
       bx.appendChild(bn); bx.appendChild(UI.button('Dừng chơi', '', function () { back(); }));
+      if (SONG) { var zi = z.idx; bx.appendChild(UI.button('♪ Nghe cả bài', '', function () { clearTimeout(snipT); if (w.MusicPage) w.MusicPage.openSong(zi); })); }
       foot.appendChild(bx);
       Nav.focus(bn, true);
     }
     function finish() {
+      if (SONG) { clearTimeout(snipT); MS.stop(); }
       paintHead();
       grid.innerHTML = ''; card.innerHTML = '';
       card.appendChild(el('div', 'qzk', 'KẾT QUẢ'));
-      card.appendChild(el('div', 'qzq', score >= 80 ? 'Đúng chất tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Cố lên lần sau! ' + score + ' điểm'));
+      card.appendChild(el('div', 'qzq', SONG ? (score >= 80 ? 'Tai nghe tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Nghe thêm rồi chơi lại nhé! ' + score + ' điểm') : score >= 80 ? 'Đúng chất tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Cố lên lần sau! ' + score + ' điểm'));
       var right = marks.filter(Boolean).length;
       card.appendChild(el('div', 'qzst ok', right + ' / ' + ROUNDS + ' câu đúng · đã cộng vào bảng điểm hôm nay'));
       foot.innerHTML = '';
@@ -3386,7 +3463,23 @@
       foot.appendChild(bx);
       Nav.focus(b1, true);
     }
-    var view = { name: 'quiz', el: v };
+    // Đoán tên bài hát: chọn bài chưa hỏi, một câu hát không chứa tên bài, 3 tên bài khác làm đáp án sai
+    function songQ() {
+      var all = MS.all(), ids = all.map(function (_, k) { return k; }).filter(function (k) { return !songUsed[k] && (all[k].lyrics || []).length > 4; });
+      if (!ids.length) { songUsed = {}; ids = all.map(function (_, k) { return k; }).filter(function (k) { return (all[k].lyrics || []).length > 4; }); }
+      var k = ids[Math.floor(Math.random() * ids.length)], sg = all[k]; songUsed[k] = 1;
+      var nk = function (x) { x = String(x || '').toLowerCase(); try { x = x.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { /* TV cũ */ } return x.replace(/đ/g, 'd').replace(/[^a-z0-9 ]/g, ''); };
+      var tn = nk(sg.title), times = w.MusicPage && w.MusicPage.times ? w.MusicPage.times(sg) : [];
+      var ls = sg.lyrics.map(function (l, n) { return { t: l.t, at: times[n] != null ? times[n] : l.at || 0, s: l.s }; }).filter(function (l) { return l.at >= 12 && nk(l.t).indexOf(tn) < 0 && l.t.length > 12; });
+      if (!ls.length) ls = sg.lyrics.map(function (l, n) { return { t: l.t, at: times[n] || l.at || 0 }; });
+      var L = ls[Math.floor(Math.random() * ls.length)];
+      var others = all.map(function (x) { return x.title; }).filter(function (t) { return t !== sg.title; });
+      for (var q = others.length - 1; q > 0; q--) { var r = Math.floor(Math.random() * (q + 1)), tmp = others[q]; others[q] = others[r]; others[r] = tmp; }
+      var opts = others.slice(0, 3).concat([sg.title]);
+      for (var q2 = opts.length - 1; q2 > 0; q2--) { var r2 = Math.floor(Math.random() * (q2 + 1)), t2 = opts[q2]; opts[q2] = opts[r2]; opts[r2] = t2; }
+      return { idx: k, line: L.t, at: Math.max(0, L.at - 0.6), answer: sg.title, options: opts, sec: 'Câu ' + (round + 1) };
+    }
+    var view = { name: SONG ? 'songquiz' : 'quiz', el: v };
     setTimeout(next, 0);
     return view;
   }
@@ -3572,7 +3665,17 @@
     ids.forEach(function (id) { var m = w.Rates ? w.Rates.of(id) : {}; Object.keys(m).forEach(function (v2) { if (m[v2].r === 1) { likes[v2] = likes[v2] || { n: 0, title: m[v2].title }; likes[v2].n++; } }); });
     var best = Object.keys(likes).map(function (k) { return likes[k]; }).sort(function (a, b) { return b.n - a.n; })[0];
     var hmx = Math.max.apply(null, hours), hpk = hours.indexOf(hmx);
-    return { ws: ws, wk: wk, rows: rows, tot: tot, prev: prevTot, films: films, best: best, peak: hmx > 0 ? hpk : -1 };
+    // nhạc: lượt nghe bài hát (quá 30 giây) trong tuần
+    var titles = {}; try { (w.Music.S.all() || []).forEach(function (x) { titles[x.file] = x.title; }); } catch (e) { /* bỏ qua */ }
+    var mAll = {}, mProf = [], mN = 0;
+    ids.forEach(function (id) {
+      var st = Store.stats(id), mine = {};
+      Object.keys(st).forEach(function (k) { var t = new Date(k + 'T00:00:00').getTime(); if (t >= ws && t < we && st[k].m) Object.keys(st[k].m).forEach(function (f) { var c = st[k].m[f] || 0; mine[f] = (mine[f] || 0) + c; mAll[f] = (mAll[f] || 0) + c; mN += c; }); });
+      var top = Object.keys(mine).sort(function (a, b) { return mine[b] - mine[a]; })[0];
+      if (top) mProf.push({ p: profileOf(id) || { id: id, name: 'Guest' }, title: titles[top] || top, n: mine[top] });
+    });
+    var music = mN ? { n: mN, top: Object.keys(mAll).sort(function (a, b) { return mAll[b] - mAll[a]; }).slice(0, 3).map(function (f) { return { title: titles[f] || f, n: mAll[f], file: f }; }), prof: mProf.sort(function (a, b) { return b.n - a.n; }) } : null;
+    return { ws: ws, wk: wk, rows: rows, tot: tot, prev: prevTot, films: films, best: best, peak: hmx > 0 ? hpk : -1, music: music };
   }
   function weekCard() {
     var r = weekReport(); if (!r) return null;
@@ -3591,6 +3694,8 @@
       var rw = el('div', 'wkr');
       rw.appendChild(avatar(x.p, 'sm'));
       rw.appendChild(el('span', 'wkn', x.p.name));
+      var mp = r.music ? r.music.prof.filter(function (q) { return q.p.id === x.p.id; })[0] : null;
+      rw.appendChild(el('span', 'wkms', mp ? '♪ ' + mp.title : ''));
       var tr = el('div', 'wktr'), fl = el('i'); fl.style.width = Math.max(1, x.m / mx * 100) + '%'; fl.style.background = cols[x.p.id] || '#E8B04B'; tr.appendChild(fl); rw.appendChild(tr);
       rw.appendChild(el('span', 'wkv', fmtMin(x.m)));
       L.appendChild(rw);
@@ -3598,6 +3703,13 @@
     c.appendChild(L);
     var R = el('div', 'wkrt');
     if (r.best) { var bb = el('div', 'wkbox'); bb.appendChild(el('div', 'wkbk', 'Phim cả nhà thích nhất')); bb.appendChild(el('div', 'wkbv', r.best.title)); bb.appendChild(el('div', 'wkbh', '❤ ' + r.best.n + ' người thích')); R.appendChild(bb); }
+    if (r.music) {
+      var allS = w.Music && w.Music.S ? w.Music.S.all() : [], fi = -1; allS.forEach(function (x, k) { if (x.file === r.music.top[0].file) fi = k; });
+      var mb = el('div', 'wkbox wkmus' + (fi >= 0 ? ' f' : '')); mb.appendChild(el('div', 'wkbk', '♪ Bài cả nhà nghe nhiều nhất'));
+      mb.appendChild(el('div', 'wkbv', r.music.top[0].title)); mb.appendChild(el('div', 'wkbh', r.music.top[0].n + ' lần nghe' + (fi >= 0 ? ' · OK để nghe' : '')));
+      if (fi >= 0) { mb._ok = function () { w.MusicPage.openSong(fi); }; mb.onclick = mb._ok; }
+      R.appendChild(mb);
+    }
     var lims = r.rows.filter(function (x) { return x.lim; });
     if (lims.length) { var lb = el('div', 'wkbox'); lb.appendChild(el('div', 'wkbk', 'Giới hạn giờ xem')); lims.forEach(function (x) { lb.appendChild(el('div', 'wkbv sm', x.p.name + ': đúng giờ ' + x.lim + ' ngày')); }); R.appendChild(lb); }
     R.appendChild(UI.button('Đã xem · ẩn đến tuần sau', 'small', function () {
@@ -3974,15 +4086,33 @@
         if (!j.ok) { fail({ status: 'GitHub' }); body.firstChild.textContent = 'Máy chủ chưa nối GitHub (GH_TOKEN, GH_REPO). Xem HUONG-DAN-ADMIN, bước “Nối GitHub”.'; return; }
         var songs = j.list.songs || [];
         body.innerHTML = ''; sub.textContent = (em ? em + ' · ' : '') + songs.length + ' bài · music/list.json trên GitHub';
-        var MD = { line: 'Hiện theo câu', word: 'Chạy theo chữ' };
+        var MD = { line: 'Hiện theo câu', word: 'Chạy theo chữ', sweep: 'Tô dần cả câu' };
         body.appendChild(kpis([['Số bài', songs.length, ''], ['Lời canh giờ chuẩn', songs.filter(function (x) { return x.lrcAuto === false; }).length + ' / ' + songs.length, ''], ['Có tóm tắt', songs.filter(function (x) { return x.sum; }).length + ' / ' + songs.length, ''], ['Cân bằng âm lượng', songs.filter(function (x) { return x.gain != null; }).length + ' / ' + songs.length, 'đo trên trang quản trị máy tính']]));
         var hc = el('div', 'admsegs'); hc.appendChild(UI.button('↶ Lịch sử thay đổi', '', function () { push(HistoryTV('music', call)); })); body.appendChild(hc);
+        var amc = card('Lời chạy trên màn hình · tất cả bài', 'Chọn một kiểu rồi bấm OK thêm lần nữa để áp dụng cho cả ' + songs.length + ' bài');
+        var amr = el('div', 'admsegs'), arm = '', rowsP = [];
+        function allMode() { var m = {}; songs.forEach(function (x) { m[x.mode || 'line'] = 1; }); var k = Object.keys(m); return k.length === 1 ? k[0] : ''; }
+        [['line', 'Hiện theo câu'], ['word', 'Chạy theo chữ'], ['sweep', 'Tô dần cả câu']].forEach(function (m) {
+          var bt = UI.button(m[1], '', function () {
+            if (allMode() === m[0]) { UI.toast('Cả ' + songs.length + ' bài đang dùng: ' + m[1]); return; }
+            if (arm !== m[0]) { arm = m[0]; UI.toast('Bấm OK lần nữa để đổi cả ' + songs.length + ' bài thành “' + m[1] + '”'); return; }
+            arm = '';
+            call('/a/music', { sha: j.sha, op: 'mode', mode: m[0] }).then(function (r) {
+              if (!r.ok) throw r; j.sha = r.sha; songs.forEach(function (x) { x.mode = m[0]; });
+              rowsP.forEach(function (f) { f(); }); paintAm(); UI.toast('Đã đổi cả ' + songs.length + ' bài. 1–2 phút nữa mọi máy sẽ thấy.');
+            }).then(null, function (e) { UI.toast('Không lưu được' + (e && e.j && e.j.error ? ': ' + e.j.error : '')); });
+          });
+          bt._m = m[0]; amr.appendChild(bt);
+        });
+        function paintAm() { var cur = allMode(); [].forEach.call(amr.children, function (q) { q.classList.toggle('on', q._m === cur); }); }
+        paintAm(); amc.appendChild(amr); body.appendChild(amc);
         var lc = card('Danh sách bài', 'OK = mở bài: chọn kiểu chạy lời, canh lời bằng remote');
         songs.forEach(function (x, i) {
           var r = el('div', 'admprow f');
           r.appendChild(el('div', 'admnum', String(i + 1)));
           var mid = el('div', 'admpmid'); mid.appendChild(el('div', 'admpn', x.title));
-          mid.appendChild(el('div', 'admps', fmtMin(x.dur || 0) + ' · ' + (x.lrcAuto === false ? 'lời canh giờ chuẩn' : 'lời tự động') + ' · ' + (MD[x.mode] || 'Tô dần cả câu') + (x.sum ? ' · có tóm tắt' : '')));
+          var ps = el('div', 'admps'); mid.appendChild(ps);
+          (function (ps, x) { function f() { ps.textContent = fmtMin(x.dur || 0) + ' · ' + (x.lrcAuto === false ? 'lời canh giờ chuẩn' : 'lời tự động') + ' · ' + (MD[x.mode] || 'Hiện theo câu') + (x.sum ? ' · có tóm tắt' : ''); } f(); rowsP.push(f); })(ps, x);
           r.appendChild(mid);
           r._ok = function () { push(AdminSongTV(songs, i, j.sha, call)); };
           lc.appendChild(r);
@@ -4048,9 +4178,9 @@
     var row = el('div', 'strow'), L = el('div', 'stcard rowwrap wide'), R = el('div', 'stcard rowwrap');
     L.appendChild(el('div', 'stct', 'Lời chạy trên màn hình'));
     var seg = el('div', 'admsegs');
-    [['line', 'Hiện theo câu'], ['word', 'Chạy theo từng chữ'], ['', 'Tô dần cả câu']].forEach(function (m) {
-      var b = el('div', 'stsegb f' + ((x.mode || '') === m[0] ? ' on' : ''), m[1]);
-      b._ok = function () { x.mode = m[0] || undefined; [].forEach.call(seg.children, function (q) { q.classList.toggle('on', q === b); }); dirty(); };
+    [['line', 'Hiện theo câu'], ['word', 'Chạy theo từng chữ'], ['sweep', 'Tô dần cả câu']].forEach(function (m) {
+      var b = el('div', 'stsegb f' + ((x.mode || 'line') === m[0] ? ' on' : ''), m[1]);
+      b._ok = function () { x.mode = m[0]; [].forEach.call(seg.children, function (q) { q.classList.toggle('on', q === b); }); dirty(); };
       seg.appendChild(b);
     });
     L.appendChild(seg);
@@ -4135,7 +4265,7 @@
     function fmtT(t) { return Math.floor(t / 60) + ':' + ('0' + (t % 60).toFixed(1)).slice(-4).replace('.', ','); }
     function sweep(k, t) {
       var l = Ls[k], b = Ls[k + 1] ? Ls[k + 1].at : l.at + 4;
-      if (x.mode === 'line') return 1;
+      if (!x.mode || x.mode === 'line') return 1;
       if (x.mode === 'word' && l.w && l.w.length) { var tot = 0, dn = 0; l.w.forEach(function (q) { tot += q[1].length + 1; }); for (var q = 0; q < l.w.length; q++) { var n = l.w[q][1].length + 1, s0 = l.w[q][0], s1 = l.w[q + 1] ? l.w[q + 1][0] : Math.min(b, s0 + 1.2); if (t >= s1) dn += n; else { if (t > s0) dn += n * (t - s0) / Math.max(0.05, s1 - s0); break; } } return dn / Math.max(1, tot); }
       return Math.max(0, Math.min(1, (t - l.at) / Math.max(0.8, Math.min(b - l.at, 8) - 0.3)));
     }
@@ -4187,7 +4317,7 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.28)', l: ['Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh”, thanh tiến độ và số phiên bản đang dùng (ví dụ 2.28.0) ở dưới cùng.','Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.','Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M84 30v46a12 10 0 1 1-6-8.7V40l48-10v38a12 10 0 1 1-6-8.7V36.4z" fill="#E8B04B"/><g fill="#4FAE8A"><rect x="40" y="70" width="6" height="22" rx="3"/><rect x="50" y="58" width="6" height="34" rx="3"/><rect x="60" y="76" width="6" height="16" rx="3"/></g></svg>', t: 'Nhạc nền Trang chủ', l: ['Nhạc của tôi: 20 bài hát của Ryan Nguyen (Chủ Tịch Giả Nghèo, Tổng Tài Ở Rể, Vợ Yêu Đừng Chạy…) phát ở Trang chủ, lần lượt hoặc trộn bài.', 'Mở phim hay sang trang khác thì nhạc tạm dừng, quay lại Trang chủ phát tiếp đúng chỗ. Ô “♪ tên bài” góc dưới bên phải: bấm để qua bài.', 'Cài đặt → Nhạc nền Trang chủ: Nhạc của tôi (lần lượt / trộn bài), Hòa tấu (5 bản), Tắt; Chọn bài để nghe bài bất kỳ; Âm lượng. Riêng từng hồ sơ.', 'TV lấy nhạc từ GitHub Pages của bạn. Android TV: Cài đặt → Kết nối → Địa chỉ nhạc. Không tải được thì app tự phát 5 bản hòa tấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14161E"/><rect x="10" y="12" width="80" height="45" rx="6" fill="#3A2A14"/><rect x="10" y="64" width="60" height="6" rx="2" fill="#F4F1EC"/><rect x="10" y="76" width="80" height="3" rx="1.5" fill="#33384A"/><rect x="10" y="76" width="34" height="3" rx="1.5" fill="#E8B04B"/><circle cx="50" cy="96" r="10" fill="#E8B04B"/><rect x="104" y="20" width="80" height="5" rx="2" fill="#5A5F6E"/><rect x="104" y="36" width="88" height="9" rx="3" fill="#E8B04B"/><rect x="104" y="54" width="76" height="5" rx="2" fill="#8A8F9E"/><rect x="104" y="66" width="70" height="5" rx="2" fill="#5A5F6E"/></svg>', t: 'Trang Nhạc', l: ['Tab Nhạc: 20 bài hát của Ryan Nguyen. Lúc nhạc dạo, khung lời hiện “Giới thiệu bài hát” (tóm tắt + đoạn trích); điện thoại thì tóm tắt nằm dưới tên bài.','Lời: câu đang hát sáng lên. Tùy bài: hiện cả câu, chạy theo từng chữ (như karaoke) hoặc tô dần cả câu. Lời lệch: nút ⏱ “Chỉnh lời”.','Ảnh: 10 ảnh phim tổng tài thật hợp với bài, đổi mỗi 8 giây, chấm dưới ảnh cho biết đang ở ảnh nào. Bấm vào ảnh (TV: chọn ảnh rồi OK) để hỏi “Xem phim này?”: “Ở lại nghe nhạc”, “Danh sách” (lưu phim xem sau, nhạc vẫn phát) hoặc “Mở phim”.','Kiểu A chia đôi hoặc Kiểu B toàn màn hình kiểu karaoke: nút ⛶. Nút: Trộn bài, Bài trước, Phát/Dừng, Bài kế, Hẹn giờ, ☰ Tất cả bài (tóm tắt và đoạn trích của cả 20 bài; chọn một bài để phát).','Các bài nghe to đều nhau. Tắt: Cài đặt → Cân bằng âm lượng các bài.'] },

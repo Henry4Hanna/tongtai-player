@@ -1030,7 +1030,7 @@ html.wholock #webback { display: none !important; }
 .w3x svg { width: 20px; height: 20px; }
 .whosig { display: flex; flex-direction: column; align-items: center; margin: 26px 0 10px; }
 .wsk { font-size: 15px; font-weight: 800; letter-spacing: .3em; color: var(--c-8c92a0); }
-.wsn { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; font-size: 44px; color: #E8B04B; margin-top: 4px; }
+.wsn { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-weight: 700; font-size: 44px; color: #E8B04B; margin-top: 4px; }
 .mobile .who3 { gap: 8px; margin: 8px 12px 0; }
 .mobile .w3stamp { width: 58px; height: 58px; } .mobile .w3stamp b { font-size: 26px; } .mobile .w3stamp span { font-size: 9px; }
 .mobile .w3chip { font-size: 13px; padding: 7px 13px 7px 7px; gap: 7px; }
@@ -1087,7 +1087,7 @@ html.wholock #webback { display: none !important; }
 #saver .svquote { display: none; }
 #saver.withq .svquote { display: block; margin: 4px 0 22px; max-width: 54vw; }
 #saver .svqk { font-size: .8em; font-weight: 800; letter-spacing: .24em; color: #E8B04B; }
-#saver .svqt { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 2.3em; line-height: 1.3; margin-top: 10px; color: #FBF6EC; text-shadow: 0 4px 20px rgba(0,0,0,.65); }
+#saver .svqt { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-size: 2.3em; line-height: 1.3; margin-top: 10px; color: #FBF6EC; text-shadow: 0 4px 20px rgba(0,0,0,.65); }
 #saver.withq .svtitle { font-size: 1.7em; }
 #saver.withq .svtag { margin-bottom: 8px; }
 #saver.withq .svbrand { margin-bottom: 14px; }
@@ -1115,7 +1115,7 @@ html.wholock #webback { display: none !important; }
 .qst { flex: 1; min-width: 0; }
 .qsk { font-size: 17px; font-weight: 800; letter-spacing: .22em; color: #E8B04B; }
 .qsh { font-size: 30px; font-weight: 800; margin-top: 6px; color: #F4F1EC; }
-.qsq { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 22px; color: #d9d2c3; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qsq { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-size: 22px; color: #d9d2c3; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qsq b { color: #E8B04B; font-style: normal; }
 .qsld { text-align: center; flex: none; } .qsavs { display: flex; justify-content: center; padding-left: 12px; } .qsavs .wav { width: 52px; height: 52px; border-radius: 50%; margin-left: -12px; box-shadow: 0 0 0 3px #1b1430; }
 .qsl { font-size: 17px; color: #b9beca; margin-top: 8px; }
@@ -1132,7 +1132,7 @@ html.wholock #webback { display: none !important; }
 .qzcard { margin: 30px 0; padding: 48px 56px; border-radius: 30px; background: linear-gradient(150deg, #2a1f3a, #151922); border: 1px solid #3a2f50; }
 .qzct { display: flex; justify-content: space-between; gap: 20px; }
 .qzk { font-size: 20px; font-weight: 800; letter-spacing: .22em; color: #E8B04B; } .qzcat { font-size: 20px; color: #9aa0ae; }
-.qzq { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 60px; line-height: 1.35; margin-top: 22px; color: #FBF6EC; }
+.qzq { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-size: 60px; line-height: 1.35; margin-top: 22px; color: #FBF6EC; }
 .qzblank { display: inline-block; min-width: 150px; border-bottom: 5px solid #E8B04B; color: #E8B04B; text-align: center; padding: 0 10px; }
 .qzblank.ok { color: #4CC27A; border-color: #4CC27A; } .qzblank.bad { color: #FF8A8A; border-color: #FF8A8A; }
 .qzst { margin-top: 22px; font-size: 22px; color: #9aa0ae; } .qzst.ok { color: #7FD3A0; font-weight: 700; font-size: 26px; } .qzst.bad { color: #FF9B8A; font-weight: 700; font-size: 26px; }
@@ -1150,7 +1150,7 @@ html.wholock #webback { display: none !important; }
 /* Có tập mới */
 .eptag { position: absolute; top: 10px; left: 10px; z-index: 3; padding: 4px 10px; border-radius: 8px; background: #E0314B; color: #fff; font-size: 15px; font-weight: 800; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
 /* Tổng tài của tuần */
-.hero-quote { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 1.25em; color: #FBF6EC; }
+.hero-quote { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-size: 1.25em; color: #FBF6EC; }
 .hero-wk { font-size: .85em; color: #9aa0ae; margin-top: 6px; }
 /* Báo cáo tuần */
 .weekc { display: flex; gap: 40px; margin: 6px 80px 24px; padding: 24px 30px; border-radius: 22px; background: linear-gradient(160deg, var(--c-1b2030), var(--c-151922)); border: 1px solid var(--c-2a3042); }
@@ -1273,3 +1273,37 @@ html.sleepy #app::after { content: ''; position: fixed; inset: 0; background: rg
 .ordlist.songlist { max-width: 1560px; }
 .songlist .sgt { font-size: 30px; } .songlist .sgs { font-size: 23px; } .songlist .sgx { font-size: 21px; }
 .mobile .songlist .sgt { font-size: 1.05em; } .mobile .songlist .sgs { font-size: .86em; } .mobile .songlist .sgx { font-size: .84em; }
+
+/* ---------- 2.29: Bài hát của ngày, Nhạc hợp phim, Đoán tên bài hát, Hẹn giờ tắt nhạc ---------- */
+.hero-song { position: absolute; left: 0; top: 0; right: 0; bottom: 0; animation: hsIn .8s ease-out; }
+@keyframes hsIn { from { opacity: 0; } to { opacity: 1; } }
+.hero-ssum { font-weight: 400; line-height: 1.45; max-width: 880px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hero-sex { flex: none; border-left: 4px solid #E8B04B; padding-left: 20px; }
+.hero-sex .hero-quote { font-size: 25px; line-height: 1.42; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-dots { position: absolute; right: 48px; bottom: 24px; display: flex; gap: 10px; z-index: 4; }
+.hero-dots i { width: 12px; height: 12px; border-radius: 6px; background: rgba(255,255,255,.35); transition: width .3s, background .3s; }
+.hero-dots i.on { width: 34px; background: #E8B04B; }
+.dsong { display: flex; align-items: center; gap: 30px; margin: 30px 80px 0; padding: 24px 34px; border-radius: 26px; background: linear-gradient(90deg, #2a2033, #151922); border: 1px solid #3a2f50; cursor: pointer; }
+.dsong.focus { box-shadow: 0 0 0 4px #fff, 0 0 30px rgba(232,176,75,.35); }
+.dsdisc { width: 96px; height: 96px; flex: none; border-radius: 50%; background: radial-gradient(circle, #0B0D12 15%, #E8B04B 16%, #E8B04B 22%, #262C3B 23%, #262C3B 60%, #1d2230 61%); animation: dsSpin 6s linear infinite; }
+@keyframes dsSpin { to { transform: rotate(360deg); } }
+.dstx { flex: 1; min-width: 0; }
+.dsk { font-size: 17px; letter-spacing: .16em; font-weight: 700; color: #E8B04B; }
+.dst { font-size: 32px; font-weight: 800; margin-top: 4px; }
+.dsw { font-size: 20px; color: #9AA0AE; margin-top: 2px; }
+.dsx { font-family: 'Noto Serif', 'Be Vietnam Pro', 'Noto Sans', sans-serif; font-style: italic; font-size: 24px; color: #FBF6EC; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dsgo { flex: none; padding: 16px 30px; border-radius: 40px; background: #E8B04B; color: #17110a; font-size: 24px; font-weight: 800; }
+.qzeq { display: flex; gap: 6px; align-items: flex-end; height: 40px; margin-top: 18px; }
+.qzeq i { width: 9px; height: 30%; border-radius: 4px; background: #E8B04B; animation: qzEq .9s ease-in-out infinite alternate; }
+.qzeq i:nth-child(2) { animation-delay: .2s; } .qzeq i:nth-child(3) { animation-delay: .45s; } .qzeq i:nth-child(4) { animation-delay: .1s; } .qzeq i:nth-child(5) { animation-delay: .6s; } .qzeq i:nth-child(6) { animation-delay: .3s; }
+@keyframes qzEq { to { height: 100%; } }
+.qzstop .qzeq i { animation: none; height: 20%; opacity: .4; }
+.songquiz .qzq { font-size: 54px; }
+.mvsleep { position: absolute; top: 26px; left: 50%; transform: translateX(-50%); z-index: 30; padding: 10px 24px; border-radius: 30px; background: rgba(58,47,26,.92); color: #F3D27A; font-size: 22px; font-weight: 700; }
+.sleepbox { width: 640px; }
+.sleepopts { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.sleepopts .btn { width: 100%; justify-content: center; }
+.wkmus .wkbv.sm { margin-top: 4px; }
+.wkms { width: 300px; flex: none; font-size: 16px; color: var(--c-9aa0ae); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wkmus.f { cursor: pointer; } .wkmus.focus { box-shadow: 0 0 0 4px #fff; }
+.mvsleep { left: auto; right: 64px; transform: none; top: 22px; }

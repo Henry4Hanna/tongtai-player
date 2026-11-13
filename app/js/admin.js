@@ -218,6 +218,28 @@
       [['Số bài', songs.length, mmss(songs.reduce(function (a, x) { return a + (x.dur || 0); }, 0)) + ' tổng thời lượng'], ['Có lời canh giờ chuẩn', withL + ' / ' + songs.length, 'Từ file .lrc hoặc .ass'], ['Có tóm tắt', withSum + ' / ' + songs.length, 'Hiện ở trang Nhạc']]
         .forEach(function (x) { ks.appendChild(el('section', 'card kpi', '<div class="t">' + x[0] + '</div><div class="v">' + x[1] + '</div><div class="s">' + esc(x[2]) + '</div>')); });
       view.appendChild(ks);
+      (function () {   // một kiểu chạy lời cho tất cả bài
+        var MN = { line: 'Hiện theo câu', word: 'Chạy theo từng chữ', sweep: 'Tô dần cả câu' };
+        var cnt = {}; songs.forEach(function (x) { var m = x.mode || 'line'; cnt[m] = (cnt[m] || 0) + 1; });
+        var cur = Object.keys(cnt).length === 1 ? Object.keys(cnt)[0] : '', pick = cur || 'line';
+        var mc = card('Lời chạy trên màn hình · tất cả bài', cur ? 'Đang dùng: ' + MN[cur] + ' cho cả ' + songs.length + ' bài' : 'Đang khác nhau: ' + Object.keys(cnt).map(function (m) { return MN[m] + ' ' + cnt[m] + ' bài'; }).join(', '));
+        var row = el('div', 'allmode'), seg = el('div', 'seg');
+        ['line', 'word', 'sweep'].forEach(function (m) { var b = el('button', '', MN[m]); b.dataset.m = m; b.onclick = function () { pick = m; paint(); }; seg.appendChild(b); });
+        var go2 = el('button', 'btn gold', ''), note = el('small', 'muted', '');
+        function paint() {
+          [].forEach.call(seg.children, function (b) { b.classList.toggle('on', b.dataset.m === pick); });
+          go2.textContent = 'Áp dụng cho cả ' + songs.length + ' bài'; go2.disabled = pick === cur;
+          note.textContent = pick === 'line' ? 'Mặc định. Câu đang hát sáng cả câu, dễ đọc trên TV.' : pick === 'word' ? 'Từng chữ sáng theo nhạc. Bài chưa có giờ từng chữ (file .ass) sẽ tô dần cả câu.' : 'Câu đang hát tô màu dần từ trái sang phải.';
+        }
+        go2.onclick = function () {
+          if (!MUS.sha) { alert('Chưa nối GitHub nên chưa lưu được.'); return; }
+          if (!confirm('Đổi kiểu chạy lời của cả ' + songs.length + ' bài thành “' + MN[pick] + '”?')) return;
+          go2.disabled = true; go2.textContent = 'Đang lưu…';
+          api('/a/music', { method: 'POST', body: JSON.stringify({ sha: MUS.sha, op: 'mode', mode: pick }) }).then(function (j) { if (!j.ok) throw new Error(j.error); MUS.list = j.list; MUS.sha = j.sha; go('music'); }).catch(function (e) { go2.disabled = false; go2.textContent = 'Lỗi: ' + e.message; });
+        };
+        row.appendChild(seg); row.appendChild(go2); mc.appendChild(row); mc.appendChild(note); paint();
+        view.appendChild(mc);
+      })();
       var c = card('Danh sách bài', 'Bấm “Sửa” để thay lời, tóm tắt, hoặc file nhạc');
       var add = el('button', 'btn dark sm', '+ Thêm bài'); add.onclick = function () { editSong(-1); };
       var lv = el('button', 'btn sm', 'Cân bằng âm lượng'); lv.style.marginLeft = 'auto';
@@ -277,7 +299,7 @@
       '<div class="field"><label>Tên bài</label><input type="text" id="e-title" value="' + esc(x.title) + '" placeholder="Ví dụ: Báo Thù Kiêu Hãnh"></div>' +
       '<div class="field"><label>File nhạc (.mp3)</label><label class="drop' + (x.file ? ' ok' : '') + '" id="e-mp3d"><span class="ic">♪</span><div><b id="e-mp3n">' + (x.file ? esc(x.file) : 'Chọn file .mp3') + '</b><span id="e-mp3s">' + (x.file ? mmss(x.dur) + ' · bấm để thay file khác' : 'Tối đa 25 MB') + '</span></div><input type="file" accept="audio/mpeg,.mp3" id="e-mp3" hidden></label></div>' +
       '<div class="field"><label>Lời bài hát (.lrc hoặc .ass)</label><label class="drop' + (x.lrcAuto === false ? ' ok' : '') + '" id="e-lrcd"><span class="ic">♫</span><div><b id="e-lrcn">' + (x.lrcAuto === false ? 'Lời canh giờ chuẩn · ' + x.lyrics.length + ' câu' : 'Chọn file .lrc / .ass') + '</b><span id="e-lrcs">' + (x.lrcAuto === false ? 'Bấm để thay file khác' : (x.lyrics || []).length ? 'Hiện đang dùng lời canh giờ tự động (' + x.lyrics.length + ' câu)' : 'Chưa có lời') + '</span></div><input type="file" accept=".lrc,.ass,.txt" id="e-lrc" hidden></label></div>' +
-      '<div class="field"><label>Lời chạy trên màn hình</label><div class="seg" id="e-mode"><button data-m="line">Hiện theo câu</button><button data-m="word">Chạy theo từng chữ</button><button data-m="">Tô dần cả câu</button></div><small id="e-modes"></small></div>' +
+      '<div class="field"><label>Lời chạy trên màn hình</label><div class="seg" id="e-mode"><button data-m="line">Hiện theo câu</button><button data-m="word">Chạy theo từng chữ</button><button data-m="sweep">Tô dần cả câu</button></div><small id="e-modes"></small></div>' +
       '<div class="syncbar"><div><b>Canh lời theo nhạc</b><span>Nghe nhạc, chỉnh giờ từng câu, sửa chữ, xem trước như trên TV</span></div><button class="btn dark sm" id="e-sync">Mở trình canh lời</button></div>' +
       '<div class="lprev" id="e-prev"></div>';
     R.innerHTML =
@@ -362,11 +384,11 @@
     paintMode2();
     // kiểu chạy lời
     function paintMode() {
-      var m = x.mode || '', hasW = (x.lyrics || []).some(function (l) { return l.w && l.w.length; });
+      var m = x.mode || 'line', hasW = (x.lyrics || []).some(function (l) { return l.w && l.w.length; });
       [].forEach.call($('e-mode').children, function (b) { b.classList.toggle('on', b.dataset.m === m); });
-      $('e-modes').textContent = m === 'line' ? 'Câu đang hát sáng cả câu, không chạy chữ.' : m === 'word' ? (hasW ? 'Từng chữ sáng đúng lúc hát (giờ từng chữ lấy từ file .ass).' : 'File lời chưa có giờ từng chữ: app chia đều chữ trong câu. Muốn chính xác hãy dùng file .ass có \\k.') : 'Câu đang hát tô màu dần từ trái sang phải (như hiện nay).';
+      $('e-modes').textContent = m === 'line' ? 'Câu đang hát sáng cả câu, không chạy chữ.' : m === 'word' ? (hasW ? 'Từng chữ sáng đúng lúc hát (giờ từng chữ lấy từ file .ass).' : 'File lời chưa có giờ từng chữ: app chia đều chữ trong câu. Muốn chính xác hãy dùng file .ass có \\k.') : 'Câu đang hát tô màu dần từ trái sang phải.';
     }
-    [].forEach.call($('e-mode').children, function (b) { b.onclick = function () { x.mode = b.dataset.m || undefined; paintMode(); }; });
+    [].forEach.call($('e-mode').children, function (b) { b.onclick = function () { x.mode = b.dataset.m; paintMode(); }; });
     paintMode();
     // đo độ to
     var src = function () { return up.mp3 ? URL.createObjectURL(up.mp3) : 'music/' + x.file; };
@@ -403,7 +425,7 @@
         var ls = parseLyrics(txt);
         if (!ls.length) { alert('Không đọc được lời trong file này. Cần .lrc có [phút:giây] hoặc .ass có dòng Dialogue.'); return; }
         x.lyrics = ls; x.lrcAuto = false;
-        if (!$('e-ex').value.trim()) { $('e-ex').value = pickEx(ls).join('\n'); } if (ls.some(function (l) { return l.w; }) && !x.mode) x.mode = 'word'; paintMode();
+        if (!$('e-ex').value.trim()) { $('e-ex').value = pickEx(ls).join('\n'); } paintMode();
         $('e-lrcd').classList.add('ok'); $('e-lrcn').textContent = (f.name.length > 34 ? f.name.slice(0, 22) + '…' + f.name.slice(-9) : f.name) + ' · ' + ls.length + ' câu'; $('e-lrcs').textContent = 'Câu đầu ở ' + mmss(ls[0].at) + ', câu cuối ở ' + mmss(ls[ls.length - 1].at);
         prev();
       });
@@ -584,7 +606,7 @@
       if (y.title !== x.title) out.push(['ed', 'Đổi tên ' + esc(y.title) + ' → ' + nm]);
       if ((y.sum || '') !== (x.sum || '') || JSON.stringify(y.ex || []) !== JSON.stringify(x.ex || [])) out.push(['ed', nm + ': tóm tắt / đoạn trích']);
       if (JSON.stringify(y.lyrics || []) !== JSON.stringify(x.lyrics || [])) out.push(['ed', nm + ': lời / giờ lời (' + (x.lyrics || []).length + ' câu)']);
-      if ((y.mode || '') !== (x.mode || '')) out.push(['ed', nm + ': kiểu chạy lời']);
+      if ((y.mode || 'line') !== (x.mode || 'line')) out.push(['ed', nm + ': kiểu chạy lời']);
       if (JSON.stringify(y.covers || (y.cover ? [y.cover] : [])) !== JSON.stringify(x.covers || (x.cover ? [x.cover] : []))) out.push(['ed', nm + ': ảnh bìa (' + (x.covers || []).length + ' ảnh)']);
       if ((y.gain || 0) !== (x.gain || 0)) out.push(['ed', nm + ': âm lượng']);
     });
@@ -871,7 +893,7 @@
     c.innerHTML =
       '<div class="tr"><button class="play" id="s-play" aria-label="Phát">▶</button><div class="tm"><b id="s-t">0:00.0</b> / <span id="s-d">' + mmss(x.dur) + '</span></div>' +
       '<div class="seg sm" id="s-rate"><button data-r="0.75">0.75×</button><button data-r="1" class="on">1×</button></div>' +
-      '<div class="seg sm" id="s-mode"><button data-m="line">Theo câu</button><button data-m="word">Theo chữ</button><button data-m="">Tô dần</button></div>' +
+      '<div class="seg sm" id="s-mode"><button data-m="line">Theo câu</button><button data-m="word">Theo chữ</button><button data-m="sweep">Tô dần</button></div>' +
       '<span class="grow"></span><span class="muted" style="font-size:13px">Lệch cả bài</span><button class="btn sm" id="s-m">−0.2s</button><button class="btn sm" id="s-p">+0.2s</button>' +
       '<button class="btn sm tap" id="s-tap">● Bấm theo nhạc</button></div>' +
       '<canvas id="s-wave" height="96"></canvas>' +
@@ -931,7 +953,7 @@
     function lineAt(t) { var i = -1; for (var k = 0; k < L.length; k++) { if (L[k].at <= t + 0.05) i = k; else break; } return i; }
     function sweep(k, t) {
       var l = L[k]; if (!l) return 1;
-      var b = L[k + 1] ? L[k + 1].at : l.at + 4, m = x.mode || '';
+      var b = L[k + 1] ? L[k + 1].at : l.at + 4, m = x.mode || 'line';
       if (m === 'line') return 1;
       if (m === 'word') {
         var ws = l.w && l.w.length ? l.w : evenWords(l, L[k + 1], x.dur), tot = 0, done = 0;
@@ -961,8 +983,8 @@
     au.onplay = function () { $('s-play').textContent = '❚❚'; }; au.onpause = function () { $('s-play').textContent = '▶'; };
     $('s-play').onclick = function () { au.paused ? au.play() : au.pause(); };
     [].forEach.call($('s-rate').children, function (b) { b.onclick = function () { au.playbackRate = +b.dataset.r; [].forEach.call($('s-rate').children, function (q) { q.classList.toggle('on', q === b); }); }; });
-    function pm() { [].forEach.call($('s-mode').children, function (b) { b.classList.toggle('on', b.dataset.m === (x.mode || '')); }); }
-    [].forEach.call($('s-mode').children, function (b) { b.onclick = function () { x.mode = b.dataset.m || undefined; pm(); }; }); pm();
+    function pm() { [].forEach.call($('s-mode').children, function (b) { b.classList.toggle('on', b.dataset.m === (x.mode || 'line')); }); }
+    [].forEach.call($('s-mode').children, function (b) { b.onclick = function () { x.mode = b.dataset.m; pm(); }; }); pm();
     $('s-m').onclick = function () { shiftAll(-0.2); }; $('s-p').onclick = function () { shiftAll(0.2); };
     function tapShow() { $('s-tapbar').hidden = tapI < 0; $('s-tap').classList.toggle('on', tapI >= 0); if (tapI >= 0) { $('s-tapn').textContent = 'Câu ' + (tapI + 1) + ' / ' + L.length + ': “' + (L[tapI] ? L[tapI].t : '') + '”'; var r = box.children[tapI]; if (r) { [].forEach.call(box.children, function (q) { q.classList.remove('tap'); }); r.classList.add('tap'); box.scrollTop = r.offsetTop - box.clientHeight * 0.35; } } }
     $('s-tap').onclick = function () {
@@ -1017,6 +1039,9 @@
           var u = ps[i].units.reduce(function (a, x) { return a + (x.u || 0); }, 0);
           return '<tr><td><span class="who">' + av(p.name, p.id, 26) + esc(p.name) + '</span></td><td><b>' + hm(p.minutes) + '</b></td><td>' + Math.round(p.minutes / tot * 100) + '%</td><td>' + p.films + '</td><td>' + nf(u) + '</td><td class="muted">' + esc(p.devices.join(', ')) + '</td></tr>';
         }).join('') + '</tbody></table>'));
+        if (o.music && o.music.n) R.appendChild(el('section', 'rsec', '<h3>Nhạc được nghe nhiều nhất</h3><div class="muted" style="margin:-4px 0 10px">' + nf(o.music.n) + ' lượt nghe (chỉ đếm bài nghe quá 30 giây)</div><div class="rcols"><div><h4>Cả nhà</h4><table><tbody>' +
+          o.music.top.slice(0, 5).map(function (x, i) { return '<tr><td style="width:28px"><b>' + (i + 1) + '</b></td><td>' + esc(x.title) + '</td><td style="text-align:right"><b>' + x.n + '</b> lần</td></tr>'; }).join('') + '</tbody></table></div><div><h4>Bài yêu thích của từng hồ sơ</h4><table><tbody>' +
+          o.music.profiles.map(function (x) { return '<tr><td><span class="who">' + av(x.name, x.id, 24) + esc(x.name) + '</span></td><td>' + esc(x.title) + '</td><td style="text-align:right">' + x.n + ' lần</td></tr>'; }).join('') + '</tbody></table></div></div>'));
         o.profiles.forEach(function (p, i) {
           var j = ps[i], col = color(p.id), m = j.daily.reduce(function (a, x) { return a + x.m; }, 0);
           var done = j.films.filter(function (f) { return f.dur && f.pos / f.dur > 0.9; }).length;
@@ -1114,6 +1139,15 @@
       uc.appendChild(el('div', '', '<div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:13px">' + j.profiles.map(function (p) { return '<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + color(p.id) + ';margin-right:6px"></i>' + esc(p.name) + ': <b>' + nf(p.unitsToday) + '</b></span>'; }).join('') + '</div><div class="muted" style="margin-top:10px">Mỗi lần tìm kiếm tốn 100 đơn vị; tải phim của một kênh tốn 1 đơn vị. Số này tính từ khi bật máy chủ thống kê.</div>'));
       right.appendChild(uc);
       r2.appendChild(t); r2.appendChild(right); v.appendChild(r2);
+      var mu = j.music;   // nhạc: bài nghe nhiều nhất (lượt nghe quá 30 giây)
+      var mc = card('Nhạc được nghe nhiều nhất', mu && mu.n ? nf(mu.n) + ' lượt nghe · chỉ đếm bài nghe quá 30 giây' : 'Chưa có lượt nghe nào trong khoảng này');
+      if (mu && mu.n) {
+        var mx = mu.top[0].n || 1, g = el('div', 'mus2');
+        g.appendChild(el('div', '', '<h4>Cả nhà</h4>' + mu.top.slice(0, 6).map(function (x, i) { return '<div class="mrank"><span class="n">' + (i + 1) + '</span><div><b>' + esc(x.title) + '</b> <span class="muted">· ' + x.n + ' lần</span><i style="width:' + Math.max(4, x.n / mx * 100) + '%"></i></div></div>'; }).join('')));
+        g.appendChild(el('div', '', '<h4>Bài yêu thích của từng hồ sơ</h4>' + mu.profiles.map(function (x) { color(x.id); return '<div class="mprof">' + av(x.name, x.id, 34) + '<div><b>' + esc(x.name) + '</b><div class="muted">' + esc(x.title) + ' · ' + x.n + ' lần</div></div></div>'; }).join('')));
+        mc.appendChild(g);
+      }
+      v.appendChild(mc);
     }).catch(function (e) { if (e.message !== 'login' && e.message !== 'denied') $('view').innerHTML = '<div class="empty">Lỗi: ' + esc(e.message) + '</div>'; });
   }
 

@@ -201,7 +201,7 @@
     try {
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;
       var c = w.Screens && w.Screens.current && w.Screens.current();
-      return !!c && (c.name === 'music' || c.name === 'lrcsync');
+      return !!c && (c.name === 'music' || c.name === 'lrcsync' || c.name === 'songquiz' || c.name === 'sleep' || c.name === 'askfilm');
     } catch (e) { return false; }
   }
   function onHome() {
@@ -362,7 +362,10 @@
     function el() {
       if (au) return au;
       au = new Audio(); au.preload = 'auto';
-      au.addEventListener('ended', function () { next(); });
+      au.addEventListener('ended', function () {
+        if (sleepEnd) { sleepEnd = false; userPaused = true; want = false; paintPill(); if (w.UI && w.UI.toast) w.UI.toast('🌙 Hết bài, đã tắt nhạc'); return; }
+        next();
+      });
       au.addEventListener('error', function () { if (w.Log) w.Log.warn('Không phát được bài nhạc: ' + lastUrl); setTimeout(next, 1500); });
       return au;
     }
@@ -379,7 +382,7 @@
       idx = ((i % list.length) + list.length) % list.length;
       pos = Math.max(0, order.indexOf(idx));
       var a = el(), u = base + encodeURI(list[idx].file).replace(/#/g, '%23');
-      lastUrl = u;
+      lastUrl = u; counted = false;
       vset(0);
       a.src = u;
       want = true;
@@ -399,7 +402,24 @@
       fade(svol(), 1200);
     }
     var lastMode = '', userPaused = false, wasPage = false;
+    // Đếm lượt nghe (quá 30 giây) cho báo cáo tuần; hẹn giờ tắt nhạc
+    var counted = false, sleepAt = 0, sleepEnd = false, sleeping = false;
+    function count() {
+      if (counted || !au || au.paused || !want || idx < 0 || !list || !list[idx] || (au.currentTime || 0) < 30) return;
+      counted = true;
+      try { if (w.Store && w.Store.addPlay) w.Store.addPlay(list[idx].file); } catch (e) { /* bỏ qua */ }
+      try { if (w.Tele && w.Tele.play) w.Tele.play(list[idx].file, list[idx].title); } catch (e) { /* bỏ qua */ }
+    }
+    function sleepTick() {
+      if (!sleepAt || sleeping || Date.now() < sleepAt) return;
+      sleepAt = 0;
+      if (!au || au.paused) return;
+      sleeping = true; want = true;
+      fade(0, 30000, function () { sleeping = false; userPaused = true; want = false; if (au) au.pause(); paintPill(); if (w.UI && w.UI.toast) w.UI.toast('🌙 Đã tắt nhạc theo hẹn giờ'); });
+    }
     function tick() {
+      count(); sleepTick();
+      if (sleeping) return;
       var m = cfg().MUSIC, page = onMusicPage(), mode = (m === 'songs' || m === 'songsx' || m == null) || page;
       if (wasPage && !page) userPaused = false;   // rời trang Nhạc: Trang chủ phát lại như thường
       wasPage = page;
@@ -423,6 +443,9 @@
       time: function () { return au ? au.currentTime || 0 : 0; },
       duration: function () { return au && isFinite(au.duration) ? au.duration : (list && list[idx] ? list[idx].dur || 0 : 0); },
       isPlaying: function () { return !!au && !au.paused && want; },
+      // Hẹn giờ tắt nhạc: số phút, 'end' = hết bài này, 0 = tắt hẹn giờ
+      sleep: function (m) { sleepEnd = m === 'end'; sleepAt = m > 0 ? Date.now() + m * 60000 : 0; if (!m && sleeping) { sleeping = false; clearInterval(fadeT); fading = false; vset(svol()); } },
+      sleepInfo: function () { return sleepEnd ? { end: true } : sleepAt ? { left: Math.max(0, sleepAt - Date.now()), min: 0 } : sleeping ? { fading: true } : null; },
       userPaused: function () { return userPaused; },
       toggle: function () {
         if (!list || !list.length) return;
@@ -442,7 +465,14 @@
       source: function () { return src; },
       // iPhone: lần phát đầu bị chặn nếu không nằm trong một lần chạm; chạm lần sau thì phát tiếp
       retry: function () { graph(); if (actx && actx.state !== 'running') { try { actx.resume(); } catch (e) { /* bỏ qua */ } } if (au && want && au.paused) { var pr = au.play(); if (pr && pr.catch) pr.catch(function () {}); } },
-      play: function (i) { userPaused = false; play(i); }, next: function () { userPaused = false; next(); }, tick: tick, load: function (f) { if (f) { loading = null; list = null; } return load(true); }
+      play: function (i) { userPaused = false; play(i); },
+      // phát bài i từ giây thứ sec (Đoán tên bài hát: không tính là một lượt nghe)
+      playAt: function (i, sec) {
+        userPaused = false; play(i); counted = true;
+        var a = el(), go = function () { try { a.currentTime = Math.max(0, sec || 0); } catch (e) { /* bỏ qua */ } };
+        if (a.readyState >= 1) go(); else { var f = function () { a.removeEventListener('loadedmetadata', f); go(); }; a.addEventListener('loadedmetadata', f); }
+      },
+      stop: function () { userPaused = true; pause(); }, next: function () { userPaused = false; next(); }, tick: tick, load: function (f) { if (f) { loading = null; list = null; } return load(true); }
     };
   })();
 

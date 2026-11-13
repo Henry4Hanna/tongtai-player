@@ -218,6 +218,13 @@
       keys.slice(0, Math.max(0, keys.length - 35)).forEach(function (x) { delete st[x]; });
       pset('stats', st);
     },
+    // lượt nghe bài hát (quá 30 giây) theo ngày: day.m = { 'tên-file.mp3': số lần }
+    addPlay: function (file) {
+      if (!file) return;
+      var st = pget('stats', {}), k = Store.dayKey(), day = st[k] || { s: 0, ch: {} };
+      day.m = day.m || {}; day.m[file] = (day.m[file] || 0) + 1;
+      st[k] = day; pset('stats', st);
+    },
     // id = hồ sơ (bỏ trống = hồ sơ đang xem)
     stats: function (id) {
       if (!id || id === prof) return pget('stats', {});

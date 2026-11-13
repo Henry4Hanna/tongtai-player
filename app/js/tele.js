@@ -4,7 +4,7 @@
 (function (w, d) {
   'use strict';
   var BEAT_MS = 60000;
-  var queue = [], watchAcc = {}, units = { search: 0, other: 0 }, queries = [], rates = [], lastBeat = Date.now(), activeMs = 0, lastTick = Date.now();
+  var queue = [], watchAcc = {}, units = { search: 0, other: 0 }, queries = [], rates = [], plays = [], lastBeat = Date.now(), activeMs = 0, lastTick = Date.now();
   var blocked = false, started = false, lastProfile = '';
 
   function C() { return w.APP_CONFIG || {}; }
@@ -81,10 +81,10 @@
     var w_ = [];
     for (var id in watchAcc) if (watchAcc.hasOwnProperty(id)) { var a = watchAcc[id]; if (a.s > 0) w_.push(a); }
     watchAcc = {};
-    var hasUse = activeMs > 1000 || w_.length || units.search || units.other || queries.length || rates.length;
+    var hasUse = activeMs > 1000 || w_.length || units.search || units.other || queries.length || rates.length || plays.length;
     if (hasUse) {
-      event('hb', { a: Math.round(activeMs / 1000), w: w_, pl: playing() === 'film', f: curFilm(), u: { search: units.search, other: units.other }, q: queries.slice(0, 10), r: rates.slice(0, 20) });
-      units = { search: 0, other: 0 }; queries = []; rates = [];
+      event('hb', { a: Math.round(activeMs / 1000), w: w_, pl: playing() === 'film', f: curFilm(), u: { search: units.search, other: units.other }, q: queries.slice(0, 10), r: rates.slice(0, 20), m: plays.slice(0, 20) });
+      units = { search: 0, other: 0 }; queries = []; rates = []; plays = [];
     }
     activeMs = 0; lastBeat = now;
     send(false);
@@ -162,6 +162,7 @@
     },
     search: function (q) { if (base() && q) queries.push(String(q).slice(0, 80)); },
     rate: function (item, r) { if (base() && item && item.id) { rates.push({ id: String(item.id).slice(0, 40), t: String(item.title || '').slice(0, 160), c: String(item.ch || '').slice(0, 80), r: r }); beat(true); } },
+    play: function (f, t) { if (base() && f) plays.push({ f: String(f).slice(0, 120), t: String(t || '').slice(0, 160) }); },
     flush: function () { beat(true); },
     id: devId,
     sha256: sha256, adminEmail: adminEmail, adminPage: adminPage

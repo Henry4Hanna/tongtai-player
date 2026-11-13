@@ -270,7 +270,7 @@
     });
     return {
       v: 1, at: Date.now(), stamps: R('stamps', {}),
-      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch, pf: pf, stats: R('stats', {}), sq: R('sq', [])
+      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch, pf: pf, stats: R('stats', {}), sq: R('sq', []), msgs: R('msgs', [])
     };
   }
   function wrapPf(x) { x = x || {}; return { v: 1, stamps: x.stamps || {}, prog: x.prog || {}, recent: x.recent || [], favs: x.favs || [], stats: x.stats || {}, sq: x.sq || [], blocked: {}, prefs: {} }; }
@@ -307,6 +307,17 @@
     var o = [];
     (a || []).concat(b || []).forEach(function (q) { if (q && !o.some(function (x) { return x.toLowerCase() === String(q).toLowerCase(); })) o.push(q); });
     return o.slice(0, 5);
+  }
+  // Lời nhắn gia đình: gộp theo mã, giữ dấu đã đọc / đã xóa của cả hai bên; bỏ lời nhắn quá 30 ngày, tối đa 60
+  function mergeMsgs(a, b) {
+    var by = {}, old = Date.now() - 30 * 864e5;
+    (a || []).concat(b || []).forEach(function (x) {
+      if (!x || !x.id || (x.ts || 0) < old) return;
+      var o = by[x.id];
+      if (!o) { by[x.id] = JSON.parse(JSON.stringify(x)); return; }
+      o.read = Math.max(o.read || 0, x.read || 0) || undefined; o.del = Math.max(o.del || 0, x.del || 0) || undefined;
+    });
+    return Object.keys(by).map(function (k) { return by[k]; }).sort(function (x, y) { return y.ts - x.ts; }).slice(0, 60);
   }
   function merge(a, b) {
     if (!b || !b.v) return a;
@@ -349,6 +360,7 @@
     // mã kênh đã tìm: gộp (máy này đã tìm thì máy kia khỏi tốn hạn mức)
     out.stats = mergeStats(a.stats, b.stats);
     out.sq = mergeSq(a.sq, b.sq);
+    if (!a.isPf) out.msgs = mergeMsgs(a.msgs, b.msgs);
     out.ch = {};
     [b.ch || {}, a.ch || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { out.ch[k] = m[k]; }); });
     // từng hồ sơ: gộp như dữ liệu chính
@@ -376,7 +388,7 @@
     ['prog', 'recent', 'favs', 'blocked', 'prefs'].forEach(function (k) {
       if (JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) { A(k, m[k]); changed = true; }
     });
-    ['stats', 'sq'].forEach(function (k) { if (m[k] && JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) A(k, m[k]); });
+    ['stats', 'sq', 'msgs'].forEach(function (k) { if (m[k] && JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) A(k, m[k]); });
     A('stamps', m.stamps);
     // hồ sơ người xem: chỉ ghi cho hồ sơ còn trong danh sách
     var live = {};

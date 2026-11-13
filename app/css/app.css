@@ -1307,3 +1307,98 @@ html.sleepy #app::after { content: ''; position: fixed; inset: 0; background: rg
 .wkms { width: 300px; flex: none; font-size: 16px; color: var(--c-9aa0ae); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wkmus.f { cursor: pointer; } .wkmus.focus { box-shadow: 0 0 0 4px #fff; }
 .mvsleep { left: auto; right: 64px; transform: none; top: 22px; }
+/* 2.29.1: 3 Không đọc rõ ở giao diện sáng (điện thoại) */
+html.light .w3chip { color: #1A1D26; background: #fff; border-color: rgba(26,29,38,.12); box-shadow: 0 4px 14px rgba(26,29,38,.08); }
+/* 2.29.1: Đồng bộ với Google trên màn hình Ai đang xem */
+.wsync { display: flex; align-items: center; gap: 24px; max-width: 1160px; margin: 30px auto 4px; padding: 24px 30px; border-radius: 26px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); text-align: left; }
+html.light .wsync { background: #fff; border-color: rgba(26,29,38,.1); box-shadow: 0 6px 20px rgba(26,29,38,.08); }
+.wsg { width: 64px; height: 64px; border-radius: 18px; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.wsg svg { width: 36px; height: 36px; }
+.wstx { flex: 1; min-width: 0; }
+.wsh { font-size: 27px; font-weight: 800; display: flex; align-items: center; gap: 14px; }
+.wsh .wsg { width: 40px; height: 40px; border-radius: 12px; } .wsh .wsg svg { width: 24px; height: 24px; }
+.wsp { font-size: 20px; color: var(--c-9aa0ae); margin-top: 6px; line-height: 1.45; }
+html.light .wsp { color: #5b6170; }
+.wsp b { color: inherit; font-weight: 800; }
+.wsp.sm { font-size: 17px; }
+.wsok { color: #2E9E6A; font-weight: 800; } .wsbad { color: #E0314B; font-weight: 800; }
+.wsav { width: 64px; height: 64px; border-radius: 50%; background: #3B6FD8; color: #fff; font-size: 30px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; position: relative; }
+.wsav i { position: absolute; right: -4px; bottom: -4px; width: 26px; height: 26px; border-radius: 50%; background: #2E9E6A; color: #fff; font-size: 14px; font-style: normal; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; }
+.wsbtns { display: flex; gap: 14px; flex: none; flex-wrap: wrap; }
+.wsbi { display: inline-flex; width: 26px; height: 26px; margin-right: 4px; background: #fff; border-radius: 50%; align-items: center; justify-content: center; }
+.wsbi svg { width: 18px; height: 18px; }
+.wstv { align-items: center; gap: 36px; }
+.wsqr { width: 190px; height: 190px; flex: none; border-radius: 16px; background: #fff; padding: 10px; }
+.wsqr:empty { background: rgba(255,255,255,.06); }
+.wsqr svg { width: 100%; height: 100%; display: block; }
+.wscode { font-size: 54px; font-weight: 900; letter-spacing: .12em; color: #E8B04B; margin: 4px 0 2px; }
+.wstv .wsbtns { margin-top: 14px; }
+.mobile .wsync { margin: 14px 12px 4px; padding: 14px; gap: 12px; border-radius: 18px; flex-wrap: wrap; }
+.mobile .wsg, .mobile .wsav { width: 44px; height: 44px; font-size: 20px; } .mobile .wsg { border-radius: 12px; } .mobile .wsg svg { width: 26px; height: 26px; }
+.mobile .wsh { font-size: 16px; } .mobile .wsp { font-size: 13px; }
+.mobile .wsbtns { flex: 1 1 100%; gap: 8px; }
+.mobile .wsbtns .btn { flex: 1 1 0; justify-content: center; height: 42px; font-size: 15px; padding: 0 12px; }
+.mobile .wsbtns .wslater { flex: 0 0 auto; }
+/* 2.30: Lời nhắn gia đình */
+.msgbox { width: 1100px; max-width: 92vw; }
+.msgwho { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin: 26px 0 16px; }
+.msgwho .wtile { width: 170px; }
+.msgopts { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+.msgopts .btn { width: 100%; justify-content: flex-start; }
+.msgpop { background: rgba(5,6,10,.78); }
+.msgcard { width: 1220px; max-width: 94vw; display: flex; gap: 46px; text-align: left; padding: 46px 52px; }
+.msgimg { width: 400px; height: 540px; flex: none; border-radius: 22px; background-size: cover; background-position: center; background-color: #262C3B; }
+.msgr { flex: 1; min-width: 0; }
+.msgk { font-size: 19px; letter-spacing: .16em; font-weight: 800; color: #E8B04B; }
+.msgfrom { display: flex; align-items: center; gap: 18px; margin-top: 20px; }
+.msgfrom .wav { width: 80px !important; height: 80px !important; margin: 0 !important; }
+.msgfrom b { font-size: 30px; } .msgdev { font-size: 20px; color: var(--c-9aa0ae); }
+.msgbub { background: #262C3B; border-radius: 6px 28px 28px 28px; padding: 22px 28px; font-size: 30px; line-height: 1.45; margin: 18px 0 24px; }
+html.light .msgbub { background: #EEE9DF; }
+.msgt { font-size: 40px; font-weight: 800; line-height: 1.15; }
+.msgm { font-size: 22px; color: var(--c-9aa0ae); margin: 8px 0 28px; }
+/* 2.30: Bình chọn phim tối nay */
+.whogos { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.whogos .whogo { margin-left: 0; margin-right: 0; }
+.votev { padding: 50px 80px; }
+.vhead { display: flex; align-items: center; gap: 34px; }
+.vht { flex: 1; min-width: 0; }
+.vk { font-size: 20px; letter-spacing: .18em; font-weight: 800; color: #E8B04B; }
+.vh1 { font-size: 54px; font-weight: 800; margin: 8px 0 6px; }
+.vstat { font-size: 26px; color: #E8B04B; font-weight: 700; }
+.vqr { width: 180px; height: 180px; flex: none; background: #fff; border-radius: 16px; padding: 10px; }
+.vqr svg { width: 100%; height: 100%; display: block; }
+.vqrt { width: 420px; font-size: 22px; color: var(--c-c9cdd6); line-height: 1.45; }
+.vqrt b { color: #F4F1EC; word-break: break-all; }
+html.light .vqrt b { color: #1A1D26; }
+.vgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin: 34px 0 30px; }
+.vcard { background: #151922; border-radius: 26px; overflow: hidden; border: 4px solid transparent; transition: transform .15s; }
+html.light .vcard { background: #fff; }
+.vcard.win { border-color: #E8B04B; }
+.vcard.focus { box-shadow: 0 0 0 4px #fff, 0 0 30px rgba(232,176,75,.4); transform: scale(1.03); }
+.vimg { height: 290px; background-size: cover; background-position: center; background-color: #262C3B; }
+.vin { padding: 20px 26px 24px; }
+.vt { font-size: 27px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vbar { height: 14px; border-radius: 8px; background: #262C3B; overflow: hidden; margin: 14px 0 10px; }
+html.light .vbar { background: #E6E1D6; }
+.vbar i { display: block; height: 100%; width: 0; background: #E8B04B; transition: width .4s; }
+.vln { display: flex; gap: 12px; font-size: 20px; color: var(--c-9aa0ae); }
+.vwho { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vcard.win .vn { color: #E8B04B; font-weight: 800; }
+/* điện thoại */
+.mobile .msgcard { flex-direction: column; gap: 16px; padding: 20px; }
+.mobile .msgimg { width: 100%; height: 180px; }
+.mobile .msgk { font-size: 11px; } .mobile .msgfrom .wav { width: 48px !important; height: 48px !important; }
+.mobile .msgfrom b { font-size: 18px; } .mobile .msgdev { font-size: 13px; }
+.mobile .msgbub { font-size: 17px; padding: 14px 16px; margin: 12px 0 14px; }
+.mobile .msgt { font-size: 22px; } .mobile .msgm { font-size: 14px; margin-bottom: 16px; }
+.mobile .msgwho { gap: 12px; } .mobile .msgwho .wtile { width: 96px; }
+.mobile .votev { padding: 16px 14px 40px; }
+.mobile .vhead { flex-wrap: wrap; gap: 12px; }
+.mobile .vh1 { font-size: 26px; } .mobile .vk { font-size: 11px; } .mobile .vstat { font-size: 15px; }
+.mobile .vqr { width: 110px; height: 110px; } .mobile .vqrt { width: auto; flex: 1; font-size: 13px; }
+.mobile .vgrid { grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
+.mobile .vimg { height: 150px; } .mobile .vt { font-size: 17px; } .mobile .vln { font-size: 13px; } .mobile .vin { padding: 12px 14px; }
+.msgwho .wav { width: 130px; height: 130px; font-size: 60px; }
+.mobile .msgwho .wav { width: 70px; height: 70px; font-size: 32px; }
+.newepsn { color: #E0314B !important; font-weight: 800; }

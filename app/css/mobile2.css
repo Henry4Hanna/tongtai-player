@@ -201,3 +201,5 @@ html.mobile .qsh { font-size: 15px; line-height: 1.3; }
 html.mobile .quizstrip { flex-wrap: wrap; }
 html.mobile .quizstrip .qst { flex: 1 1 calc(100% - 70px); }
 html.mobile .quizstrip .btn { flex: 1 1 0; justify-content: center; }
+html.mobile .msgimg { height: 190px !important; padding: 0 !important; aspect-ratio: auto !important; flex: none; }
+html.mobile .msgcard { margin-top: 16px; }

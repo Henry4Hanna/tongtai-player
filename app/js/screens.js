@@ -307,6 +307,7 @@
       var l = newEpisodes(series);
       if (!l.length) return;
       rows.neweps.show();
+      var rh = rows.cont.wrap.querySelector('.rowhead'); if (rh && !rh.querySelector('.newepsn')) rh.appendChild(el('span', 'rh newepsn', '● ' + l.length + ' phim có tập mới'));
       rows.neweps.cards(l.map(function (x) { return x.item; }), function (it) {
         var n = (l.filter(function (x) { return x.item === it; })[0] || {}).n || 1;
         var c = UI.card(it, cardOpts({ sub: 'Tập ' + it.eps + ' đã ra' }));
@@ -347,6 +348,8 @@
       return true;
     }
     var heroResumed = heroResume();
+    setTimeout(function () { if (current() && current().el === v) showMsgs(); }, 1500);
+    var msgT = setInterval(function () { if (!d.body.contains(v)) { clearInterval(msgT); return; } if (current() && current().el === v && Date.now() - (w.lastKeyAt || 0) > 8000) showMsgs(); }, 60000);
     // Bài hát của ngày: banner đổi qua lại giữa phim và bài hát mỗi 12 giây
     var songOn = false, songLayer = null, heroDots = el('div', 'hero-dots'), heroSongI = -1;
     function buildSong() {
@@ -977,6 +980,7 @@
       favLabel();
     }, UI.ICON_PLUS);
     btns.appendChild(bPlay); btns.appendChild(bRe); btns.appendChild(bFav);
+    if (msgTargets().length) btns.appendChild(UI.button('✉ Gửi cho…', '', function () { push(MsgTo(item)); }));
     if (item.chId) {
       var bCh = UI.button('', 'favch', function () {
         var on = Store.toggleFavCh({ id: item.chId, name: item.ch });
@@ -2070,6 +2074,7 @@
       go.innerHTML = '';
       go.appendChild(el('span', 'blabel', sel.length >= 2 ? '▶ Xem chung: ' + names.join(' + ') : 'Chọn ít nhất 2 người'));
       go.classList.toggle('dim', sel.length < 2);
+      gov.style.display = whoMode === 'tog' && sel.length >= 2 ? '' : 'none';
     }
     go._ok = function () {
       if (sel.length < 2) { UI.toast('Chọn ít nhất 2 người để xem chung'); return; }
@@ -2080,6 +2085,12 @@
       UI.toast('Xem chung: ' + sel.map(function (id) { return (profileOf(id) || { name: 'Guest' }).name; }).join(' + '));
       goTab('home');
       Nav.focus(d.querySelector('.hero .btn') || S.tabEls.home, true);
+    };
+    var gov = el('div', 'btn f whogo whovote', '🗳 Cả nhà bình chọn phim');   // xem chung: bình chọn phim tối nay
+    gov._ok = function () {
+      if (sel.length < 2) { UI.toast('Chọn ít nhất 2 người để xem chung'); return; }
+      Store.setTogether(sel); Settings.apply(); paintWho(); chainSeen = {};
+      goTab('home'); setTimeout(function () { push(VoteTV()); }, 60);
     };
     Store.profiles().forEach(function (p) {
       var t = el('div', 'wtile f');
@@ -2120,12 +2131,14 @@
     if (whoMode === 'tog') add.style.display = 'none';
     g.appendChild(add);
     v.appendChild(g);
-    v.appendChild(go);
+    var gw = el('div', 'whogos'); gw.appendChild(go); gw.appendChild(gov); v.appendChild(gw);
     if (!startup) {   // mở từ nút hồ sơ: có nút quay lại ngay trong khung
       var bx = el('div', 'btns center');
       bx.appendChild(UI.button('‹ Quay lại', 'small', function () { back(); }));
       v.appendChild(bx);
     }
+    var syncCard = whoSync(tv);
+    if (syncCard) v.appendChild(syncCard);
     // 3 Không + tác giả
     var k3 = el('div', 'who3');
     var stamp = el('div', 'w3stamp'); stamp.appendChild(el('b', '', '3')); stamp.appendChild(el('span', '', 'KHÔNG')); k3.appendChild(stamp);
@@ -2141,6 +2154,304 @@
   }
 
   /* Menu khi GIỮ LÂU trên một hồ sơ: đặt / đổi / bỏ mã PIN, đổi hình, xóa */
+  /* Ô "Đồng bộ với Google" trên màn hình Ai đang xem.
+     Chưa đăng nhập: điện thoại/máy tính có nút Đăng nhập Google; TV hiện sẵn mã QR + mã nhập ở google.com/device.
+     Đã đăng nhập: email, lần đồng bộ cuối, nút Đồng bộ ngay / Đổi tài khoản. */
+  var G_LOGO = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"/></svg>';
+  function maskMail(m) { m = String(m || ''); var i = m.indexOf('@'); if (i < 0) return m; var u = m.slice(0, i); return (u.length > 4 ? u.slice(0, 4) + '…' : u) + m.slice(i); }
+  function agoText(t) {
+    if (!t) return 'chưa đồng bộ lần nào';
+    var m = Math.round((Date.now() - t) / 60000);
+    return m < 1 ? 'vừa xong' : m < 60 ? m + ' phút trước' : m < 1440 ? Math.round(m / 60) + ' giờ trước' : Math.round(m / 1440) + ' ngày trước';
+  }
+  function whoSync(tv) {
+    var Sy = w.Sync; if (!Sy) return null;
+    var s = Sy.status();
+    if (!s.configured || C.WHO_SYNC === false) return null;
+    if (!s.google && Store.raw('whoSyncHide', 0) > Date.now()) return null;   // "Để sau": ẩn 30 ngày
+    var c = el('div', 'wsync'), flow = null, watch = null;
+    function stop() { if (flow) { flow.cancel(); flow = null; } clearInterval(watch); }
+    function after(msg) { Sy.sync('login').then(function () { UI.toast(Sy.status().error || msg || 'Đã đồng bộ'); reWho(); }, function () { reWho(); }); }
+    function logo() { var g = el('div', 'wsg'); g.innerHTML = G_LOGO; return g; }
+    function bt(label, cls, fn, ic) { var b = UI.button(label, cls, fn); if (ic) { var i = el('span', 'wsbi'); i.innerHTML = G_LOGO; b.insertBefore(i, b.firstChild); } return b; }
+    function later() { return bt('Để sau', 'wslater', function () { Store.applyRaw('whoSyncHide', Date.now() + 30 * 864e5); stop(); if (c.parentNode) c.parentNode.removeChild(c); UI.toast('Đã ẩn. Đăng nhập Google lúc nào cũng được trong Cài đặt'); }); }
+    var tx = el('div', 'wstx'), bx = el('div', 'wsbtns');
+    if (s.google && !s.expired) {
+      var av = el('div', 'wsav', (s.email || 'G').charAt(0).toUpperCase()); av.appendChild(el('i', '', '✓'));
+      c.appendChild(av);
+      tx.appendChild(el('div', 'wsh', maskMail(s.email) || 'Đã đăng nhập Google'));
+      var st = el('div', 'wsp');
+      if (s.error) st.appendChild(el('span', 'wsbad', '● ' + s.error));
+      else if (s.needTap) st.appendChild(el('span', 'wsbad', '● Bấm “Đồng bộ ngay” để tiếp tục'));
+      else { st.appendChild(el('span', 'wsok', '● Đã đồng bộ')); st.appendChild(d.createTextNode(' · ' + agoText(s.lastSync) + ' · ' + Store.profiles().length + ' hồ sơ')); }
+      tx.appendChild(st); c.appendChild(tx);
+      bx.appendChild(bt('↻ Đồng bộ ngay', '', function () {
+        UI.toast('Đang đồng bộ…');
+        var p = s.needTap && s.web ? Sy.webLogin() : Sy.sync('manual');
+        p.then(function () { UI.toast(Sy.status().error || 'Đã đồng bộ'); reWho(); }, function () { UI.toast('Chưa đồng bộ được, thử lại sau'); reWho(); });
+      }));
+      bx.appendChild(bt('Đổi tài khoản', '', function () {
+        Sy.logout();
+        if (s.web) Sy.webLogin().then(function () { after('Đã đổi tài khoản và đồng bộ'); }, function () { UI.toast('Chưa đăng nhập được Google'); reWho(); });
+        else reWho();
+      }));
+      c.appendChild(bx);
+      return c;
+    }
+    // chưa đăng nhập (hoặc hết hạn)
+    tx.appendChild(el('div', 'wsh', s.expired ? 'Đăng nhập Google lại để đồng bộ' : 'Đồng bộ với Google'));
+    if (!tv) {
+      c.appendChild(logo());
+      tx.appendChild(el('div', 'wsp', 'Hồ sơ, lịch sử, phim xem dở và danh sách giống nhau trên TV, điện thoại, máy tính. Đổi máy không mất gì.'));
+      c.appendChild(tx);
+      bx.appendChild(bt('Đăng nhập Google', 'gold', function () {
+        Sy.webLogin().then(function () { after('Đã đăng nhập và đồng bộ'); }, function () { UI.toast('Chưa đăng nhập được Google'); });
+      }, true));
+      bx.appendChild(later());
+      c.appendChild(bx);
+      return c;
+    }
+    // TV: mã QR + mã nhập, tự chuyển khi đăng nhập xong trên điện thoại
+    c.classList.add('wstv');
+    var qr = el('div', 'wsqr'); c.appendChild(qr);
+    var h = tx.firstChild; h.insertBefore(logo(), h.firstChild);
+    var how = el('div', 'wsp', 'Đang lấy mã…'), code = el('div', 'wscode', ''), note = el('div', 'wsp sm', '');
+    tx.appendChild(how); tx.appendChild(code); tx.appendChild(note);
+    bx.appendChild(later()); tx.appendChild(bx);
+    c.appendChild(tx);
+    setTimeout(function () {
+      if (!d.body.contains(c)) return;
+      Sy.startDevice().then(function (f) {
+        if (!d.body.contains(c)) { f.cancel(); return; }
+        flow = f;
+        var url = (f.url || 'https://www.google.com/device').replace(/^http:/, 'https:');
+        qr.innerHTML = (w.QR && w.QR.svg(url, 300)) || '';
+        how.innerHTML = '';
+        how.appendChild(d.createTextNode('Quét mã bằng điện thoại, hoặc mở '));
+        how.appendChild(el('b', '', url.replace(/^https?:\/\/(www\.)?/, '')));
+        how.appendChild(d.createTextNode(', đăng nhập Gmail rồi nhập mã:'));
+        code.textContent = f.code;
+        var until = Date.now() + 30 * 60000;
+        function left() { var m = Math.max(0, Math.round((until - Date.now()) / 60000)); note.textContent = 'Mã dùng được ' + m + ' phút nữa · màn hình tự chuyển khi bạn đăng nhập xong. Hồ sơ, lịch sử, phim xem dở và danh sách sẽ giống nhau trên mọi máy.'; }
+        left();
+        watch = setInterval(function () { if (!d.body.contains(c)) stop(); else left(); }, 15000);
+        return f.poll();
+      }).then(function (acc) {
+        if (!acc) return;
+        clearInterval(watch); flow = null;
+        UI.toast('Đã đăng nhập ' + (acc.email || 'Google') + '. Đang đồng bộ…');
+        after('Đã đồng bộ');
+      }, function (e) {
+        clearInterval(watch);
+        if (e && e.cancelled) return;
+        if (!d.body.contains(c)) return;
+        qr.innerHTML = ''; code.textContent = '';
+        how.textContent = e && e.expired ? 'Mã đã hết hạn.' : googleWhy(e);
+        bx.insertBefore(UI.button('Lấy mã mới', 'gold', function () { reWho(); }), bx.firstChild);
+      });
+    }, 400);
+    return c;
+  }
+  /* ---------- Lời nhắn gia đình: gửi một phim kèm lời nhắn cho hồ sơ khác (đồng bộ Google để sang máy khác) ---------- */
+  function allPeople() { return Store.profiles(); }
+  function msgTargets() { var me = Store.profile(); return allPeople().filter(function (p) { return p.id !== me; }); }
+  function msgList() { return Store.raw('msgs', []) || []; }
+  function msgSave(l) { Store.applyRaw('msgs', l.slice(0, 60)); if (w.Sync && w.Sync.dirty) w.Sync.dirty('msgs'); }
+  function slimItem(it) {
+    var o = {}; ['id', 'kind', 'title', 'ch', 'chId', 'thumb', 'hero', 'dur', 'eps', 'pub', 'views', 'cat'].forEach(function (k) { if (it[k] != null) o[k] = it[k]; });
+    if (it.desc) o.desc = String(it.desc).slice(0, 300);
+    return o;
+  }
+  function sendMsg(to, item, text) {
+    var me = Store.profile(), mp = profileOf(me) || { name: 'Guest' };
+    var l = msgList();
+    l.unshift({ id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), from: me, fromN: mp.name, to: to.id, ts: Date.now(), text: String(text || '').slice(0, 300), item: slimItem(item), dev: w.tizen ? 'TV Samsung' : w.AndroidApp ? 'Android TV' : /iPhone|iPad/.test(navigator.userAgent) ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'điện thoại' : 'máy tính' });
+    msgSave(l);
+  }
+  function markMsg(id, k) { var l = msgList(); l.forEach(function (x) { if (x.id === id) x[k || 'read'] = Date.now(); }); msgSave(l); }
+  function pendingMsgs() { var me = Store.profile(); return msgList().filter(function (x) { return x.to === me && !x.read && !x.del && x.item && x.item.id; }).sort(function (a, b) { return a.ts - b.ts; }); }
+  function showMsgs() {
+    if (C.FAMILY_MSGS === false) return;
+    var m = pendingMsgs()[0]; if (!m) return;
+    var cur = current(); if (!cur || cur.name === 'msg' || cur.name === 'who' || Player.isOpen()) return;
+    push(MsgPopup(m));
+  }
+  var MSG_PRESETS = ['Phim này hay lắm, xem thử nha!', 'Tối nay xem phim này cùng nhau nhé?', 'Tập cuối cảm động lắm 😢', 'Tổng tài trong phim này ngầu lắm 😄'];
+  function MsgTo(item) {
+    var v = UI.view(); v.classList.add('glogin');
+    var box = el('div', 'gbox msgbox');
+    box.appendChild(el('div', 'gt', '✉ Gửi phim cho…'));
+    box.appendChild(el('div', 'gnote', '“' + item.title + '” · người nhận mở app sẽ thấy ngay' + (w.Sync && w.Sync.status().google ? ' (cả trên máy khác)' : '. Muốn gửi sang máy khác thì bật Đồng bộ Google')));
+    var g = el('div', 'msgwho'), first = null;
+    msgTargets().forEach(function (p) {
+      var t = el('div', 'wtile f'); t.appendChild(avatar(p)); t.appendChild(el('div', 'wname', p.name));
+      t._ok = function () { push(MsgText(item, p)); };
+      if (!first) first = t; g.appendChild(t);
+    });
+    box.appendChild(g);
+    var bx = el('div', 'btns center'); bx.appendChild(UI.button('Hủy', '', function () { back(); })); box.appendChild(bx);
+    v.appendChild(box);
+    return { name: 'msgto', el: v, focus: first };
+  }
+  function MsgText(item, p) {
+    var v = UI.view(); v.classList.add('glogin');
+    var box = el('div', 'gbox msgbox');
+    box.appendChild(el('div', 'gt', 'Lời nhắn cho ' + p.name));
+    box.appendChild(el('div', 'gnote', 'Chọn một câu có sẵn hoặc tự viết'));
+    var col = el('div', 'msgopts'), first = null;
+    function done(text) {
+      sendMsg(p, item, text);
+      UI.toast('✉ Đã gửi cho ' + p.name);
+      back(); back();
+    }
+    MSG_PRESETS.forEach(function (t) { var b = UI.button(t, '', function () { done(t); }); if (!first) first = b; col.appendChild(b); });
+    col.appendChild(UI.button('✏ Tự viết…', 'gold', function () {
+      push(TextEdit('Lời nhắn cho ' + p.name, '', function (val) {
+        val = String(val || '').trim(); if (!val) { UI.toast('Chưa có lời nhắn'); return; }
+        setTimeout(function () { done(val); }, 30);
+      }, { space: true, hint: 'Gõ lời nhắn (không dấu cũng được) rồi chọn Lưu. Back để hủy.' }));
+    }));
+    box.appendChild(col); v.appendChild(box);
+    return { name: 'msgtext', el: v, focus: first };
+  }
+  function MsgPopup(m) {
+    var it = m.item, v = UI.view(); v.classList.add('glogin'); v.classList.add('msgpop');
+    var box = el('div', 'gbox msgcard');
+    var ph = el('div', 'thumb msgimg'); if (it.hero || it.thumb) ph.style.backgroundImage = 'url("' + String(it.hero || it.thumb).replace(/"/g, '%22') + '")';
+    box.appendChild(ph);
+    var R2 = el('div', 'msgr');
+    var me = Store.profile(), mp = profileOf(me) || { name: 'Guest' };
+    var ago = Math.round((Date.now() - m.ts) / 60000);
+    R2.appendChild(el('div', 'msgk', '✉ LỜI NHẮN CHO ' + String(mp.name).toUpperCase() + ' · ' + (ago < 1 ? 'VỪA XONG' : ago < 60 ? ago + ' PHÚT TRƯỚC' : ago < 1440 ? Math.round(ago / 60) + ' GIỜ TRƯỚC' : Math.round(ago / 1440) + ' NGÀY TRƯỚC')));
+    var fr = el('div', 'msgfrom'), fp = profileOf(m.from) || { id: m.from, name: m.fromN || '?' };
+    fr.appendChild(avatar(fp, 'msgav')); var fn = el('div'); fn.appendChild(el('b', '', m.fromN || fp.name)); fn.appendChild(el('div', 'msgdev', 'gửi từ ' + (m.dev || 'máy khác'))); fr.appendChild(fn);
+    R2.appendChild(fr);
+    if (m.text) R2.appendChild(el('div', 'msgbub', m.text));
+    R2.appendChild(el('div', 'msgt', it.title));
+    R2.appendChild(el('div', 'msgm', it.kind === 'anime' ? (it.eps || '?') + ' tập' + (it.ch ? ' · ' + it.ch : '') : (it.ch || '') + (it.dur ? ' · ' + Math.round(it.dur / 60) + ' phút' : '')));
+    var bx = el('div', 'btns');
+    var b1 = UI.button('Xem ngay', 'gold', function () { markMsg(m.id); back(); if (it.kind === 'anime') openItem(it); else playFilm(it); }, UI.ICON_PLAY);
+    bx.appendChild(b1);
+    if (!Store.isFav(it)) bx.appendChild(UI.button('Danh sách', '', function () { Store.toggleFav(it); markMsg(m.id); UI.toast('Đã thêm vào danh sách'); back(); setTimeout(showMsgs, 400); }, UI.ICON_PLUS));
+    bx.appendChild(UI.button('Để sau', '', function () { markMsg(m.id); back(); setTimeout(showMsgs, 400); }));
+    R2.appendChild(bx); box.appendChild(R2); v.appendChild(box);
+    return { name: 'msg', el: v, focus: b1 };
+  }
+
+  /* ---------- Bình chọn phim tối nay (Xem chung) ----------
+     TV đưa ra 3 phim hợp với những người đang xem chung. Mỗi người quét mã QR để chọn trên điện thoại
+     (cần máy chủ thống kê STATS_URL), hoặc bấm OK trên phim bằng remote. Hết giờ: mở phim nhiều phiếu nhất. */
+  function votePick(n) {
+    var ids = Store.together().length ? Store.together() : [Store.profile()];
+    var pool = (Api.pool() || []).filter(function (f) { return f && f.id && !Settings.hides(f) && (f.hero || f.thumb); });
+    var seen = {}; ids.forEach(function (id) { Store.as(id, function () { pool.forEach(function (f) { if (Store.isWatched(f.id)) seen[f.id] = 1; }); }); });
+    var cats = {}; profileCats(C.CATEGORIES.filter(function (c) { return c.kind === 'film'; })).forEach(function (c) { cats[c.name] = 1; });
+    var sc = pool.filter(function (f) { return !seen[f.id]; }).map(function (f) {
+      var s0 = Math.random() * 2 + Math.log(1 + (f.views || 0)) / 6; Api.catsOf(f).forEach(function (c) { if (cats[c]) s0 += 2; }); return { f: f, s: s0 };
+    }).sort(function (a, b) { return b.s - a.s; });
+    var out = [], ch = {};
+    sc.forEach(function (x) { if (out.length < n && !ch[x.f.ch]) { out.push(x.f); ch[x.f.ch] = 1; } });
+    sc.forEach(function (x) { if (out.length < n && out.indexOf(x.f) < 0) out.push(x.f); });
+    return out;
+  }
+  function VoteTV() {
+    var v = UI.view(); v.classList.add('votev');
+    var head = el('div', 'vhead'), ht = el('div', 'vht');
+    ht.appendChild(el('div', 'vk', '👥 XEM CHUNG · BÌNH CHỌN PHIM TỐI NAY'));
+    ht.appendChild(el('div', 'vh1', 'Cả nhà chọn phim nào?'));
+    var stat = el('div', 'vstat', ''); ht.appendChild(stat);
+    head.appendChild(ht);
+    var qr = el('div', 'vqr hidden'), qrt = el('div', 'vqrt', '');
+    head.appendChild(qr); head.appendChild(qrt);
+    v.appendChild(head);
+    var grid = el('div', 'vgrid'); v.appendChild(grid);
+    var bx = el('div', 'btns'); v.appendChild(bx);
+    var films = [], votes = [], room = '', ends = 0, tvN = 0, timer = null, done = false, cards = [], base = String(C.STATS_URL || '').replace(/\/+$/, '');
+    var people = (Store.together().length ? Store.together() : [Store.profile()]).map(function (id) { var p = profileOf(id) || { id: id, name: id === 'guest' ? 'Guest' : '?' }; return { id: p.id, n: p.name, e: '' }; });
+    var SECS = 60;
+    function counts() { var c = films.map(function () { return 0; }); votes.forEach(function (x) { if (c[x.pick] != null) c[x.pick]++; }); return c; }
+    function paint() {
+      var c = counts(), mx = Math.max.apply(null, c.concat([0])), n = votes.length;
+      cards.forEach(function (cd, i) {
+        cd.querySelector('.vbar i').style.width = (n ? c[i] / n * 100 : 0) + '%';
+        var who = votes.filter(function (x) { return x.pick === i; }).map(function (x) { return x.name || 'Remote'; });
+        cd.querySelector('.vn').textContent = c[i] ? c[i] + ' phiếu' + (c[i] === mx && mx > 0 ? ' · dẫn đầu' : '') : 'chưa có phiếu';
+        cd.querySelector('.vwho').textContent = who.join(', ');
+        cd.classList.toggle('win', c[i] === mx && mx > 0);
+      });
+      var left = Math.max(0, Math.ceil((ends - Date.now()) / 1000));
+      stat.textContent = done ? 'Đã chốt phim!' : n + ' / ' + people.length + ' người đã chọn · còn ' + left + ' giây';
+    }
+    function winner() { var c = counts(), mx = Math.max.apply(null, c); if (mx <= 0) return -1; return c.indexOf(mx); }
+    function start() {
+      films = votePick(3); votes = []; done = false; tvN = 0; room = '';
+      if (films.length < 2) { stat.textContent = 'Chưa đủ phim để chọn, thử lại sau'; return; }
+      grid.innerHTML = ''; cards = [];
+      films.forEach(function (f, i) {
+        var cd = el('div', 'vcard f');
+        var th = el('div', 'thumb vimg'); th.style.backgroundImage = 'url("' + String(f.hero || f.thumb).replace(/"/g, '%22') + '")'; cd.appendChild(th);
+        var inn = el('div', 'vin'); inn.appendChild(el('div', 'vt', f.title));
+        var bar = el('div', 'vbar'); bar.appendChild(el('i')); inn.appendChild(bar);
+        var ln = el('div', 'vln'); ln.appendChild(el('span', 'vwho', '')); ln.appendChild(el('span', 'vn', '')); inn.appendChild(ln);
+        cd.appendChild(inn);
+        cd._ok = function () {   // bấm OK = thêm một phiếu cho người ngồi cạnh (không có điện thoại)
+          if (done) { finish(i); return; }
+          var vt = { voter: 'tv' + (++tvN), name: 'Remote', pick: i };
+          votes.push(vt); paint(); UI.toast('+1 phiếu cho “' + f.title + '”');
+          if (room) fetch(base + '/v/' + room, { method: 'POST', body: JSON.stringify(vt) }).catch(function () { /* bỏ qua */ });
+        };
+        cards.push(cd); grid.appendChild(cd);
+      });
+      ends = Date.now() + SECS * 1000;
+      qr.classList.add('hidden'); qrt.textContent = base ? 'Đang tạo mã…' : 'Bấm OK trên phim để bỏ phiếu (mỗi lần bấm một phiếu).';
+      if (base) {
+        fetch(base + '/v', { method: 'POST', body: JSON.stringify({ opts: films.map(function (f) { return { t: f.title, img: f.thumb || f.hero }; }), who: people, secs: SECS }) })
+          .then(function (r) { return r.json(); }).then(function (j) {
+            if (!j.ok) throw j;
+            room = j.room; ends = Date.now() + SECS * 1000;
+            var url = base + '/vote/' + room;
+            qr.innerHTML = (w.QR && w.QR.svg(url, 300)) || ''; qr.classList.remove('hidden');
+            qrt.innerHTML = ''; qrt.appendChild(d.createTextNode('Quét bằng điện thoại để chọn.')); qrt.appendChild(el('br')); qrt.appendChild(el('b', '', url.replace(/^https?:\/\//, '')));
+          }).catch(function () { qrt.textContent = 'Chưa tạo được mã cho điện thoại. Bấm OK trên phim để bỏ phiếu.'; });
+      }
+      clearInterval(timer);
+      var k = 0;
+      timer = setInterval(function () {
+        if (!d.body.contains(v)) { clearInterval(timer); return; }
+        if (done) return;
+        k++;
+        if (room && k % 2 === 0) fetch(base + '/v/' + room).then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) { votes = j.votes || []; paint(); } }).catch(function () { /* bỏ qua */ });
+        if (Date.now() >= ends || (votes.length >= people.length && people.length >= 2 && votes.some(function (x) { return x.name !== 'Remote'; }))) { lock(); return; }
+        paint();
+      }, 1000);
+      paint();
+      bx.innerHTML = '';
+      bx.appendChild(UI.button('▶ Xem phim dẫn đầu ngay', 'gold', function () { lock(); var i = winner(); finish(i < 0 ? 0 : i); }));
+      bx.appendChild(UI.button('Đổi 3 phim khác', '', function () { start(); }));
+      bx.appendChild(UI.button('Thôi', '', function () { back(); }));
+      setTimeout(function () { if (current() === view && cards[0]) Nav.focus(cards[0]); }, 50);
+    }
+    var autoT = null;
+    function lock() {
+      if (done) return; done = true; clearInterval(timer);
+      var i = winner(); paint();
+      if (i < 0) { stat.textContent = 'Chưa ai chọn. Bấm OK trên một phim để xem.'; return; }
+      var n = 8;
+      stat.textContent = 'Phim thắng: “' + films[i].title + '” · tự mở sau ' + n + ' giây';
+      autoT = setInterval(function () { if (!d.body.contains(v)) { clearInterval(autoT); return; } n--; if (n <= 0) { clearInterval(autoT); finish(i); } else stat.textContent = 'Phim thắng: “' + films[i].title + '” · tự mở sau ' + n + ' giây'; }, 1000);
+    }
+    function finish(i) {
+      clearInterval(autoT); clearInterval(timer);
+      var f = films[i]; if (!f) return;
+      back();
+      if (f.kind === 'anime') openItem(f); else playFilm(f);
+    }
+    var view = { name: 'vote', el: v };
+    view.onLeave = function () { clearInterval(timer); clearInterval(autoT); };
+    setTimeout(start, 0);
+    return view;
+  }
+
   function reWho() {   // vẽ lại màn hình Ai đang xem (giữ nguyên chế độ lúc mở app)
     var top = current();
     if (top && top.name === 'who') { var st = top.startup; S.stack.pop(); if (top.el.parentNode) top.el.parentNode.removeChild(top.el); push(Who(st)); }
@@ -3373,6 +3684,7 @@
       }
       wrap.appendChild(UI.button('▶ Chơi ngay', 'gold', function () { push(Quiz()); }));
       if (w.Music && w.Music.S && w.Music.S.all().length >= 4) wrap.appendChild(UI.button('♪ Đoán bài hát', '', function () { push(Quiz('song')); }));
+      if (Store.together().length >= 2) wrap.appendChild(UI.button('🗳 Cả nhà chọn phim', '', function () { push(VoteTV()); }));
     }
     paint();
     return { wrap: wrap, hide: function () { wrap.classList.add('hidden'); }, show: function () { wrap.classList.remove('hidden'); }, refresh: paint };
@@ -4317,7 +4629,7 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.30: Lời nhắn gia đình (trang phim → ✉ Gửi cho…), Cả nhà bình chọn phim khi Xem chung (quét mã QR bằng điện thoại hoặc bấm OK bằng remote), hàng Tiếp tục xem báo số phim có tập mới.','Mới 2.29.1: màn hình Ai đang xem có ô Đồng bộ với Google (TV quét mã QR bằng điện thoại, không cần gõ mật khẩu).','Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh”, thanh tiến độ và số phiên bản đang dùng (ví dụ 2.28.0) ở dưới cùng.','Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.','Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M84 30v46a12 10 0 1 1-6-8.7V40l48-10v38a12 10 0 1 1-6-8.7V36.4z" fill="#E8B04B"/><g fill="#4FAE8A"><rect x="40" y="70" width="6" height="22" rx="3"/><rect x="50" y="58" width="6" height="34" rx="3"/><rect x="60" y="76" width="6" height="16" rx="3"/></g></svg>', t: 'Nhạc nền Trang chủ', l: ['Nhạc của tôi: 20 bài hát của Ryan Nguyen (Chủ Tịch Giả Nghèo, Tổng Tài Ở Rể, Vợ Yêu Đừng Chạy…) phát ở Trang chủ, lần lượt hoặc trộn bài.', 'Mở phim hay sang trang khác thì nhạc tạm dừng, quay lại Trang chủ phát tiếp đúng chỗ. Ô “♪ tên bài” góc dưới bên phải: bấm để qua bài.', 'Cài đặt → Nhạc nền Trang chủ: Nhạc của tôi (lần lượt / trộn bài), Hòa tấu (5 bản), Tắt; Chọn bài để nghe bài bất kỳ; Âm lượng. Riêng từng hồ sơ.', 'TV lấy nhạc từ GitHub Pages của bạn. Android TV: Cài đặt → Kết nối → Địa chỉ nhạc. Không tải được thì app tự phát 5 bản hòa tấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14161E"/><rect x="10" y="12" width="80" height="45" rx="6" fill="#3A2A14"/><rect x="10" y="64" width="60" height="6" rx="2" fill="#F4F1EC"/><rect x="10" y="76" width="80" height="3" rx="1.5" fill="#33384A"/><rect x="10" y="76" width="34" height="3" rx="1.5" fill="#E8B04B"/><circle cx="50" cy="96" r="10" fill="#E8B04B"/><rect x="104" y="20" width="80" height="5" rx="2" fill="#5A5F6E"/><rect x="104" y="36" width="88" height="9" rx="3" fill="#E8B04B"/><rect x="104" y="54" width="76" height="5" rx="2" fill="#8A8F9E"/><rect x="104" y="66" width="70" height="5" rx="2" fill="#5A5F6E"/></svg>', t: 'Trang Nhạc', l: ['Tab Nhạc: 20 bài hát của Ryan Nguyen. Lúc nhạc dạo, khung lời hiện “Giới thiệu bài hát” (tóm tắt + đoạn trích); điện thoại thì tóm tắt nằm dưới tên bài.','Lời: câu đang hát sáng lên. Tùy bài: hiện cả câu, chạy theo từng chữ (như karaoke) hoặc tô dần cả câu. Lời lệch: nút ⏱ “Chỉnh lời”.','Ảnh: 10 ảnh phim tổng tài thật hợp với bài, đổi mỗi 8 giây, chấm dưới ảnh cho biết đang ở ảnh nào. Bấm vào ảnh (TV: chọn ảnh rồi OK) để hỏi “Xem phim này?”: “Ở lại nghe nhạc”, “Danh sách” (lưu phim xem sau, nhạc vẫn phát) hoặc “Mở phim”.','Kiểu A chia đôi hoặc Kiểu B toàn màn hình kiểu karaoke: nút ⛶. Nút: Trộn bài, Bài trước, Phát/Dừng, Bài kế, Hẹn giờ, ☰ Tất cả bài (tóm tắt và đoạn trích của cả 20 bài; chọn một bài để phát).','Các bài nghe to đều nhau. Tắt: Cài đặt → Cân bằng âm lượng các bài.'] },
@@ -4430,7 +4742,7 @@
   }
 
   w.Screens = {
-    init: init, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, adminTV: function (t, d2) { push(AdminTV(t, d2)); }, askFilm: function (it) { push(AskFilm(it)); }, quiz: function () { push(Quiz()); }, birthday: function (id) { push(Birthday(profileOf(id || Store.profile()) || { id: 'guest', name: 'Guest' }, false)); }, afterBoot: function () { checkBirthday(); }, sleepTick: function () { sleepTick(); }, preN: function () { return preN; }, weekPick: function () { return weekPick(Api.pool()); }, limitList: function () { push(LimitList()); }, limitLock: function () { var st = limNow(); if (st) push(LimitLock(st)); }, limNow: function () { return limNow(); }, chBadge: function () { paintChBadge(); }, push: push, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
+    init: init, vote: function () { push(VoteTV()); }, showMsgs: function () { showMsgs(); }, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, adminTV: function (t, d2) { push(AdminTV(t, d2)); }, askFilm: function (it) { push(AskFilm(it)); }, quiz: function () { push(Quiz()); }, birthday: function (id) { push(Birthday(profileOf(id || Store.profile()) || { id: 'guest', name: 'Guest' }, false)); }, afterBoot: function () { checkBirthday(); }, sleepTick: function () { sleepTick(); }, preN: function () { return preN; }, weekPick: function () { return weekPick(Api.pool()); }, limitList: function () { push(LimitList()); }, limitLock: function () { var st = limNow(); if (st) push(LimitLock(st)); }, limNow: function () { return limNow(); }, chBadge: function () { paintChBadge(); }, push: push, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
     depth: function () { return S.stack.length; },
     current: function () { return current(); }
   };

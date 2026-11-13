@@ -252,6 +252,8 @@
     };
     homeOrder().forEach(function (k) { if (k !== 'top') rows[k].wrap.classList.add('row-' + k); v.appendChild(rows[k].wrap); });   // thứ tự hàng theo hồ sơ
     var wkc = weekCard(); if (wkc) hero.parentNode.insertBefore(wkc, hero.nextSibling);   // báo cáo tuần (hồ sơ người lớn)
+    try { if (w.Badges) w.Badges.check(); } catch (e) { /* bỏ qua */ }
+    var rcc = raceCard(); if (rcc) hero.parentNode.insertBefore(rcc, (wkc || hero).nextSibling);   // Thi đua tuần: huy hiệu cả nhà
     rows.neweps.hide();
     v.classList.add('homev');
 
@@ -349,6 +351,7 @@
     }
     var heroResumed = heroResume();
     setTimeout(function () { if (current() && current().el === v) showMsgs(); }, 1500);
+    setTimeout(showBadges, 2500);
     var msgT = setInterval(function () { if (!d.body.contains(v)) { clearInterval(msgT); return; } if (current() && current().el === v && Date.now() - (w.lastKeyAt || 0) > 8000) showMsgs(); }, 60000);
     // Bài hát của ngày: banner đổi qua lại giữa phim và bài hát mỗi 12 giây
     var songOn = false, songLayer = null, heroDots = el('div', 'hero-dots'), heroSongI = -1;
@@ -1366,7 +1369,8 @@
       { v: 5, t: '5 giây', on: true }, { v: 8, t: '8 giây', on: true }]);
     opt('SCREENSAVER', 'Màn hình chờ', 'Để yên bao lâu thì hiện ảnh bìa phim mới chạy chậm kèm đồng hồ. Đang chiếu phim thì không hiện', [
       { v: 0, t: 'Tắt' }, { v: 5, t: '5 phút', on: true }, { v: 10, t: '10 phút', on: true }, { v: 15, t: '15 phút', on: true }, { v: 30, t: '30 phút', on: true }]);
-    opt('SAVER_QUOTE', 'Câu thoại tổng tài', 'Mỗi lần màn hình chờ hiện là một câu thoại tổng tài mới (250 câu, 5 chủ đề), kèm tên phim', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
+    opt('SAVER_QUOTE', 'Câu thoại tổng tài', 'Mỗi ảnh phim đi kèm một câu thoại tổng tài ngẫu nhiên (500 câu, 5 chủ đề)', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
+    opt('SAVER_MUSIC', 'Nhạc trong màn hình chờ', 'Màn hình chờ phát ngẫu nhiên một bài trong Nhạc của tôi (trộn bài). Nhạc nền đang Tắt thì im lặng', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
     opt('SLEEP_AT', 'Chế độ ngủ', 'Tới giờ này: màn hình tối dần, âm lượng nhỏ lại, hết phim thì tắt app (có nút xem thêm 15 phút)', [{ v: '', t: 'Tắt' }, { v: '21:00', t: '21:00', on: true }, { v: '21:30', t: '21:30', on: true }, { v: '22:00', t: '22:00', on: true }, { v: '22:30', t: '22:30', on: true }, { v: '23:00', t: '23:00', on: true }]);
     opt('SLEEP_WHO', 'Chế độ ngủ áp dụng cho', 'Cả nhà, hoặc chỉ khi đang xem bằng hồ sơ có giới hạn giờ xem', [{ v: 'all', t: 'Cả nhà', on: true }, { v: 'lim', t: 'Hồ sơ có giới hạn', on: true }]);
     opt('PRELOAD', 'Tải sẵn ảnh bìa', 'Lưu sẵn ảnh bìa phim mới khi rảnh để TV mở nhanh, đỡ giật khi mạng yếu (tạm dừng khi đang xem phim)', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);
@@ -1381,6 +1385,12 @@
       var n = Object.keys(limAll()).filter(function (k) { return limOf(k); }).length;
       return { t: n ? n + ' hồ sơ có giới hạn' : 'Chưa đặt', on: !!n };
     }, function () { withPin('đặt giới hạn giờ xem', function () { setTimeout(function () { push(LimitList()); }, 30); }); });
+    row('Huy hiệu thành tích', '12 huy hiệu vàng · bạc · đồng của hồ sơ này: đoán nhạc, câu đố, ngủ sớm, chuỗi ngày…', function () {
+      return { t: (w.Badges ? w.Badges.count(Store.profile()) : 0) + ' / 12 · Xem', on: true };
+    }, function () { push(BadgeShelf()); });
+    row('Thi đua tuần trên Trang chủ', 'Bảng xếp hạng huy hiệu cả nhà và một thử thách mỗi tuần. Đổi cần mã PIN người lớn', function () {
+      return { t: Store.pref('raceOff', false) ? 'Tắt' : 'Bật', on: !Store.pref('raceOff', false) };
+    }, function (paint) { withPin('đổi Thi đua tuần', function () { Store.setPref('raceOff', !Store.pref('raceOff', false)); paint(); UI.toast(Store.pref('raceOff', false) ? 'Đã tắt Thi đua tuần' : 'Đã bật Thi đua tuần'); }); });
     row('Ngày sinh của hồ sơ', 'Hôm đó app chúc mừng sinh nhật, có pháo bông, nhạc và thêm 30 phút xem phim (nếu có giới hạn giờ)', function () {
       var b = bdayOf(Store.profile()); return { t: b ? Store.profileName() + ' · ' + b : 'Chưa đặt', on: !!b };
     }, function (paint) {
@@ -1455,7 +1465,7 @@
     }, function (paint) { changePin(paint); });
 
     sec('Nhạc nền Trang chủ');
-    var MOPTS = [{ v: 'songs', t: 'Nhạc của tôi (lần lượt)', on: true }, { v: 'songsx', t: 'Nhạc của tôi (trộn bài)', on: true }, { v: 'auto', t: 'Hòa tấu (lần lượt 5 bài)', on: true }, { v: 'off', t: 'Tắt' }].concat(
+    var MOPTS = [{ v: 'songsx', t: 'Nhạc của tôi (trộn bài, mặc định)', on: true }, { v: 'songs', t: 'Nhạc của tôi (lần lượt)', on: true }, { v: 'auto', t: 'Hòa tấu (lần lượt 5 bài)', on: true }, { v: 'off', t: 'Tắt' }].concat(
       (w.Music ? w.Music.tracks() : []).map(function (n, i) { return { v: i, t: (i + 1) + '. ' + n, on: true }; }));
     opt('MUSIC', 'Nhạc nền', 'Nhạc của tôi (bài hát trong thư mục music/) hoặc 5 bản hòa tấu. Chỉ phát ở Trang chủ, tự dừng khi xem phim, quay lại phát tiếp. Mỗi lần OK đổi một kiểu', MOPTS);
     opt('MUSIC_VIEW', 'Kiểu trang Nhạc', 'Kiểu A: ảnh + lời + bài tiếp theo. Kiểu B: ảnh phủ toàn màn hình, lời to kiểu karaoke. Đổi nhanh bằng nút trên trang Nhạc', [{ v: 'split', t: 'Kiểu A: chia đôi', on: true }, { v: 'karaoke', t: 'Kiểu B: toàn màn hình', on: true }]);
@@ -1555,6 +1565,12 @@
       return b.at ? { t: 'Đã sao lưu lúc ' + when(b.at), on: true } : { t: 'Chưa sao lưu' };
     }, function (paint) {
       if (!Sync.backupStatus().can) { UI.toast('Hãy đăng nhập Google hoặc kết nối GitHub ở trên trước'); return; }
+      var st0 = Sync.status();
+      if (st0.google && st0.needTap && st0.web) {   // Google cần chạm để đăng nhập lại: chạm ở đây cũng được
+        Sync.webLogin().then(function () { return Sync.backupNow('manual'); }).then(function (r) { paint(); UI.toast('Đã sao lưu lúc ' + UI.hhmm(r.at) + ' vào ' + r.where); },
+          function () { paint(); UI.toast(Sync.backupStatus().error || 'Chưa đăng nhập được Google'); });
+        return;
+      }
       UI.toast('Đang sao lưu…');
       Sync.backupNow('manual').then(function (r) { paint(); UI.toast('Đã sao lưu lúc ' + UI.hhmm(r.at) + ' vào ' + r.where); },
         function () { paint(); UI.toast(Sync.backupStatus().error || 'Chưa sao lưu được'); });
@@ -2267,6 +2283,7 @@
     var l = msgList();
     l.unshift({ id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), from: me, fromN: mp.name, to: to.id, ts: Date.now(), text: String(text || '').slice(0, 300), item: slimItem(item), dev: w.tizen ? 'TV Samsung' : w.AndroidApp ? 'Android TV' : /iPhone|iPad/.test(navigator.userAgent) ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'điện thoại' : 'máy tính' });
     msgSave(l);
+    if (w.Badges) w.Badges.add('msg', 1, me);
   }
   function markMsg(id, k) { var l = msgList(); l.forEach(function (x) { if (x.id === id) x[k || 'read'] = Date.now(); }); msgSave(l); }
   function pendingMsgs() { var me = Store.profile(); return msgList().filter(function (x) { return x.to === me && !x.read && !x.del && x.item && x.item.id; }).sort(function (a, b) { return a.ts - b.ts; }); }
@@ -2443,6 +2460,12 @@
     function finish(i) {
       clearInterval(autoT); clearInterval(timer);
       var f = films[i]; if (!f) return;
+      if (w.Badges && votes.length) {   // mỗi người đã bỏ phiếu (theo tên), phiếu bấm remote tính cho hồ sơ đang dùng
+        var did = {};
+        people.forEach(function (pp) { if (votes.some(function (x) { return x.id === pp.id || (x.name && String(x.name).toLowerCase() === String(pp.n).toLowerCase()); })) did[pp.id] = 1; });
+        if (votes.some(function (x) { return /^tv/.test(x.voter || ''); })) did[Store.profile()] = 1;
+        Object.keys(did).forEach(function (id) { w.Badges.add('vote', 1, id); });
+      }
       back();
       if (f.kind === 'anime') openItem(f); else playFilm(f);
     }
@@ -2824,7 +2847,7 @@
         r.appendChild(el('div', 'ordstate', fmtDur(x.dur)));
         r._ok = function () {
           var m = Settings.get('MUSIC');
-          if (m !== 'songs' && m !== 'songsx') Settings.set('MUSIC', 'songs');
+          if (m !== 'songs' && m !== 'songsx') Settings.set('MUSIC', 'songsx');
           w.Music.playSong(i);
           setTimeout(function () { render(i); }, 60);
         };
@@ -3741,7 +3764,7 @@
     function answer(o, btn) {
       if (done) return; done = true; clearInterval(tmr);
       var ok = o === z.answer;
-      marks.push(ok); if (ok) { score += 10; quizAdd(me.id, 10); }
+      marks.push(ok); if (ok) { score += 10; quizAdd(me.id, 10); if (w.Badges) w.Badges.add(SONG ? 'songok' : 'qpts', SONG ? 1 : 10, me.id); }
       Array.prototype.forEach.call(grid.children, function (b) {
         var wv = b.querySelector('.qzw').textContent;
         b.classList.add(wv === z.answer ? 'right' : b === btn ? 'wrong' : 'dim');
@@ -3765,6 +3788,8 @@
       card.appendChild(el('div', 'qzk', 'KẾT QUẢ'));
       card.appendChild(el('div', 'qzq', SONG ? (score >= 80 ? 'Tai nghe tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Nghe thêm rồi chơi lại nhé! ' + score + ' điểm') : score >= 80 ? 'Đúng chất tổng tài! ' + score + ' điểm' : score >= 50 ? 'Khá lắm! ' + score + ' điểm' : 'Cố lên lần sau! ' + score + ' điểm'));
       var right = marks.filter(Boolean).length;
+      if (SONG && right >= ROUNDS && w.Badges) w.Badges.add('sp', 1, me.id);
+      setTimeout(showBadges, 1500);
       card.appendChild(el('div', 'qzst ok', right + ' / ' + ROUNDS + ' câu đúng · đã cộng vào bảng điểm hôm nay'));
       foot.innerHTML = '';
       var ld = quizLeaders();
@@ -3800,7 +3825,9 @@
   function bdayOf(id) { return ((Store.pref('bdays', {}) || {})[id]) || ''; }
   function isBday(id) { var b = bdayOf(id); if (!b) return false; var n = new Date(); return b === ('0' + n.getDate()).slice(-2) + '/' + ('0' + (n.getMonth() + 1)).slice(-2); }
   function checkBirthday() {
-    var id = Store.profile(); if (!isBday(id)) return;
+    var id = Store.profile();
+    try { if (w.Badges) { w.Badges.open(id, isBday(id)); setTimeout(showBadges, 6000); } } catch (e) { /* bỏ qua */ }
+    if (!isBday(id)) return;
     var shown = Store.pref('bdayShown', {}) || {}; if (shown[id] === Store.dayKey()) return;
     shown[id] = Store.dayKey(); Store.setPref('bdayShown', shown);
     var b = Store.pref('limitBonus', {}) || {}, dk = Store.dayKey();
@@ -4029,6 +4056,141 @@
       if (c.parentNode) c.parentNode.removeChild(c);
       Nav.focus(d.querySelector('.hero .btn') || S.tabEls.home, true);
     }));
+    c.appendChild(R);
+    return c;
+  }
+
+  /* ---------- Huy hiệu thành tích: bật mở khóa, bộ sưu tập, Thi đua tuần ---------- */
+  function badgeAgo(t) {
+    var a = new Date(t), n = new Date(), days = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 864e5);
+    return days <= 0 ? 'hôm nay' : days === 1 ? 'hôm qua' : days + ' ngày trước';
+  }
+  function badgeBusy() {
+    var cur = current();
+    return !cur || (Player.isOpen && Player.isOpen()) || ['quiz', 'songquiz', 'who', 'badge', 'bday', 'msg', 'vote', 'limlock', 'limadd'].indexOf(cur.name) >= 0 || (w.Saver && w.Saver.isOn());
+  }
+  var badgeT = 0;
+  function showBadges() {
+    clearTimeout(badgeT);
+    if (!w.Badges || !w.Badges.pending()) return;
+    if (badgeBusy()) { badgeT = setTimeout(showBadges, 4000); return; }
+    var x = w.Badges.next(); if (x) push(BadgePopup(x));
+  }
+  function BadgePopup(x) {
+    var b = x.b, p = profileOf(x.pid) || { id: x.pid, name: 'Guest' };
+    var v = UI.view(); v.classList.add('glogin'); v.classList.add('bdgpop');
+    var cv = d.createElement('canvas'); cv.className = 'bdgcv'; v.appendChild(cv);
+    var box = el('div', 'gbox bdgbox');
+    box.appendChild(el('div', 'bdgk', '🏅 MỞ KHÓA HUY HIỆU MỚI · ' + String(p.name).toUpperCase()));
+    var md = w.Badges.medal(b.id, 150); md.classList.add('bdgbig'); box.appendChild(md);
+    box.appendChild(el('div', 'bdgt', b.n));
+    box.appendChild(el('div', 'bdgd', b.full));
+    box.appendChild(el('div', 'bdgq', '“' + b.q + '”'));
+    var bx = el('div', 'btns center');
+    var b1 = UI.button('Xem bộ sưu tập', 'gold', function () { back(); push(BadgeShelf(x.pid)); });
+    bx.appendChild(b1); bx.appendChild(UI.button('Đóng', '', function () { back(); setTimeout(showBadges, 500); }));
+    box.appendChild(bx); v.appendChild(box);
+    var ctx = cv.getContext && cv.getContext('2d'), bits = [], raf = 0, t0 = 0;
+    var COLS = ['#E8B04B', '#F3D27A', '#C0392B', '#4A6FD0', '#2E9E6A', '#FFFFFF'];
+    function frame(ts) {
+      if (!d.body.contains(v) || !ctx) { cancelAnimationFrame(raf); return; }
+      if (!t0) t0 = ts;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      bits.forEach(function (q) {
+        q.y += q.vy; q.x += Math.sin((ts + q.ph) / 600) * 0.8; q.r += q.vr;
+        if (q.y > cv.height + 20) { if (ts - t0 < 6000) { q.y = -20; q.x = Math.random() * cv.width; } else return; }
+        ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.r); ctx.fillStyle = q.c; ctx.fillRect(-q.w / 2, -q.h / 2, q.w, q.h); ctx.restore();
+      });
+      raf = requestAnimationFrame(frame);
+    }
+    var view = { name: 'badge', el: v, focus: b1 };
+    view.onLeave = function () { cancelAnimationFrame(raf); };
+    setTimeout(function () {
+      cv.width = cv.clientWidth || 1280; cv.height = cv.clientHeight || 720;
+      var s = cv.width / 1280;
+      for (var i = 0; i < 90; i++) bits.push({ x: Math.random() * cv.width, y: Math.random() * cv.height - cv.height, vy: (1.2 + Math.random() * 2.2) * s, vr: (Math.random() - .5) * .12, r: Math.random() * 3, ph: Math.random() * 3000, w: (8 + Math.random() * 6) * s, h: (12 + Math.random() * 8) * s, c: COLS[i % COLS.length] });
+      raf = requestAnimationFrame(frame);
+      if (current() === view) Nav.focus(b1, true);
+    }, 60);
+    return view;
+  }
+  function BadgeShelf(pid) {
+    pid = pid || Store.profile();
+    var p = profileOf(pid) || { id: pid, name: 'Guest' };
+    var v = UI.view(); v.classList.add('scroller'); v.classList.add('bdgshelf');
+    var l = w.Badges.list(pid), got = l.filter(function (x) { return x.got; }).length;
+    var head = el('div', 'bdghead');
+    head.appendChild(avatar(p, 'bdgav'));
+    var ht = el('div', 'bdght'); ht.appendChild(el('div', 'bdgk', 'HUY HIỆU CỦA ' + String(p.name).toUpperCase())); ht.appendChild(el('div', 'bdgh1', got + ' / ' + l.length + ' huy hiệu')); head.appendChild(ht);
+    var near = l.filter(function (x) { return !x.got && x.cur > 0; }).sort(function (a, b) { return (b.cur / b.need) - (a.cur / a.need); })[0];
+    if (near) { var nr = el('div', 'bdgnear'); nr.appendChild(el('div', 'bdgns', 'Sắp mở khóa')); nr.appendChild(el('div', 'bdgnv', near.b.n + ' · còn ' + (near.need - near.cur) + ' ' + near.b.unit)); head.appendChild(nr); }
+    v.appendChild(head);
+    var grid = el('div', 'bdggrid'), first = null;
+    l.forEach(function (x) {
+      var c = el('div', 'bdgcard f' + (x.got ? ' got' : ''));
+      c.appendChild(w.Badges.medal(x.b.id, 84, !x.got));
+      c.appendChild(el('div', 'bdgn', x.b.n));
+      c.appendChild(el('div', 'bdgs', x.b.d));
+      if (x.got) { var dt = new Date(x.got); c.appendChild(el('div', 'bdgon', 'Mở khóa ' + dt.getDate() + '/' + (dt.getMonth() + 1))); }
+      else { var bar = el('div', 'bdgbar'), fl = el('i'); fl.style.width = Math.round(x.cur / x.need * 100) + '%'; bar.appendChild(fl); c.appendChild(bar); c.appendChild(el('div', 'bdgpv', x.cur + ' / ' + x.need)); }
+      c._ok = function () { UI.toast(x.b.n + ': ' + x.b.full + (x.got ? ' · đã có' : ' · ' + x.cur + '/' + x.need)); };
+      grid.appendChild(c); if (!first) first = c;
+    });
+    v.appendChild(grid);
+    v.appendChild(el('div', 'bdgfoot', 'Huy hiệu riêng của từng hồ sơ, đồng bộ qua Google. Vàng · bạc · đồng tùy độ khó.'));
+    return { name: 'badges', el: v, focus: first };
+  }
+  function raceCard() {
+    if (!w.Badges || Store.pref('raceOff', false)) return null;
+    var ids = Store.profiles().map(function (p) { return p.id; });
+    var ch = w.Badges.challenge();
+    var rows = ids.map(function (id) { return { p: profileOf(id) || { id: id, name: 'Guest' }, n: w.Badges.count(id), nw: w.Badges.newest(id), cn: w.Badges.weekN(id, ch.k) }; });
+    var any = rows.some(function (r) { return r.n > 0 || r.cn > 0; });
+    if (!any) return null;
+    rows = rows.filter(function (r) { return r.n > 0 || r.cn > 0 || r.p.id === Store.profile(); });
+    rows.sort(function (a, b) { return b.n - a.n || ((b.nw || {}).at || 0) - ((a.nw || {}).at || 0); });
+    var c = el('div', 'rowwrap racec');
+    var L = el('div', 'rcl');
+    var ws = new Date(w.Badges.weekKey() + 'T00:00:00'), we = new Date(ws.getTime() + 6 * 864e5);
+    L.appendChild(el('div', 'wkk', '🏆 THI ĐUA TUẦN NÀY · ' + ws.getDate() + '/' + (ws.getMonth() + 1) + ' – ' + we.getDate() + '/' + (we.getMonth() + 1)));
+    L.appendChild(el('div', 'rct', 'Ai nhiều huy hiệu nhất?'));
+    rows.slice(0, 4).forEach(function (r, i) {
+      var rw = el('div', 'rcr f');
+      rw.appendChild(el('div', 'rcrk', String(i + 1)));
+      rw.appendChild(avatar(r.p, 'rcav'));
+      var mid = el('div', 'rcm');
+      mid.appendChild(el('div', 'rcn', r.p.name + (r.cn >= ch.need ? '  ✓' : '')));
+      mid.appendChild(el('div', 'rcs', r.nw ? 'Mới nhất: ' + r.nw.b.n + ' · ' + badgeAgo(r.nw.at) : 'Chưa có huy hiệu'));
+      var mini = el('div', 'rcmini');
+      w.Badges.list(r.p.id).filter(function (x) { return x.got; }).sort(function (a, b) { return b.got - a.got; }).slice(0, 6).forEach(function (x) { mini.appendChild(w.Badges.medal(x.b.id, 40)); });
+      mid.appendChild(mini); rw.appendChild(mid);
+      var ct = el('div', 'rccnt'); ct.appendChild(el('b', '', String(r.n))); ct.appendChild(el('small', '', 'huy hiệu')); rw.appendChild(ct);
+      rw._ok = function () { push(BadgeShelf(r.p.id)); }; rw.onclick = rw._ok;
+      L.appendChild(rw);
+    });
+    c.appendChild(L);
+    var R = el('div', 'rcrt');
+    var cb = el('div', 'wkbox rcch');
+    cb.appendChild(el('div', 'wkbk', 'THỬ THÁCH TUẦN NÀY'));
+    cb.appendChild(el('div', 'wkbv', ch.t));
+    cb.appendChild(el('div', 'wkbh', ch.d()));
+    var dots = el('div', 'rcdots');
+    rows.slice(0, 4).forEach(function (r) {
+      var it = el('span', 'rcdi'); it.appendChild(avatar(r.p, 'rcdav')); it.appendChild(el('span', 'rcdn', r.p.name));
+      if (ch.need <= 10) { var dd = el('span', 'rcdd'); for (var k = 0; k < ch.need; k++) dd.appendChild(el('i', k < r.cn ? 'on' : '')); it.appendChild(dd); }
+      else it.appendChild(el('span', 'rcdv', Math.min(r.cn, ch.need) + '/' + ch.need));
+      dots.appendChild(it);
+    });
+    cb.appendChild(dots); R.appendChild(cb);
+    var last = rows.map(function (r) { return r.nw ? { p: r.p, x: r.nw } : null; }).filter(Boolean).sort(function (a, b) { return b.x.at - a.x.at; })[0];
+    if (last) {
+      var nb = el('div', 'wkbox rcnew'); nb.appendChild(el('div', 'wkbk', 'MỚI MỞ KHÓA'));
+      var ln = el('div', 'rcnl'); ln.appendChild(w.Badges.medal(last.x.b.id, 64));
+      var lt = el('div'); lt.appendChild(el('div', 'wkbv', last.p.name + ' · ' + last.x.b.n));
+      var at = new Date(last.x.at); lt.appendChild(el('div', 'wkbh', badgeAgo(last.x.at).replace(/^h/, 'H') + ' ' + UI.hhmm(at)));
+      ln.appendChild(lt); nb.appendChild(ln); R.appendChild(nb);
+    }
+    R.appendChild(UI.button('Huy hiệu của tôi', 'small', function () { push(BadgeShelf()); }));
     c.appendChild(R);
     return c;
   }
@@ -4629,7 +4791,7 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.30: Lời nhắn gia đình (trang phim → ✉ Gửi cho…), Cả nhà bình chọn phim khi Xem chung (quét mã QR bằng điện thoại hoặc bấm OK bằng remote), hàng Tiếp tục xem báo số phim có tập mới.','Mới 2.29.1: màn hình Ai đang xem có ô Đồng bộ với Google (TV quét mã QR bằng điện thoại, không cần gõ mật khẩu).','Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.32: Huy hiệu thành tích (12 huy hiệu vàng · bạc · đồng, riêng từng hồ sơ, xem ở Cài đặt → Hồ sơ người xem → Huy hiệu thành tích) và ô Thi đua tuần trên Trang chủ: bảng xếp hạng cả nhà và một thử thách mỗi tuần. Câu thoại tổng tài tăng lên 500 câu.','Mới 2.31: màn hình chờ đổi câu thoại ngẫu nhiên theo từng ảnh và phát ngẫu nhiên một bài trong Nhạc của tôi (tắt trong Cài đặt → Màn hình chờ). Nhạc nền mặc định trộn bài.','Mới 2.30: Lời nhắn gia đình (trang phim → ✉ Gửi cho…), Cả nhà bình chọn phim khi Xem chung (quét mã QR bằng điện thoại hoặc bấm OK bằng remote), hàng Tiếp tục xem báo số phim có tập mới.','Mới 2.29.1: màn hình Ai đang xem có ô Đồng bộ với Google (TV quét mã QR bằng điện thoại, không cần gõ mật khẩu).','Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh”, thanh tiến độ và số phiên bản đang dùng (ví dụ 2.28.0) ở dưới cùng.','Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.','Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M84 30v46a12 10 0 1 1-6-8.7V40l48-10v38a12 10 0 1 1-6-8.7V36.4z" fill="#E8B04B"/><g fill="#4FAE8A"><rect x="40" y="70" width="6" height="22" rx="3"/><rect x="50" y="58" width="6" height="34" rx="3"/><rect x="60" y="76" width="6" height="16" rx="3"/></g></svg>', t: 'Nhạc nền Trang chủ', l: ['Nhạc của tôi: 20 bài hát của Ryan Nguyen (Chủ Tịch Giả Nghèo, Tổng Tài Ở Rể, Vợ Yêu Đừng Chạy…) phát ở Trang chủ, lần lượt hoặc trộn bài.', 'Mở phim hay sang trang khác thì nhạc tạm dừng, quay lại Trang chủ phát tiếp đúng chỗ. Ô “♪ tên bài” góc dưới bên phải: bấm để qua bài.', 'Cài đặt → Nhạc nền Trang chủ: Nhạc của tôi (lần lượt / trộn bài), Hòa tấu (5 bản), Tắt; Chọn bài để nghe bài bất kỳ; Âm lượng. Riêng từng hồ sơ.', 'TV lấy nhạc từ GitHub Pages của bạn. Android TV: Cài đặt → Kết nối → Địa chỉ nhạc. Không tải được thì app tự phát 5 bản hòa tấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14161E"/><rect x="10" y="12" width="80" height="45" rx="6" fill="#3A2A14"/><rect x="10" y="64" width="60" height="6" rx="2" fill="#F4F1EC"/><rect x="10" y="76" width="80" height="3" rx="1.5" fill="#33384A"/><rect x="10" y="76" width="34" height="3" rx="1.5" fill="#E8B04B"/><circle cx="50" cy="96" r="10" fill="#E8B04B"/><rect x="104" y="20" width="80" height="5" rx="2" fill="#5A5F6E"/><rect x="104" y="36" width="88" height="9" rx="3" fill="#E8B04B"/><rect x="104" y="54" width="76" height="5" rx="2" fill="#8A8F9E"/><rect x="104" y="66" width="70" height="5" rx="2" fill="#5A5F6E"/></svg>', t: 'Trang Nhạc', l: ['Tab Nhạc: 20 bài hát của Ryan Nguyen. Lúc nhạc dạo, khung lời hiện “Giới thiệu bài hát” (tóm tắt + đoạn trích); điện thoại thì tóm tắt nằm dưới tên bài.','Lời: câu đang hát sáng lên. Tùy bài: hiện cả câu, chạy theo từng chữ (như karaoke) hoặc tô dần cả câu. Lời lệch: nút ⏱ “Chỉnh lời”.','Ảnh: 10 ảnh phim tổng tài thật hợp với bài, đổi mỗi 8 giây, chấm dưới ảnh cho biết đang ở ảnh nào. Bấm vào ảnh (TV: chọn ảnh rồi OK) để hỏi “Xem phim này?”: “Ở lại nghe nhạc”, “Danh sách” (lưu phim xem sau, nhạc vẫn phát) hoặc “Mở phim”.','Kiểu A chia đôi hoặc Kiểu B toàn màn hình kiểu karaoke: nút ⛶. Nút: Trộn bài, Bài trước, Phát/Dừng, Bài kế, Hẹn giờ, ☰ Tất cả bài (tóm tắt và đoạn trích của cả 20 bài; chọn một bài để phát).','Các bài nghe to đều nhau. Tắt: Cài đặt → Cân bằng âm lượng các bài.'] },
@@ -4649,7 +4811,7 @@
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="70" cy="52" r="18" fill="#E8B04B"/><path d="M40 96c0-17 13-28 30-28s30 11 30 28z" fill="#E8B04B"/><circle cx="130" cy="56" r="14" fill="#4FAE8A"/><path d="M106 96c0-14 11-23 24-23s24 9 24 23z" fill="#4FAE8A"/></svg>', t: 'Hồ sơ người xem (Ai đang xem?)', l: ['Mở app sẽ hỏi “Ai đang xem?”. Chọn Guest hoặc hồ sơ của bạn. Đổi hồ sơ bất cứ lúc nào: ô tròn chữ cái góc trên bên phải, hoặc Cài đặt → Hồ sơ người xem.', 'Mỗi hồ sơ có lịch sử xem, phim xem dở, danh sách và 5 từ khóa tìm gần nhất riêng.', '“+ Thêm” để tạo hồ sơ mới (tối đa 8): gõ tên rồi chọn 1 trong 25 hình thú kawaii. Guest tự có hình gấu trúc.', 'Giữ lâu trên một hồ sơ (TV: giữ lâu OK) để mở menu: Đặt / Đổi / Bỏ mã PIN, Đổi hình, Xóa hồ sơ.', 'Bỏ mã PIN khi không cần: menu giữ lâu → 🔓 Bỏ mã PIN, hoặc Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này → Bỏ mã PIN. Nhập mã cũ (quên thì dùng mã PIN người lớn).', 'Cài đặt riêng từng hồ sơ: các dòng có hình con thú trong Cài đặt (giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi) là của riêng người đang xem; đổi hồ sơ là đổi theo.', 'Mã PIN riêng cho từng hồ sơ: Cài đặt → Hồ sơ người xem → Mã PIN của hồ sơ này. Hồ sơ có 🔒 phải nhập mã mới vào được; mã PIN người lớn mở được mọi hồ sơ.', 'Không muốn bị hỏi mỗi lần mở app: Cài đặt → “Hỏi Ai đang xem? khi mở app” → Tắt.', 'Chủ đề theo mùa và ngày lễ: Cài đặt → Chủ đề. Tự động đổi theo ngày (Tết, Noel, Valentine, Halloween, 4 mùa…), chọn tay một chủ đề, hoặc Tắt. TV chậm thì tắt “Hiệu ứng rơi”.', 'Thống kê xem (Lịch sử → “Thống kê xem”, hoặc Cài đặt → Hồ sơ người xem): số phút xem 7 ngày qua, kênh xem nhiều nhất, so sánh các hồ sơ. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="26" width="120" height="68" rx="10" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M88 46v28l22-14z" fill="#F4F1EC"/><path d="M40 104h120" stroke="#4FAE8A" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Tự phát phim tiếp theo', l: ['Hết phim, màn hình hiện phim/tập tiếp theo và đếm ngược 30 giây rồi tự phát.', '“Phát ngay” để xem luôn, “Hủy” (hoặc Back) để dừng lại. Trái/phải để chọn nút.', 'Phim tiếp theo ưu tiên phim chưa xem, cùng kênh, cùng thể loại. Tắt trong Cài đặt → Xem phim → Tự phát phim tiếp theo.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="62" r="38" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M100 40v24l16 10" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Hẹn giờ tắt và Đã xem', l: ['Đang xem phim: bấm ▲ để hiện nút, chọn “Hẹn giờ”. Mỗi lần OK đổi: 30 phút → 60 phút → 90 phút → Hết phim này → Tắt.', 'Hết giờ, phim tạm dừng và hiện thông báo; bấm OK để xem tiếp. Còn 1 phút app nhắc trước.', 'Phim xem hết có dấu “✓ Đã xem” và không hiện lại ở Phim mới, Đang hot, Đề xuất (tắt trong Cài đặt → Trang chủ).', 'Trang chi tiết phim: nút “Đánh dấu đã xem” / “Đã xem ✓” để tự đánh dấu hoặc bỏ đánh dấu.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><defs><linearGradient id="gsv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A14"/><stop offset="1" stop-color="#0B0B0E"/></linearGradient></defs><rect width="200" height="120" rx="12" fill="url(#gsv)"/><circle cx="60" cy="34" r="12" fill="#E8B04B" opacity=".35"/><circle cx="120" cy="26" r="9" fill="#E8B04B" opacity=".3"/><path d="M0 120V84h18v-14h16v20h14V64h20v56z" fill="#000" opacity=".7"/><rect x="16" y="92" width="26" height="6" rx="2" fill="#E8B04B"/><rect x="16" y="102" width="60" height="7" rx="2" fill="#F4F1EC"/><text x="186" y="104" text-anchor="end" font-size="26" font-weight="300" fill="#F4F1EC" font-family="sans-serif">11:19</text></svg>', t: 'Màn hình chờ', l: ['Để app yên 10 phút: hiện ảnh bìa phim mới chạy chậm, đổi phim mỗi 12 giây, kèm tên phim và đồng hồ lớn, giống Netflix.', 'Bấm phím bất kỳ (hoặc chạm) để quay lại đúng chỗ cũ, phím đó không làm gì khác.', 'Đang chiếu phim thì không hiện. Nhạc nền tạm im. Đồng hồ đổi góc để màn TV không bị in hình.', 'Cài đặt → Giao diện → Màn hình chờ: Tắt / 5 / 10 / 15 / 30 phút, có nút Xem thử.', 'Câu thoại tổng tài: mỗi lần màn hình chờ hiện là một câu mới (250 câu, 5 chủ đề, đi hết mới lặp lại), hiện cùng tên phim. Tắt ở Cài đặt → Câu thoại tổng tài.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><defs><linearGradient id="gsv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A14"/><stop offset="1" stop-color="#0B0B0E"/></linearGradient></defs><rect width="200" height="120" rx="12" fill="url(#gsv)"/><circle cx="60" cy="34" r="12" fill="#E8B04B" opacity=".35"/><circle cx="120" cy="26" r="9" fill="#E8B04B" opacity=".3"/><path d="M0 120V84h18v-14h16v20h14V64h20v56z" fill="#000" opacity=".7"/><rect x="16" y="92" width="26" height="6" rx="2" fill="#E8B04B"/><rect x="16" y="102" width="60" height="7" rx="2" fill="#F4F1EC"/><text x="186" y="104" text-anchor="end" font-size="26" font-weight="300" fill="#F4F1EC" font-family="sans-serif">11:19</text></svg>', t: 'Màn hình chờ', l: ['Để app yên 10 phút: hiện ảnh bìa phim mới chạy chậm, đổi phim mỗi 12 giây, kèm tên phim và đồng hồ lớn, giống Netflix.', 'Bấm phím bất kỳ (hoặc chạm) để quay lại đúng chỗ cũ, phím đó không làm gì khác.', 'Đang chiếu phim thì không hiện. Nhạc nền tạm im. Đồng hồ đổi góc để màn TV không bị in hình.', 'Cài đặt → Giao diện → Màn hình chờ: Tắt / 5 / 10 / 15 / 30 phút, có nút Xem thử.', 'Câu thoại tổng tài: mỗi lần màn hình chờ hiện là một câu mới (500 câu, 5 chủ đề, đi hết mới lặp lại), hiện cùng tên phim. Tắt ở Cài đặt → Câu thoại tổng tài.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="52" r="30" fill="none" stroke="#2A3042" stroke-width="10"/><path d="M100 22a30 30 0 0 1 26 45" fill="none" stroke="#E8B04B" stroke-width="10" stroke-linecap="round"/><text x="100" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">1 giờ</text><text x="100" y="106" text-anchor="middle" font-size="13" fill="#9AA0AE" font-family="sans-serif">18:00 – 21:00</text></svg>', t: 'Giới hạn giờ xem', l: ['Cài đặt → Hồ sơ người xem → Giới hạn giờ xem (cần mã PIN người lớn). Chọn hồ sơ, đặt số giờ mỗi ngày, cuối tuần, khung giờ được xem, nhắc trước 5 hoặc 10 phút.', 'Sắp hết giờ: góc màn hình nhắc “còn 5 phút”. Hết giờ: phim dừng, hiện màn hình “Hết giờ xem phim hôm nay”. Vẫn nghe nhạc được.', 'Người lớn bấm “Người lớn: thêm giờ”, nhập mã PIN, cho thêm 15 / 30 / 60 phút.', 'Giới hạn đồng bộ qua Google nên áp dụng trên mọi máy của gia đình. Thời gian xem tính theo thống kê xem của hồ sơ.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="82" cy="54" r="22" fill="#DDEBFF"/><circle cx="118" cy="54" r="22" fill="#FFE4EE" stroke="#1D2230" stroke-width="4"/><circle cx="134" cy="36" r="9" fill="#E8B04B"/><path d="M130 36l3 3 6-6" stroke="#1a1206" stroke-width="2.5" fill="none"/><rect x="50" y="88" width="100" height="18" rx="9" fill="#E8B04B"/></svg>', t: 'Xem chung', l: ['Ai đang xem? → chọn “Xem chung” → chọn 2 đến 4 người → “Xem chung: …”.', 'Phim, phim xem dở và thời gian xem được ghi cho tất cả. Hàng Đề xuất gợi ý theo sở thích chung.', 'Có giới hạn giờ xem thì người có giới hạn chặt nhất quyết định.', 'Thôi xem chung: chọn lại một hồ sơ trong Ai đang xem?.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="56" r="26" fill="#E0314B"/><rect x="93" y="40" width="14" height="24" rx="7" fill="#fff"/><path d="M86 58a14 14 0 0 0 28 0M100 72v8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><text x="100" y="106" text-anchor="middle" font-size="13" fill="#F4F1EC" font-family="sans-serif">“tổng tài giả nghèo”</text></svg>', t: 'Tìm bằng giọng nói', l: ['Trang Tìm kiếm có nút micro đỏ (điện thoại, máy tính, Android TV). Bấm rồi nói tên phim, app tự tìm.', 'Android TV: hộp giọng nói của Google hiện ra. Remote có nút Tìm kiếm thì bấm nút đó cũng được.', 'Lần đầu trình duyệt hỏi quyền dùng micro: chọn Cho phép.', 'TV Samsung không cho app dùng micro nên không có nút này.'] },
@@ -4707,6 +4869,7 @@
       return po.apply(this, arguments);
     };
     setInterval(limTick, 15000);
+    if (w.Badges) w.Badges.setup({ limOf: function (id) { return limOf(id); }, onUnlock: function () { showBadges(); } });
     setInterval(sleepTick, 30000); setTimeout(sleepTick, 3000);
     // nút micro / tìm kiếm trên remote Android TV
     w.__voiceKey = function () {
@@ -4742,7 +4905,7 @@
   }
 
   w.Screens = {
-    init: init, vote: function () { push(VoteTV()); }, showMsgs: function () { showMsgs(); }, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, adminTV: function (t, d2) { push(AdminTV(t, d2)); }, askFilm: function (it) { push(AskFilm(it)); }, quiz: function () { push(Quiz()); }, birthday: function (id) { push(Birthday(profileOf(id || Store.profile()) || { id: 'guest', name: 'Guest' }, false)); }, afterBoot: function () { checkBirthday(); }, sleepTick: function () { sleepTick(); }, preN: function () { return preN; }, weekPick: function () { return weekPick(Api.pool()); }, limitList: function () { push(LimitList()); }, limitLock: function () { var st = limNow(); if (st) push(LimitLock(st)); }, limNow: function () { return limNow(); }, chBadge: function () { paintChBadge(); }, push: push, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
+    init: init, vote: function () { push(VoteTV()); }, showMsgs: function () { showMsgs(); }, badges: function (pid) { push(BadgeShelf(pid)); }, showBadges: function () { showBadges(); }, who: function (startup) { push(Who(startup)); }, avatarEl: function (p, cls) { return avatar(p, cls); }, paintWho: function () { paintWho(); }, errorLog: function () { push(ErrorLog()); }, adminTV: function (t, d2) { push(AdminTV(t, d2)); }, askFilm: function (it) { push(AskFilm(it)); }, quiz: function () { push(Quiz()); }, birthday: function (id) { push(Birthday(profileOf(id || Store.profile()) || { id: 'guest', name: 'Guest' }, false)); }, afterBoot: function () { checkBirthday(); }, sleepTick: function () { sleepTick(); }, preN: function () { return preN; }, weekPick: function () { return weekPick(Api.pool()); }, limitList: function () { push(LimitList()); }, limitLock: function () { var st = limNow(); if (st) push(LimitLock(st)); }, limNow: function () { return limNow(); }, chBadge: function () { paintChBadge(); }, push: push, back: back, goTab: goTab, openItem: openItem, autoRefresh: autoRefresh, nextRefresh: nextRefresh, home: home,
     depth: function () { return S.stack.length; },
     current: function () { return current(); }
   };

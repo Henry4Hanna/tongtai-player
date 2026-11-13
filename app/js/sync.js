@@ -270,7 +270,7 @@
     });
     return {
       v: 1, at: Date.now(), stamps: R('stamps', {}),
-      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch, pf: pf, stats: R('stats', {}), sq: R('sq', []), msgs: R('msgs', [])
+      prog: R('prog', {}), recent: R('recent', []), favs: R('favs', []), blocked: R('blocked', {}), prefs: stripPrefs(R('prefs', {})), ch: ch, pf: pf, stats: R('stats', {}), sq: R('sq', []), msgs: R('msgs', []), badges: R('badges', {})
     };
   }
   function wrapPf(x) { x = x || {}; return { v: 1, stamps: x.stamps || {}, prog: x.prog || {}, recent: x.recent || [], favs: x.favs || [], stats: x.stats || {}, sq: x.sq || [], blocked: {}, prefs: {} }; }
@@ -361,6 +361,7 @@
     out.stats = mergeStats(a.stats, b.stats);
     out.sq = mergeSq(a.sq, b.sq);
     if (!a.isPf) out.msgs = mergeMsgs(a.msgs, b.msgs);
+    if (!a.isPf) out.badges = w.Badges ? w.Badges.merge(a.badges, b.badges) : (a.badges || b.badges || {});
     out.ch = {};
     [b.ch || {}, a.ch || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { out.ch[k] = m[k]; }); });
     // từng hồ sơ: gộp như dữ liệu chính
@@ -388,7 +389,7 @@
     ['prog', 'recent', 'favs', 'blocked', 'prefs'].forEach(function (k) {
       if (JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) { A(k, m[k]); changed = true; }
     });
-    ['stats', 'sq', 'msgs'].forEach(function (k) { if (m[k] && JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) A(k, m[k]); });
+    ['stats', 'sq', 'msgs', 'badges'].forEach(function (k) { if (m[k] && JSON.stringify(R(k, null)) !== JSON.stringify(m[k])) A(k, m[k]); });
     A('stamps', m.stamps);
     // hồ sơ người xem: chỉ ghi cho hồ sơ còn trong danh sách
     var live = {};
@@ -543,7 +544,7 @@
     };
   }
   function backupWhy(e) {
-    if (e && e.needTap) return 'Cần chạm “Đồng bộ ngay” để đăng nhập Google lại';
+    if (e && e.needTap) return 'Chạm “Đồng bộ ngay” để đăng nhập lại';
     if (e && e.net) return 'Mất mạng, sẽ thử lại';
     if (e && e.status === 401) return ghToken() ? 'Token GitHub sai hoặc hết hạn' : 'Hết hạn đăng nhập Google, hãy đăng nhập lại';
     if (e && e.status === 403) return ghToken() ? 'GitHub từ chối: token cần quyền gist' : driveWhy(e);

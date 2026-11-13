@@ -51,6 +51,7 @@
     var clk = el('div', 'svclock');
     clk.appendChild(el('div', 'svtime', ''));
     clk.appendChild(el('div', 'svdate', ''));
+    clk.appendChild(el('div', 'svsong', ''));   // bài đang phát
     box.appendChild(clk);
     box.appendChild(el('div', 'svhint', 'Bấm phím bất kỳ để quay lại'));
     (d.getElementById('app') || d.body).appendChild(box);
@@ -80,12 +81,42 @@
       cur = 1 - cur;
       var info = box.querySelector('.svinfo');
       info.classList.remove('in'); void info.offsetWidth;
+      if (box.classList.contains('withq')) setQuote();   // mỗi ảnh một câu thoại ngẫu nhiên
       box.querySelector('.svtitle').textContent = it.title || '';
       box.querySelector('.svch').textContent = (it.ch || '') + (it.eps > 1 ? ' · ' + it.eps + ' tập' : '');
       info.classList.add('in');
       box.classList.toggle('alt', idx % 2 === 0);   // đổi góc đồng hồ, tránh in hình lên màn TV
     };
     img.src = src;
+  }
+
+  // câu thoại ngẫu nhiên, không lặp lại câu vừa hiện
+  var lastQ = -1;
+  function setQuote() {
+    var Q = w.Quotes, qq = null;
+    if (Q.count && Q.quiz) {
+      var n = 0, i;
+      do { i = Math.floor(Math.random() * Q.count); n++; } while (i === lastQ && n < 5);
+      lastQ = i; qq = Q.get ? Q.get(i) : null; if (!qq) { var z = Q.quiz(i); qq = { text: z.text, cat: z.cat, n: z.n }; }
+    } else qq = Q.next ? Q.next() : { text: Q.today(), cat: '' };
+    box.querySelector('.svqk').textContent = 'CÂU THOẠI TỔNG TÀI' + (qq.cat ? ' · ' + qq.cat.toUpperCase() : '') + (qq.n ? ' · #' + qq.n : '');
+    box.querySelector('.svqt').textContent = '“' + qq.text + '”';
+  }
+  // nhạc: chọn ngẫu nhiên một bài trong Nhạc của tôi
+  var songTimer = 0;
+  function startSong() {
+    var S = w.Music && w.Music.S, C = w.APP_CONFIG || {};
+    paintSong();
+    clearInterval(songTimer); songTimer = setInterval(paintSong, 2000);
+    if (!S || C.SAVER_MUSIC === false || C.MUSIC === 'off' || !S.all().length) return;
+    var n = S.all().length, cur = S.index(), i;
+    do { i = Math.floor(Math.random() * n); } while (n > 1 && i === cur);
+    setTimeout(function () { if (on) S.play(i); }, 800);
+  }
+  function paintSong() {
+    var S = w.Music && w.Music.S, e = box && box.querySelector('.svsong'); if (!e) return;
+    var sg = S && S.isPlaying() ? S.song(S.index()) : null;
+    e.textContent = sg ? '♪ ' + sg.title : '';
   }
 
   function show() {
@@ -96,11 +127,8 @@
     box.classList.toggle('noimg', !items.length);
     var useQ = !!(w.Quotes && (!w.Settings || w.Settings.get('SAVER_QUOTE') !== false));
     box.classList.toggle('withq', useQ);
-    if (useQ) {   // mỗi lần màn hình chờ hiện: một câu thoại mới
-      var qq = w.Quotes.next ? w.Quotes.next() : { text: w.Quotes.today(), cat: '' };
-      box.querySelector('.svqk').textContent = 'CÂU THOẠI TỔNG TÀI' + (qq.cat ? ' · ' + qq.cat.toUpperCase() : '') + (qq.n ? ' · #' + qq.n : '');
-      box.querySelector('.svqt').textContent = '“' + qq.text + '”';
-    }
+    if (useQ) setQuote();
+    startSong();
     paintClock();
     d.documentElement.classList.add('ssaver');
     box.classList.add('on');
@@ -113,7 +141,7 @@
   function hide() {
     if (!on) return;
     on = false; last = Date.now();
-    clearInterval(slideTimer); clearInterval(clockTimer);
+    clearInterval(slideTimer); clearInterval(clockTimer); clearInterval(songTimer);
     d.documentElement.classList.remove('ssaver');
     box.classList.remove('on');
     layers.forEach(function (l) { l.classList.remove('show'); });

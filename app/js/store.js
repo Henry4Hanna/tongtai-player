@@ -115,6 +115,7 @@
         a.unshift(c);
       }
       pset('favs', a.slice(0, 60));
+      if (!has && w.Badges) { try { w.Badges.add('favw', 1); } catch (e) { /* bỏ qua */ } }
       return !has;
     },
 

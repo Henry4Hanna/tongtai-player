@@ -206,6 +206,7 @@
   }
   function onHome() {
     if (onMusicPage()) return true;   // trang Nhạc: luôn phát nhạc của tôi
+    if (w.Saver && w.Saver.isOn() && !d.hidden && !(w.Player && w.Player.isOpen())) return cfg().SAVER_MUSIC !== false;   // màn hình chờ: phát nhạc của tôi (tắt được trong Cài đặt)
     try {
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;   // màn hình chờ: im lặng
       var c = w.Screens && w.Screens.current && w.Screens.current();

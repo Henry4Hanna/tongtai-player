@@ -40,7 +40,7 @@
     {
      "s": "",
      "t": "Câu nói giản đơn mà làm tim anh",
-     "at": 50.0
+     "at": 50
     },
     {
      "s": "",
@@ -536,7 +536,7 @@
     {
      "s": "",
      "t": "Riêng một ánh nhìn em, anh chẳng biết làm sao",
-     "at": 48.0
+     "at": 48
     },
     {
      "s": "ĐIỆP KHÚC",
@@ -631,7 +631,7 @@
     {
      "s": "",
      "t": "Nếu ngày mai em chẳng còn đứng đợi",
-     "at": 144.0
+     "at": 144
     },
     {
      "s": "",
@@ -706,7 +706,7 @@
     {
      "s": "KẾT",
      "t": "Là một mái nhà có em bên đời",
-     "at": 206.0
+     "at": 206
     },
     {
      "s": "",
@@ -1072,7 +1072,7 @@
     {
      "s": "LỜI 2",
      "t": "Cuộc họp kéo dài, trời nghiêng về tối",
-     "at": 88.0
+     "at": 88
     },
     {
      "s": "",
@@ -1152,27 +1152,27 @@
     {
      "s": "CẦU NỐI",
      "t": "Anh không hứa những điều xa xôi",
-     "at": 154.0
+     "at": 154
     },
     {
      "s": "",
      "t": "Chỉ hứa hôm nay sẽ không quay lưng",
-     "at": 158.0
+     "at": 158
     },
     {
      "s": "",
      "t": "Nếu em còn đây, anh sẽ học cách",
-     "at": 162.0
+     "at": 162
     },
     {
      "s": "",
      "t": "Nói rằng anh cần em, dù rất vụng về",
-     "at": 166.0
+     "at": 166
     },
     {
      "s": "ĐIỆP KHÚC CUỐI",
      "t": "Tổng tài lạnh lùng, thôi giấu đi anh",
-     "at": 178.0
+     "at": 178
     },
     {
      "s": "",
@@ -1251,7 +1251,7 @@
     {
      "s": "",
      "t": "Bản hợp đồng trên bàn bỗng hóa thành xa lạ",
-     "at": 29.0
+     "at": 29
     },
     {
      "s": "",
@@ -1700,7 +1700,7 @@
     "Để em cười sáng trong đôi mắt anh",
     "Một mái nhà có em chờ anh"
    ],
-   "gain": 0.1,
+   "gain": 0,
    "keys": [
     "cưng chiều",
     "vợ nhỏ",
@@ -1931,7 +1931,7 @@
     "Là nhớ một người ngay khi người rời đi",
     "Ta đã từng có nhau, mà chẳng giữ được gì"
    ],
-   "gain": 0.0,
+   "gain": -0.1,
    "keys": [
     "ly hôn",
     "chia tay",
@@ -2172,7 +2172,7 @@
     {
      "s": "",
      "t": "Và em chọn chính em",
-     "at": 246.0
+     "at": 246
     }
    ],
    "sum": "Bài hát \"Thiên Kim Thật Trở Về\" kể về cô gái từng bị lạc mất thân phận nay trở về giữa bao lời cay nghiệt, không cúi đầu, không cầu xin, tự viết tương lai bằng trái tim vững vàng.",
@@ -2362,7 +2362,7 @@
     {
      "s": "",
      "t": "Anh sẽ không dùng danh phận níu em",
-     "at": 161.0
+     "at": 161
     },
     {
      "s": "",
@@ -2671,7 +2671,7 @@
     "Anh đã có trong tay bao điều người mơ ước",
     "Mà thiếu em, căn phòng rộng hóa heo may"
    ],
-   "gain": 0.0,
+   "gain": 0,
    "keys": [
     "gặp lại",
     "5 năm",
@@ -4123,7 +4123,7 @@
     "Đứng phía sau em qua những tháng ngày giông",
     "Anh vẫn chọn ở bên em đến cùng"
    ],
-   "gain": 0.0,
+   "gain": 0,
    "keys": [
     "ở rể",
     "con rể",
@@ -4304,7 +4304,7 @@
     {
      "s": "",
      "t": "Mình cùng đi, chẳng cần ai dẫn lối",
-     "at": 168.0
+     "at": 168
     },
     {
      "s": "",
@@ -4314,7 +4314,7 @@
     {
      "s": "",
      "t": "Khi về bên em, chỉ cần là anh",
-     "at": 175.0
+     "at": 175
     },
     {
      "s": "",
@@ -4373,7 +4373,7 @@
     "Người luôn lạnh lùng nay đứng chờ bên thềm",
     "Chỉ mong mỗi ngày được đón em về"
    ],
-   "gain": 0.0,
+   "gain": 0,
    "keys": [
     "bá đạo",
     "tổng tài"
@@ -4617,7 +4617,7 @@
     "Bao nhiêu thành công chẳng đổi được một đêm",
     "Được ngồi bên em, nghe em kể chuyện thường"
    ],
-   "gain": 0.0,
+   "gain": 0,
    "keys": [
     "yếu lòng",
     "dịu dàng",

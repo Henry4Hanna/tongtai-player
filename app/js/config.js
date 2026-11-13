@@ -44,7 +44,7 @@ window.APP_CONFIG = {
   MUSIC_URL: '',
   ADMIN_HASHES: ['95db4e4e635ec618bced1909f3fe20fcbab24956bb52560573ba3d33ea9be03c', 'dfc441d28737366d7329d2264ee8c8f326b77e939d70c2876df2a458308b5772'],  // email quản trị (mã hóa SHA-256, không lộ email). Đồng bộ bằng email này thì trang Thông tin hiện mục Quản trị
   ADMIN_PAGE: 'https://henry4hanna.github.io/tongtai-player/app/admin.html',  // địa chỉ trang quản trị (TV hiện mã QR tới đây)
-  STATS_URL: '',        // máy chủ thống kê cho trang quản trị (Cloudflare Worker), ví dụ https://tongtai-stats.ten-cua-ban.workers.dev . Để trống = không gửi gì
+  STATS_URL: 'https://tongtai-stats.ryannguyen0128.workers.dev/',        // máy chủ thống kê cho trang quản trị (Cloudflare Worker), ví dụ https://tongtai-stats.ten-cua-ban.workers.dev . Để trống = không gửi gì
   MUSIC_VIEW: 'split',  // trang Nhạc: 'split' (Kiểu A: chia đôi) hoặc 'karaoke' (Kiểu B: toàn màn hình)        // địa chỉ trang web có thư mục music/ (GitHub Pages của bạn). Để trống = tự dò theo bản web / PLAYER_HOST
   MUSIC_VOL: 'low',     // âm lượng nhạc nền: 'low', 'mid', 'high'
   SEASON: 'auto',       // chủ đề theo mùa/ngày lễ: 'auto' (tự đổi theo ngày), 'off' (tắt), hoặc mã chủ đề (vd 'noel', 'tet')

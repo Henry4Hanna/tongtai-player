@@ -1099,6 +1099,45 @@
   }
   function card(title, sub) { var c = el('section', 'card'); c.appendChild(el('h2', '', esc(title) + (sub ? '<span>' + esc(sub) + '</span>' : ''))); return c; }
 
+  /* ---------- Khóa tìm kiếm theo hồ sơ: lưu trong channels.json (policy.searchLock), mọi máy đọc được ---------- */
+  function searchLockCard(profs) {
+    var c = card('Khóa tìm kiếm theo hồ sơ', 'tiết kiệm đơn vị YouTube');
+    var box = el('div', 'slk', '<div class="muted">Đang tải…</div>'); c.appendChild(box);
+    var people = [], seen = {};
+    function addP(id, n, u) { if (!id || seen[id]) { if (seen[id] && u) seen[id].u = u; return; } seen[id] = { id: id, n: n || id, u: u || 0 }; people.push(seen[id]); }
+    (profs || []).forEach(function (p) { addP(p.id, p.name, p.unitsToday); });
+    addP('guest', 'Guest');
+    Object.keys(LOCALP).forEach(function (k) { addP(k, LOCALP[k].name); });
+    api('/a/channels').catch(function () { return null; }).then(function (j) {
+      var live = !!(j && j.ok), data = (j && j.data) || {}, pol = data.policy || {}, on = {};
+      (pol.searchLock || []).forEach(function (x) { on[x.id] = 1; if (!seen[x.id]) addP(x.id, x.n); });
+      if (live) { CH.sha = j.sha; CH.live = true; if (data.v >= 2) CH.list = data.channels; }
+      box.innerHTML = '';
+      box.appendChild(el('div', 'muted', 'Hồ sơ bị khóa thì trang Tìm kiếm trong app không dùng được (mỗi lần tìm tốn 100 đơn vị). Phim ở Trang chủ, Kênh, Danh mục vẫn xem bình thường.'));
+      var list = el('div', 'slkl');
+      people.forEach(function (p) {
+        var r = el('label', 'slkr' + (on[p.id] ? ' on' : ''), av(p.n, p.id, 28) + '<span class="n">' + esc(p.n) + '</span><span class="muted">' + (p.u ? nf(p.u) + ' đơn vị hôm nay' : '') + '</span><span class="sw"><input type="checkbox"' + (on[p.id] ? ' checked' : '') + '><i></i></span>');
+        r.querySelector('input').onchange = function () { if (this.checked) on[p.id] = 1; else delete on[p.id]; r.classList.toggle('on', this.checked); btn.disabled = !live; msg.textContent = ''; };
+        list.appendChild(r);
+      });
+      box.appendChild(list);
+      var bar = el('div', 'slkb'), btn = el('button', 'btn sm', 'Lưu'), msg = el('span', 'muted', live ? '' : 'Chưa nối GitHub nên chưa lưu được (xem HUONG-DAN-ADMIN, bước Nối GitHub).');
+      btn.disabled = true;
+      btn.onclick = function () {
+        btn.disabled = true; msg.textContent = 'Đang lưu…';
+        var lock = people.filter(function (p) { return on[p.id]; }).map(function (p) { return { id: p.id, n: p.n }; });
+        var chl = CH.list || data.channels || [];
+        api('/a/channels', { method: 'POST', body: JSON.stringify({ sha: CH.sha, message: lock.length ? 'Khóa tìm kiếm: ' + lock.map(function (x) { return x.n; }).join(', ') : 'Mở khóa tìm kiếm cho mọi hồ sơ', channels: chl, policy: { searchLock: lock } }) }).then(function (r) {
+          if (!r.ok) throw new Error(r.error || 'lỗi');
+          CH.sha = r.sha; CH.list = r.data.channels;
+          msg.innerHTML = '<b style="color:#1E6B33">Đã lưu.</b> Các máy nhận trong vòng 3 giờ (hoặc khi mở lại app).';
+        }).catch(function (e) { btn.disabled = false; msg.innerHTML = '<b style="color:#B42318">Không lưu được: ' + esc(e.message) + '</b>'; });
+      };
+      bar.appendChild(btn); bar.appendChild(msg); box.appendChild(bar);
+    });
+    return c;
+  }
+
   /* ---------- Tổng quan ---------- */
   function loadOverview() {
     api('/a/overview').then(function (j) {
@@ -1138,6 +1177,7 @@
       uc.appendChild(ub);
       uc.appendChild(el('div', '', '<div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:13px">' + j.profiles.map(function (p) { return '<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + color(p.id) + ';margin-right:6px"></i>' + esc(p.name) + ': <b>' + nf(p.unitsToday) + '</b></span>'; }).join('') + '</div><div class="muted" style="margin-top:10px">Mỗi lần tìm kiếm tốn 100 đơn vị; tải phim của một kênh tốn 1 đơn vị. Số này tính từ khi bật máy chủ thống kê.</div>'));
       right.appendChild(uc);
+      right.appendChild(searchLockCard(j.profiles));
       r2.appendChild(t); r2.appendChild(right); v.appendChild(r2);
       var mu = j.music;   // nhạc: bài nghe nhiều nhất (lượt nghe quá 30 giây)
       var mc = card('Nhạc được nghe nhiều nhất', mu && mu.n ? nf(mu.n) + ' lượt nghe · chỉ đếm bài nghe quá 30 giây' : 'Chưa có lượt nghe nào trong khoảng này');

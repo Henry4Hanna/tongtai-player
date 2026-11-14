@@ -24,7 +24,7 @@
     THEME: C.THEME || 'dark',
     CLOCK_12: C.CLOCK_12 !== false, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SAVER_MUSIC: C.SAVER_MUSIC !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
-    SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX !== false,
+    SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
     AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
     AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
@@ -100,6 +100,11 @@
     SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {
+    var v = get0(k);
+    if (k === 'SEASON_FX' && v === true) v = 'low';   // bản cũ lưu Bật = true -> mức Ít
+    return v;
+  }
+  function get0(k) {
     if (PP[k]) { var ps = psaved(); if (ps[k] !== undefined) return ps[k]; }
     var s = saved();
     return s[k] !== undefined ? s[k] : BASE[k];

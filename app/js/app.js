@@ -262,7 +262,14 @@
     var bk = d.createElement('div');
     bk.id = 'webback';
     bk.textContent = '‹ Quay lại';
-    bk.onclick = function (e) { e.stopPropagation(); if (w.Player.isOpen()) w.Player.close(); else w.Screens.back(); };
+    var bkT = 0;
+    function bkGo(e) {
+      if (e) { e.stopPropagation(); if (e.type === 'touchend') e.preventDefault(); }
+      if (Date.now() - bkT < 600) return; bkT = Date.now();   // chạm trên iPhone: touchend + click chỉ tính 1 lần
+      if (w.Player.isOpen()) w.Player.close(); else w.Screens.back();
+    }
+    bk.onclick = bkGo;
+    bk.addEventListener('touchend', bkGo, { passive: false });
     d.getElementById('app').appendChild(bk);
     d.documentElement.className += ' webmode';
     // Điện thoại: chỉ hiện nút Quay lại khi có trang để quay lại
@@ -270,7 +277,8 @@
       var need = w.Player.isOpen() || (w.Screens.depth && w.Screens.depth() > 1) || !w.UI.isMobile();
       bk.style.display = need ? '' : 'none';
       bk.classList.toggle('inplayer', w.Player.isOpen());
-      bk.textContent = w.Player.isOpen() && w.UI.isMobile() ? '✕ Đóng' : '‹ Quay lại';
+      var tx = w.Player.isOpen() && w.UI.isMobile() ? '✕ Đóng' : '‹ Quay lại';
+      if (bk.textContent !== tx) bk.textContent = tx;   // không viết lại liên tục (iPhone bỏ lỡ cú chạm)
     }, 300);
   }
 

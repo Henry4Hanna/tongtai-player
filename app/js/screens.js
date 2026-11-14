@@ -41,7 +41,7 @@
     if (Nav.cur) Nav.cur.classList.remove('focus');
     Nav.cur = null;
     setActiveTab(id);
-    var b = { home: Home, chans: Chans, cats: Cats, music: function () { return w.MusicPage.open(); }, search: Search, history: History, guide: Guide, info: Info, settings: SettingsScreen }[id];
+    var b = { home: Home, chans: Chans, cats: Cats, music: function () { return w.MusicPage.open(); }, search: function () { return Api.searchLocked && Api.searchLocked() ? SearchLock() : Search(); }, history: History, guide: Guide, info: Info, settings: SettingsScreen }[id];
     mount(b());
   }
 
@@ -790,6 +790,18 @@
 
   /* ---------- Tìm kiếm ---------- */
 
+  function SearchLock() {
+    var v = UI.view(); v.classList.add('slockv');
+    var box = el('div', 'slock');
+    var ic = el('div', 'slic'); ic.innerHTML = '<svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'; box.appendChild(ic);
+    box.appendChild(el('div', 'slt', 'Tìm kiếm đang tạm khóa cho ' + Store.profileName()));
+    box.appendChild(el('div', 'sls', 'Người lớn đã khóa tìm kiếm của hồ sơ này để tiết kiệm đơn vị YouTube (mỗi lần tìm tốn 100 đơn vị). Phim ở Trang chủ, Kênh và Danh mục vẫn xem bình thường.'));
+    var bx = el('div', 'btns center');
+    var b1 = UI.button('Về Trang chủ', 'gold', function () { goTab('home'); });
+    bx.appendChild(b1); bx.appendChild(UI.button('Xem Danh mục', '', function () { goTab('cats'); }));
+    box.appendChild(bx); v.appendChild(box);
+    return { name: 'search', el: v, focus: b1 };
+  }
   function Search() {
     var v = UI.view();
     v.classList.add('search');
@@ -1487,7 +1499,7 @@
       if (m === 'auto') return { t: 'Tự động · ' + (th ? th.name : 'không có'), on: true };
       return { t: (th ? th.name : m) + ' (chọn tay)', on: true };
     }, function () { push(SeasonPick()); }));
-    opt('SEASON_FX', 'Hiệu ứng rơi (tuyết, hoa, lá, bóng bay…)', 'Tắt nếu TV chạy chậm. Vẫn giữ dây đèn và hình trên logo', ONOFF);
+    opt('SEASON_FX', 'Hiệu ứng rơi (tuyết, hoa, lá, bóng bay…)', 'Mặc định: Ít. Tăng lên Vừa/Nhiều, hoặc Tắt nếu TV chạy chậm. Vẫn giữ dây đèn và hình trên logo', [{ v: false, t: 'Tắt' }, { v: 'low', t: 'Ít', on: true }, { v: 'mid', t: 'Vừa', on: true }, { v: 'high', t: 'Nhiều', on: true }]);
 
     sec('Cập nhật phim mới');
     opt('AUTO_REFRESH', 'Tự cập nhật phim mới', 'Lấy video mới từ các kênh theo dõi khi đang mở app', ONOFF);
@@ -2061,10 +2073,24 @@
     checkBirthday();
   }
 
+  // Logo động trên màn hình Ai đang xem (điện thoại): ô logo bật ra, vương miện rơi xuống, chữ hiện từng chữ
+  function whoLogo() {
+    var o = el('div', 'wlogo');
+    var ic = el('div', 'wlic');
+    ic.innerHTML = '<svg class="wlbase" viewBox="0 0 48 48"><defs><linearGradient id="wlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FAD680"/><stop offset="1" stop-color="#C48026"/></linearGradient></defs><rect width="48" height="48" rx="11" fill="url(#wlg)"/><path d="M18 24v15l13-7.5z" fill="#221206"/></svg>' +
+      '<svg class="wlcrown" viewBox="0 0 26 16"><path d="M2 12V4l5.5 3L13 0l5.5 7L24 4v8z" fill="#221206"/><rect x="2" y="13" width="22" height="2.5" fill="#221206"/></svg>';
+    o.appendChild(ic);
+    var tx = el('div', 'wltx'), k = 0;
+    function add(str, gold) { str.split('').forEach(function (c) { var sp = el('span', gold ? 'g' : '', c === ' ' ? '\u00a0' : c); sp.style.animationDelay = (0.7 + (k++) * 0.05).toFixed(2) + 's'; tx.appendChild(sp); }); }
+    add('Tổng Tài '); add('TV', true);
+    o.appendChild(tx);
+    return o;
+  }
   var whoMode = 'one';   // 'one' = một người, 'tog' = xem chung
   function Who(startup) {
     var v = UI.view();
     v.classList.add('who');
+    v.appendChild(whoLogo());   // điện thoại: logo động (thanh tab đang ẩn)
     v.appendChild(el('div', 'whot', 'Ai đang xem?'));
     var sub = el('div', 'whos', '');
     v.appendChild(sub);
@@ -3687,16 +3713,32 @@
   }
   function quizStrip() {
     var wrap = el('div', 'rowwrap quizstrip');
-    function paint() {
+    function songsOk() { return !!(w.Music && w.Music.S && w.Music.S.all().length >= 4); }
+    function kind() { var k = (Store.pref('qzKind', {}) || {})[Store.profile()]; return k === 'song' && songsOk() ? 'song' : 'quote'; }
+    function setKind(k) { var m = Store.pref('qzKind', {}) || {}; m[Store.profile()] = k; Store.setPref('qzKind', m); paint(k); }
+    function paint(focusTab) {
       wrap.innerHTML = '';
       if (!w.Quotes || !w.Quotes.quiz) return;
-      var z = w.Quotes.quiz(Math.floor(Math.random() * w.Quotes.count));
-      var ic = el('div', 'qsic', '🎯'); wrap.appendChild(ic);
+      var K = kind(), SONG = K === 'song';
+      wrap.classList.toggle('qssong', SONG);
+      wrap.appendChild(el('div', 'qsic', SONG ? '🎵' : '🎯'));
       var t = el('div', 'qst');
-      t.appendChild(el('div', 'qsk', 'CÂU ĐỐ TỔNG TÀI · HÔM NAY'));
-      t.appendChild(el('div', 'qsh', 'Điền chữ còn thiếu trong câu thoại · hoặc đoán tên bài hát'));
-      var pv = el('div', 'qsq'); pv.appendChild(d.createTextNode('“' + z.before)); pv.appendChild(el('b', '', '___')); pv.appendChild(d.createTextNode(z.after + '”'));
-      t.appendChild(pv);
+      var top = el('div', 'qstop');
+      top.appendChild(el('div', 'qsk', 'CÂU ĐỐ TỔNG TÀI · HÔM NAY'));
+      var tabs = el('div', 'qstabs'), tq = el('div', 'qstab f' + (SONG ? '' : ' on'), '💬 Câu thoại'), ts = el('div', 'qstab f' + (SONG ? ' on' : '') + (songsOk() ? '' : ' off'), '♪ Bài hát');
+      tq._ok = function () { if (kind() !== 'quote') setKind('quote'); }; tq.onclick = tq._ok;
+      ts._ok = function () { if (!songsOk()) { UI.toast('Cần ít nhất 4 bài trong Nhạc của tôi'); return; } if (kind() !== 'song') setKind('song'); }; ts.onclick = ts._ok;
+      tq.dataset.k = 'quote'; ts.dataset.k = 'song';
+      tabs.appendChild(tq); tabs.appendChild(ts); top.appendChild(tabs); t.appendChild(top);
+      if (SONG) {
+        t.appendChild(el('div', 'qsh', 'Nghe đoạn nhạc, đoán tên bài hát'));
+        t.appendChild(el('div', 'qsq', '10 câu · mỗi câu 20 giây · ' + w.Music.S.all().length + ' bài trong Nhạc của tôi'));
+      } else {
+        var z = w.Quotes.quiz(Math.floor(Math.random() * w.Quotes.count));
+        t.appendChild(el('div', 'qsh', 'Điền chữ còn thiếu trong câu thoại'));
+        var pv = el('div', 'qsq'); pv.appendChild(d.createTextNode('“' + z.before)); pv.appendChild(el('b', '', '___')); pv.appendChild(d.createTextNode(z.after + '”'));
+        t.appendChild(pv);
+      }
       wrap.appendChild(t);
       var ld = quizLeaders();
       if (ld.length) {
@@ -3705,12 +3747,12 @@
         lb.appendChild(avs); lb.appendChild(el('div', 'qsl', ld[0].p.name + ' dẫn đầu · ' + ld[0].n + ' điểm'));
         wrap.appendChild(lb);
       }
-      wrap.appendChild(UI.button('▶ Chơi ngay', 'gold', function () { push(Quiz()); }));
-      if (w.Music && w.Music.S && w.Music.S.all().length >= 4) wrap.appendChild(UI.button('♪ Đoán bài hát', '', function () { push(Quiz('song')); }));
+      wrap.appendChild(UI.button('▶ Chơi ngay', 'gold qsplay', function () { push(SONG ? Quiz('song') : Quiz()); }));
       if (Store.together().length >= 2) wrap.appendChild(UI.button('🗳 Cả nhà chọn phim', '', function () { push(VoteTV()); }));
+      if (focusTab) Nav.focus(focusTab === 'song' ? ts : tq, true);
     }
     paint();
-    return { wrap: wrap, hide: function () { wrap.classList.add('hidden'); }, show: function () { wrap.classList.remove('hidden'); }, refresh: paint };
+    return { wrap: wrap, hide: function () { wrap.classList.add('hidden'); }, show: function () { wrap.classList.remove('hidden'); }, refresh: function () { paint(); } };
   }
   function Quiz(kind) {
     var SONG = kind === 'song', MS = w.Music && w.Music.S, songUsed = {}, snipT = 0;
@@ -4791,7 +4833,7 @@
       '<text x="262" y="372" font-size="18" fill="#9AA0AE">OK 2 lần nhanh: về Trang chủ · Back 2 lần: thoát</text>' +
       '</g></svg>';
     var SECTIONS = [
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.32: Huy hiệu thành tích (12 huy hiệu vàng · bạc · đồng, riêng từng hồ sơ, xem ở Cài đặt → Hồ sơ người xem → Huy hiệu thành tích) và ô Thi đua tuần trên Trang chủ: bảng xếp hạng cả nhà và một thử thách mỗi tuần. Câu thoại tổng tài tăng lên 500 câu.','Mới 2.31: màn hình chờ đổi câu thoại ngẫu nhiên theo từng ảnh và phát ngẫu nhiên một bài trong Nhạc của tôi (tắt trong Cài đặt → Màn hình chờ). Nhạc nền mặc định trộn bài.','Mới 2.30: Lời nhắn gia đình (trang phim → ✉ Gửi cho…), Cả nhà bình chọn phim khi Xem chung (quét mã QR bằng điện thoại hoặc bấm OK bằng remote), hàng Tiếp tục xem báo số phim có tập mới.','Mới 2.29.1: màn hình Ai đang xem có ô Đồng bộ với Google (TV quét mã QR bằng điện thoại, không cần gõ mật khẩu).','Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 22l9 18 20 3-14 14 3 20-18-9-18 9 3-20-14-14 20-3z" fill="#E8B04B"/><text x="100" y="104" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">' + (C.VERSION || '') + '</text></svg>', t: 'Có gì mới (2.25 – 2.29)', l: ['Mới 2.32.5: Hiệu ứng rơi mặc định Ít, chỉnh Ít · Vừa · Nhiều · Tắt trong Cài đặt → Giao diện. Điện thoại: nút ✕ Đóng khi xem phim bấm nhạy hơn, bỏ nút Gửi sang điện thoại và dòng nhắc quảng cáo.','Mới 2.32.1: Câu đố trên Trang chủ có 2 tab Câu thoại | Bài hát, chọn tab rồi bấm Chơi ngay. Trang quản trị khóa được Tìm kiếm cho từng hồ sơ để tiết kiệm đơn vị YouTube.','Mới 2.32: Huy hiệu thành tích (12 huy hiệu vàng · bạc · đồng, riêng từng hồ sơ, xem ở Cài đặt → Hồ sơ người xem → Huy hiệu thành tích) và ô Thi đua tuần trên Trang chủ: bảng xếp hạng cả nhà và một thử thách mỗi tuần. Câu thoại tổng tài tăng lên 500 câu.','Mới 2.31: màn hình chờ đổi câu thoại ngẫu nhiên theo từng ảnh và phát ngẫu nhiên một bài trong Nhạc của tôi (tắt trong Cài đặt → Màn hình chờ). Nhạc nền mặc định trộn bài.','Mới 2.30: Lời nhắn gia đình (trang phim → ✉ Gửi cho…), Cả nhà bình chọn phim khi Xem chung (quét mã QR bằng điện thoại hoặc bấm OK bằng remote), hàng Tiếp tục xem báo số phim có tập mới.','Mới 2.29.1: màn hình Ai đang xem có ô Đồng bộ với Google (TV quét mã QR bằng điện thoại, không cần gõ mật khẩu).','Mới 2.29: Bài hát của ngày trên banner Trang chủ; Đoán tên bài hát (nút ♪ cạnh Câu đố); trang phim gợi ý bài hát hợp phim; hẹn giờ tắt nhạc (nút 🌙 ở trang Nhạc, hoặc Cài đặt); báo cáo tuần có bài cả nhà nghe nhiều nhất.','Trang Nhạc: mỗi bài có tóm tắt và đoạn trích, lời hiện theo câu hoặc chạy theo từng chữ, 10 ảnh phim tổng tài thật hợp với bài (đổi mỗi 8 giây). Bấm vào ảnh phim để mở phim đó.','Âm lượng các bài đều nhau (cả trên iPhone). Tiết kiệm đơn vị YouTube tự động khi cả nhà gần dùng hết hạn mức trong ngày.','Giới hạn giờ xem, Xem chung, tìm bằng giọng nói, câu đố tổng tài, đánh giá phim, gửi phim sang điện thoại, chế độ ngủ, sinh nhật có pháo hoa, báo cáo tuần.','Người quản lý: trang Quản trị (Thông tin → Quản trị) có Kênh và Nhạc: thêm/sửa/tắt kênh, thêm bài, gắn lời, lịch sử thay đổi và hoàn tác.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="74" y="18" width="52" height="52" rx="12" fill="#E8B04B"/><path d="M86 38v-8l7 4 7-10 7 10 7-4v8z" fill="#221206"/><path d="M93 44v18l15-9z" fill="#221206"/><rect x="50" y="88" width="100" height="6" rx="3" fill="#2A3042"/><rect x="50" y="88" width="46" height="6" rx="3" fill="#F5D58E"/></svg>', t: 'Màn hình khởi động', l: ['Mở app: logo vương miện vàng, dòng “Đang lấy phim mới… 3/38 kênh”, thanh tiến độ và số phiên bản đang dùng (ví dụ 2.28.0) ở dưới cùng.','Mạng chậm: bấm OK để vào ngay, phim tiếp tục tải phía sau.','Hiện bao lâu: Cài đặt → Giao diện → Màn hình khởi động: 1, 2, 3 (mặc định), 5, 8 giây.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M84 30v46a12 10 0 1 1-6-8.7V40l48-10v38a12 10 0 1 1-6-8.7V36.4z" fill="#E8B04B"/><g fill="#4FAE8A"><rect x="40" y="70" width="6" height="22" rx="3"/><rect x="50" y="58" width="6" height="34" rx="3"/><rect x="60" y="76" width="6" height="16" rx="3"/></g></svg>', t: 'Nhạc nền Trang chủ', l: ['Nhạc của tôi: 20 bài hát của Ryan Nguyen (Chủ Tịch Giả Nghèo, Tổng Tài Ở Rể, Vợ Yêu Đừng Chạy…) phát ở Trang chủ, lần lượt hoặc trộn bài.', 'Mở phim hay sang trang khác thì nhạc tạm dừng, quay lại Trang chủ phát tiếp đúng chỗ. Ô “♪ tên bài” góc dưới bên phải: bấm để qua bài.', 'Cài đặt → Nhạc nền Trang chủ: Nhạc của tôi (lần lượt / trộn bài), Hòa tấu (5 bản), Tắt; Chọn bài để nghe bài bất kỳ; Âm lượng. Riêng từng hồ sơ.', 'TV lấy nhạc từ GitHub Pages của bạn. Android TV: Cài đặt → Kết nối → Địa chỉ nhạc. Không tải được thì app tự phát 5 bản hòa tấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14161E"/><rect x="10" y="12" width="80" height="45" rx="6" fill="#3A2A14"/><rect x="10" y="64" width="60" height="6" rx="2" fill="#F4F1EC"/><rect x="10" y="76" width="80" height="3" rx="1.5" fill="#33384A"/><rect x="10" y="76" width="34" height="3" rx="1.5" fill="#E8B04B"/><circle cx="50" cy="96" r="10" fill="#E8B04B"/><rect x="104" y="20" width="80" height="5" rx="2" fill="#5A5F6E"/><rect x="104" y="36" width="88" height="9" rx="3" fill="#E8B04B"/><rect x="104" y="54" width="76" height="5" rx="2" fill="#8A8F9E"/><rect x="104" y="66" width="70" height="5" rx="2" fill="#5A5F6E"/></svg>', t: 'Trang Nhạc', l: ['Tab Nhạc: 20 bài hát của Ryan Nguyen. Lúc nhạc dạo, khung lời hiện “Giới thiệu bài hát” (tóm tắt + đoạn trích); điện thoại thì tóm tắt nằm dưới tên bài.','Lời: câu đang hát sáng lên. Tùy bài: hiện cả câu, chạy theo từng chữ (như karaoke) hoặc tô dần cả câu. Lời lệch: nút ⏱ “Chỉnh lời”.','Ảnh: 10 ảnh phim tổng tài thật hợp với bài, đổi mỗi 8 giây, chấm dưới ảnh cho biết đang ở ảnh nào. Bấm vào ảnh (TV: chọn ảnh rồi OK) để hỏi “Xem phim này?”: “Ở lại nghe nhạc”, “Danh sách” (lưu phim xem sau, nhạc vẫn phát) hoặc “Mở phim”.','Kiểu A chia đôi hoặc Kiểu B toàn màn hình kiểu karaoke: nút ⛶. Nút: Trộn bài, Bài trước, Phát/Dừng, Bài kế, Hẹn giờ, ☰ Tất cả bài (tóm tắt và đoạn trích của cả 20 bài; chọn một bài để phát).','Các bài nghe to đều nhau. Tắt: Cài đặt → Cân bằng âm lượng các bài.'] },

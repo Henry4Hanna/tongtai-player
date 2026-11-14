@@ -113,13 +113,19 @@
     var f = SH[spec[0]];
     return f ? f(spec[1], spec[2]) : '';
   }
+  // Mức hiệu ứng rơi: off · low (ít, mặc định) · mid (vừa) · high (nhiều). Bản cũ lưu true/false
+  function fxLevel() {
+    var v = w.APP_CONFIG ? w.APP_CONFIG.SEASON_FX : 'low';
+    if (v === false || v === 'off') return 'off';
+    return v === 'mid' || v === 'high' ? v : 'low';
+  }
   function isMobile() { return d.documentElement.classList.contains('mobile'); }
 
   /* ---------- Áp dụng lên giao diện ---------- */
   var applied = '';
   function apply(force) {
-    var th = current(), fx = !w.APP_CONFIG || w.APP_CONFIG.SEASON_FX !== false;
-    var key = (th ? th.id : 'none') + ':' + fx + ':' + isMobile();
+    var th = current(), lv = fxLevel(), fx = lv !== 'off';
+    var key = (th ? th.id : 'none') + ':' + lv + ':' + isMobile();
     if (key === applied && !force) return th;
     applied = key;
     var html = d.documentElement;
@@ -153,7 +159,7 @@
     // hạt rơi / bay lên
     if (fx && app && th.fx) {
       var o = d.createElement('div'); o.id = 'season'; if (th.rise) o.className = 'rise';
-      var cnt = isMobile() ? 9 : 18, out = '';
+      var cnt = ({ low: isMobile() ? 4 : 8, mid: isMobile() ? 9 : 18, high: isMobile() ? 16 : 32 })[lv] || 4, out = '';
       for (var k = 0; k < cnt; k++) {
         var sz = Math.round((isMobile() ? 14 : 26) + Math.random() * (isMobile() ? 12 : 26));
         var dur = (11 + Math.random() * 10).toFixed(1), del = (-Math.random() * 20).toFixed(1);

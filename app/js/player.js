@@ -336,7 +336,7 @@
     btns.push({ id: 'fav', label: favOn ? 'Đã lưu' : 'Danh sách', on: favOn, svg: favOn ? '<path d="M5 12.5l4.5 4.5L19 7.5"/>' : '<path d="M12 5v14M5 12h14"/>' });
     btns.push({ id: 'skip', label: 'Bỏ phim', svg: '<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>' });
     btns.push({ id: 'cc', wide: true, label: ccOn() ? (ccInfo === 'dich' ? 'Phụ đề: Việt (dịch)' : 'Phụ đề: Tiếng Việt') : 'Phụ đề: Tắt', on: ccOn(), svg: '<rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 10.2a2.4 2.4 0 1 0 0 3.6M17 10.2a2.4 2.4 0 1 0 0 3.6"/>' });
-    if (w.QR && sendUrl()) btns.push({ id: 'send', wide: true, label: 'Gửi sang điện thoại', svg: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>' });
+    if (w.QR && sendUrl() && !w.UI.isMobile()) btns.push({ id: 'send', wide: true, label: 'Gửi sang điện thoại', svg: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>' });
     btns.push({ id: 'sleep', wide: true, label: sleepLabel(), on: sleep.mode !== 'off', svg: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/>' });
     var nowQ = qNow();
     btns.push({ id: 'quality', wide: true, label: 'Chất lượng: ' + (qPref() === 'auto' && nowQ ? 'Tự động (' + nowQ + ')' : qLabel(qPref())), svg: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>' });
@@ -406,7 +406,6 @@
     msg('Đang tải video…');
     var s = startPos(it);
     if (s > 0) w.UI.toast('Tiếp tục từ ' + w.UI.fmtDur(s));
-    if (!adTold) { adTold = true; setTimeout(function () { if (isOpen) w.UI.toast('Có quảng cáo? Chờ nút “Bỏ qua” của YouTube hiện rồi bấm OK'); }, s > 0 ? 3500 : 800); }
     loadApi(function (ok) {
       if (!isOpen || cur() !== it) return;
       if (!ok) {

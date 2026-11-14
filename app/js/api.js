@@ -426,13 +426,13 @@
     else if (host) url = host + (host.slice(-1) === '/' ? '' : '/') + 'channels.json';
     else if (/^https?:/.test(w.location.protocol) && !w.AndroidApp) url = '../channels.json';   // bản trình duyệt trên GitHub Pages
     if (!url) { sharedP = Promise.resolve(saved ? saved.map : {}); return sharedP; }
-    if (saved && Date.now() - saved.t < 12 * 3600e3) { sharedP = Promise.resolve(saved.map); return sharedP; }
+    if (saved && Date.now() - saved.t < 3 * 3600e3) { sharedP = Promise.resolve(saved.map); return sharedP; }
     sharedP = new Promise(function (resolve) {
       var x = new XMLHttpRequest();
       x.open('GET', url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Math.floor(Date.now() / 3600e3));
       x.timeout = 10000;
       x.onload = function () {
-        var map = {};
+        var map = {}, policy = saved ? saved.policy || null : null;
         try {
           var d = JSON.parse(x.responseText), base = url.replace(/[^\/]*$/, '');
           (d.channels || d || []).forEach(function (c) {
@@ -440,11 +440,12 @@
             if (c.img && !/^https?:/.test(c.img)) c.img = base + c.img;   // ảnh kênh tải lên từ trang quản trị (đường dẫn tính từ channels.json)
             if (c.id || c.img || c.title) map[normName(c.name)] = c;
           });
+          policy = d.policy || null;   // cài đặt do trang quản trị đặt (khóa tìm kiếm theo hồ sơ)
           var list = d.v >= 2 ? d.channels : null;   // channels.json bản 2: danh sách kênh do trang quản trị quản lý
         } catch (e) { map = saved ? saved.map : {}; list = saved && saved.list; }
         if (x.status === 200) {
           var changed = JSON.stringify(list || null) !== JSON.stringify((saved && saved.list) || null);
-          Store.keep('shared', { t: Date.now(), map: map, list: list || null });
+          Store.keep('shared', { t: Date.now(), map: map, list: list || null, policy: policy });
           if (changed && w.Settings && w.Settings.apply) { try { w.Settings.apply(); } catch (e2) { /* bỏ qua */ } }
         }
         resolve(map);
@@ -455,6 +456,12 @@
     return sharedP;
   }
 
+  // Trang quản trị khóa tìm kiếm cho một số hồ sơ (mỗi lần tìm tốn 100 đơn vị YouTube)
+  function searchLocked(pid) {
+    var sv = Store.keep('shared'), l = (sv && sv.policy && sv.policy.searchLock) || [];
+    pid = pid || Store.profile();
+    return l.some(function (x) { return x && x.id === pid; });
+  }
   function sharedInfo(c, ch) {   // tên hiển thị + ảnh kênh do trang quản trị đặt
     var sv = Store.keep('shared'), s2 = sv && sv.map && sv.map[normName(c.name)];
     if (s2) { if (s2.title) ch.title = s2.title; if (s2.img) ch.thumb = s2.img; else if (!ch.thumb && s2.thumb) ch.thumb = s2.thumb; }
@@ -883,7 +890,7 @@
   }
   function fP(fn) { return function () { return fn.apply(null, arguments).then(fl); }; }
 
-  w.Api = {
+  w.Api = { searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
     updateUrls: updateUrls,
     details: function (ids) { return videoDetails(ids); },
     comments: comments, hasKey: hasKey, films: fP(films), anime: fP(anime), animeAll: fP(animeAll), episodes: fP(episodes),

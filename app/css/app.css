@@ -305,7 +305,8 @@ body { font-family: 'Be Vietnam Pro', 'Noto Sans', system-ui, sans-serif; color:
 /* 2.4.0: bản trình duyệt (chuột, cảm ứng) */
 #webback { display: none; }
 .webmode #webback { display: block; position: absolute; left: 24px; bottom: 24px; z-index: 9999; padding: 12px 24px; border-radius: 999px; background: rgba(21,25,34,.92); color: #F4F1EC; font-size: 22px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
-.webmode #webback:hover { background: #E8B04B; color: #1a1206; }
+@media (hover: hover) { .webmode #webback:hover { background: #E8B04B; color: #1a1206; } }
+.webmode #webback { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .webmode #pl-ui { pointer-events: auto; cursor: pointer; }
 .webmode .f { cursor: pointer; }
 
@@ -723,7 +724,10 @@ html.light #musicpill { background: rgba(255,255,255,.9); color: #8A5A1C; }
 @keyframes meqm { 0%, 100% { height: 3px; } 50% { height: 12px; } }
 .mobile #musicpill .eq i { animation-name: meqm; }
 /* 2.18.1: "Ai đang xem?" chỉ bấm trong khung; menu giữ lâu trên hồ sơ */
-html.wholock #topbar, html.wholock #mhead, html.wholock #webback, html.wholock #mdrawer { pointer-events: none !important; opacity: .28; filter: grayscale(.6); }
+html.wholock #topbar, html.wholock #mhead, html.wholock #webback, html.wholock #mdrawer { pointer-events: none !important; }
+html.wholock #tabs, html.wholock #whobtn, html.wholock #mhead { opacity: .28; filter: grayscale(.6); }
+/* Ai đang xem trên điện thoại: ẩn hẳn thanh tab (mờ nhìn như bị lỗi), chỉ giữ logo */
+html.mobile.wholock #tabs, html.mobile.wholock #mhead, html.mobile.wholock #mdrawer { display: none !important; }
 html.wholock #webback { display: none !important; }
 .pmenu { text-align: center; min-width: 560px; }
 .pmhead { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
@@ -1474,3 +1478,41 @@ html.light .bmed.lock .bmc { background: radial-gradient(circle at 35% 30%, #EEE
 html.light .bdgnv, html.light .bdgpv, html.light .bdgon, html.light .bdgk, html.light .rcrk, html.light .rccnt b, html.light .rcdv { color: #A86F12; }
 html.light .rcdd i { border-color: #A86F12; } html.light .rcdd i.on { background: #A86F12; }
 .mobile .racec .wkk { letter-spacing: .08em; font-size: 12px; }
+
+/* Câu đố: 2 tab Câu thoại | Bài hát */
+.qstop { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.qstabs { display: inline-flex; gap: 6px; padding: 5px; border-radius: 30px; background: rgba(255,255,255,.08); }
+.qstab { padding: 8px 22px; border-radius: 24px; font-size: 20px; font-weight: 700; color: #C9CDD6; cursor: pointer; border: 3px solid transparent; white-space: nowrap; }
+.qstab.on { background: #E8B04B; color: #17110a; }
+.qstab.off { opacity: .45; }
+.qstab.focus { border-color: #fff; }
+.quizstrip.qssong { background: linear-gradient(120deg, #1f2f4a 0%, #16203a 55%, #151922 100%); border-color: #2f4a72; }
+.quizstrip .btn:not(.gold) { background: rgba(255,255,255,.12); color: #F4F1EC; }
+html.light .quizstrip .btn:not(.gold) { background: rgba(255,255,255,.14); color: #F4F1EC; }
+html.light .quizstrip .qsh { color: #F4F1EC; }
+.mobile .qstop { gap: 8px; } .mobile .qstabs { padding: 3px; } .mobile .qstab { font-size: 14px; padding: 6px 14px; }
+
+/* Tìm kiếm bị khóa (trang quản trị) */
+.slockv { display: flex; align-items: center; justify-content: center; }
+.slock { width: 1000px; margin: 120px auto 0; padding: 60px; border-radius: 28px; background: var(--c-151922); text-align: center; }
+.slic { width: 120px; height: 120px; margin: 0 auto 20px; border-radius: 50%; background: rgba(232,176,75,.15); color: #E8B04B; display: flex; align-items: center; justify-content: center; }
+.slt { font-size: 40px; font-weight: 900; } .sls { font-size: 22px; color: var(--c-9aa0ae); line-height: 1.5; margin: 14px auto 30px; max-width: 800px; }
+.mobile .slock { width: auto; margin: 30px 14px; padding: 28px 18px; } .mobile .slic { width: 80px; height: 80px; } .mobile .slic svg { width: 40px; height: 40px; } .mobile .slt { font-size: 22px; } .mobile .sls { font-size: 15px; }
+/* Nhạc · tóm tắt các bài: chữ đọc được ở giao diện sáng */
+html.light .songlist .sgs { color: #4A4F5C; }
+html.light .songlist .sgx { color: #8A5A0E; }
+html.light .songlist .ordrow.now .sgs { color: #3D3A33; } html.light .songlist .ordrow.now .sgx { color: #7A4E08; }
+/* Logo động ở màn hình Ai đang xem (chỉ điện thoại) */
+.wlogo { display: none; }
+html.mobile .wlogo { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px auto 16px; width: max-content; }
+.wlic { position: relative; width: 52px; height: 52px; animation: wlPop .5s ease-out both; }
+.wlic .wlbase { width: 52px; height: 52px; display: block; }
+.wlic .wlcrown { position: absolute; left: 11.9px; top: 8.7px; width: 28.2px; height: 17.3px; animation: wlDrop 1s cubic-bezier(.3,1.6,.5,1) .2s both; }
+.wltx { font-size: 28px; font-weight: 900; color: var(--c-f4f1ec, #F4F1EC); white-space: nowrap; }
+html.light .wltx { color: #17110a; }
+.wltx span { display: inline-block; animation: wlUp .45s ease-out both; }
+.wltx span.g { color: #E8B04B; } html.light .wltx span.g { color: #B07A26; }
+@keyframes wlPop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes wlDrop { 0% { transform: translateY(-70px) rotate(-25deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+@keyframes wlUp { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+html.mobile.wholock #views { top: calc(10px + env(safe-area-inset-top)) !important; }

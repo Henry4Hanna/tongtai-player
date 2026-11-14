@@ -136,7 +136,7 @@
     }
     return callRaw(path, params).then(function (d) { quotaLog(path); return d; }, function (e) {
       quotaLog(path, e);
-      if (w.Log) w.Log.err('YouTube API (' + path + '): ' + explain(e) + (e && e.reason ? ' [' + e.reason + ']' : ''));
+      if (w.Log && !(e && e.reason === 'playlistNotFound' && path === 'playlistItems')) w.Log.err('YouTube API (' + path + '): ' + explain(e) + (e && e.reason ? ' [' + e.reason + ']' : ''));   // kênh trống: ghi riêng kèm tên kênh
       throw e;
     });
   }
@@ -238,7 +238,9 @@
     var p = v.player || {}, ew = +p.embedWidth || 0, eh = +p.embedHeight || 0;
     return ew > 0 && eh > ew * 0.9;
   }
-  function notBlocked(list) { return list.filter(function (x) { return !Store.isBlocked(x.id); }); }
+  // 2.37: phim người quản lý ẩn cho mọi máy (trang quản trị → Sức khỏe app → Ẩn phim)
+  function hiddenSet() { var sv = Store.keep('shared'), h = {}; ((sv && sv.policy && sv.policy.hide) || []).forEach(function (id) { h[id] = 1; }); return h; }
+  function notBlocked(list) { var h = hiddenSet(); return list.filter(function (x) { return !Store.isBlocked(x.id) && !h[x.id]; }); }
 
   // Hết hạn mức hoặc mất mạng: dùng lại danh sách cũ đã lưu thay vì báo lỗi
   var staleWarned = false;
@@ -457,6 +459,9 @@
   }
 
   // Trang quản trị khóa tìm kiếm cho một số hồ sơ (mỗi lần tìm tốn 100 đơn vị YouTube)
+  // 2.36: tìm phim trên YouTube (100 đơn vị/lần) chỉ khi trang quản trị BẬT "Cho phép tìm theo tên phim" (mặc định tắt)
+  function nameSearchOn() { var sv = Store.keep('shared'); return !!(sv && sv.policy && sv.policy.nameSearch === true); }
+  function ytSearchOk(pid) { return nameSearchOn() && !searchLocked(pid); }
   function searchLocked(pid) {
     var sv = Store.keep('shared'), l = (sv && sv.policy && sv.policy.searchLock) || [];
     pid = pid || Store.profile();
@@ -653,7 +658,20 @@
         list = notBlocked(list);
         addPool(list);
         return list;
-      }).catch(function (e) { return stale(ck, e); });
+      }).catch(function (e) {
+        // Kênh không còn video công khai (đã xóa hết hoặc ẩn): YouTube báo playlistNotFound.
+        // Ghi nhật ký kèm tên kênh (1 lần mỗi ngày) và coi như kênh trống, không báo lỗi lặp lại.
+        if (e && e.reason === 'playlistNotFound') {
+          var day = Store.dayKey(), kk = 'empty:' + ch.id;
+          if (Store.keep(kk) !== day) {
+            Store.keep(kk, day);
+            if (w.Log) w.Log.err('Kênh “' + (ch.title || ch.name || ch.id) + '” (' + (ch.name || ch.id) + ') không còn video nào trên YouTube. Nên xóa kênh này: trang Quản trị → Kênh, hoặc Cài đặt → Kênh theo dõi.');
+          }
+          Store.cacheSet(ck, []);
+          return [];
+        }
+        return stale(ck, e);
+      });
   }
 
   // Gộp phim mới của tất cả kênh, mới nhất trước
@@ -694,7 +712,7 @@
         }
         if (mine.length) return mine;
       }
-      if (mine.length >= (C.CAT_MIN_FROM_CHANNELS || 12) || !cat.q || C.CAT_SEARCH_MORE === false) return mine;
+      if (mine.length >= (C.CAT_MIN_FROM_CHANNELS || 12) || !cat.q || C.CAT_SEARCH_MORE === false || !ytSearchOk()) return mine;
       return films(cat.q, 'relevance').then(function (more) {
         var seen = {};
         mine.forEach(function (f) { seen[f.id] = 1; });
@@ -769,6 +787,72 @@
     return out;
   }
 
+
+
+  /* ---------- Tìm theo cảnh trong phim (2.36) ----------
+     Tìm trong tên + mô tả các tập đã tải về máy (kênh phim, phim lẻ, hoạt hình), gom theo phim.
+     Không gọi tìm kiếm YouTube. */
+  function foldMap(s) {   // chuỗi không dấu + vị trí từng ký tự trong chuỗi gốc
+    s = String(s || ''); var out = '', map = [];
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charAt(i).toLowerCase();
+      try { c = c.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) { /* TV cũ */ }
+      c = c.replace(/đ/g, 'd');
+      if (!/[a-z0-9]/.test(c)) c = c ? ' ' : '';
+      for (var k = 0; k < c.length; k++) { out += c.charAt(k); map.push(i); }
+    }
+    return { t: out, m: map, s: s };
+  }
+  function fold(s) { return foldMap(s).t.replace(/\s+/g, ' ').trim(); }
+  // đoạn ngắn quanh chỗ khớp, đánh dấu bằng \u0001 ... \u0002
+  function hitSnip(text, words, room) {
+    var fm = foldMap(text), best = -1, len = 0;
+    words.forEach(function (wd) { var i = fm.t.indexOf(wd); if (i >= 0 && (best < 0 || i < best)) { best = i; len = wd.length; } });
+    if (best < 0) return null;
+    var a = fm.m[best], b = fm.m[best + len - 1] + 1, s = fm.s;
+    var from = Math.max(0, a - room), to = Math.min(s.length, b + room);
+    while (from > 0 && from < a && s.charAt(from - 1) !== ' ') from++;
+    while (to < s.length && to > b && s.charAt(to) !== ' ') to--;
+    return (from > 0 ? '…' : '') + s.slice(from, a) + '\u0001' + s.slice(a, b) + '\u0002' + s.slice(b, to).replace(/\s+$/, '') + (to < s.length ? '…' : '');
+  }
+  function sceneSearch(text) {
+    var q = fold(text);
+    if (!q) return Promise.resolve([]);
+    var words = q.split(' ').filter(function (x) { return x.length > 0; });
+    var safe = function (p) { return p.catch(function () { return []; }); };
+    return Promise.all([safe(mergeChannels('drama')), safe(mergeChannels('movie')), safe(mergeChannels('anime'))]).then(function (r) {
+      var seen = {}, all = [];
+      r.forEach(function (l) { l.forEach(function (f) { if (!seen[f.id]) { seen[f.id] = 1; all.push(f); } }); });
+      all = notBlocked(all);
+      var by = {}, order = [];
+      all.forEach(function (f) {
+        var tt = fold(f.title), dd = fold(f.desc), hay = tt + ' ' + dd;
+        if (q.length > 2 ? hay.indexOf(q) < 0 && !words.every(function (x) { return hay.indexOf(x) >= 0; }) : hay.indexOf(q) < 0) return;
+        var score = (tt.indexOf(q) >= 0 ? 6 : 0) + (dd.indexOf(q) >= 0 ? 3 : 0) + 1;
+        var e = epInfo(f.title), k = e && e.key && e.key.length >= 4 ? e.key : 'v:' + tt;
+        var snip = hitSnip(f.title, [q].concat(words), 40) ? null : hitSnip(f.desc, [q].concat(words), 34);
+        if (!by[k]) { by[k] = { key: k, name: e && e.key.length >= 4 ? e.name : f.title, hits: [], score: 0 }; order.push(by[k]); }
+        by[k].hits.push({ f: f, n: e ? e.n : 0, snip: snip || hitSnip(f.title, [q].concat(words), 40) || f.title, inTitle: !snip });
+        by[k].score += score;
+      });
+      // tổng số tập của mỗi phim (để ghi "38 tập")
+      var fam = {};
+      all.forEach(function (f) { var e = epInfo(f.title); if (e && e.key && e.key.length >= 4) (fam[e.key] = fam[e.key] || []).push({ f: f, n: e.n }); });
+      order.forEach(function (g) {
+        g.hits.sort(function (a, b) { return a.n - b.n; });
+        if (g.key.indexOf('v:') !== 0) { var hn = {}; g.hits = g.hits.filter(function (x) { if (hn[x.n]) return false; hn[x.n] = 1; return true; }); }
+        var f0 = g.hits[0].f, list = fam[g.key] || [], seenN = {};
+        list = list.sort(function (a, b) { return a.n - b.n; }).filter(function (x) { if (seenN[x.n]) return false; seenN[x.n] = 1; return true; });
+        g.total = list.length || 1;
+        if (g.key.indexOf('v:') === 0 || list.length < 2) { g.item = f0; g.total = 1; return; }
+        var gid = 'grp:' + g.key;
+        groups[gid] = list.map(function (x) { var f = x.f; return { id: f.id, kind: 'ep', title: f.title, ep: x.n, thumb: f.thumb, hero: f.hero, dur: f.dur, desc: f.desc, tag: f.tag || '', pub: f.pub, ch: f.ch }; });
+        g.item = { id: gid, kind: 'anime', title: g.name, thumb: list[0].f.thumb, hero: list[0].f.hero || list[0].f.thumb, ch: f0.ch, chId: f0.chId, eps: g.total, desc: list[0].f.desc, tag: f0.tag || '', grouped: true };
+      });
+      order.sort(function (a, b) { return b.hits.length - a.hits.length || b.score - a.score; });
+      return order.slice(0, 40);
+    });
+  }
 
   function demoChannels() {
     return (C.CHANNELS || []).map(function (c, i) { return { name: c.name, id: 'demo-ch' + i, title: c.name, thumb: '' }; });
@@ -890,7 +974,7 @@
   }
   function fP(fn) { return function () { return fn.apply(null, arguments).then(fl); }; }
 
-  w.Api = { searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
+  w.Api = { sceneSearch: sceneSearch, nameSearchOn: nameSearchOn, ytSearchOk: ytSearchOk, searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
     updateUrls: updateUrls,
     details: function (ids) { return videoDetails(ids); },
     comments: comments, hasKey: hasKey, films: fP(films), anime: fP(anime), animeAll: fP(animeAll), episodes: fP(episodes),

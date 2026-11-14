@@ -1516,3 +1516,203 @@ html.light .wltx { color: #17110a; }
 @keyframes wlDrop { 0% { transform: translateY(-70px) rotate(-25deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
 @keyframes wlUp { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 html.mobile.wholock #views { top: calc(10px + env(safe-area-inset-top)) !important; }
+/* Giao diện sáng: câu thoại trên banner Trang chủ (Tổng tài của tuần, Bài hát của ngày) bị trắng trên nền sáng */
+html.light .hero-quote { color: #5A4527; }
+html.light .hero-dots i { background: rgba(60,40,10,.22); }
+/* Giao diện sáng: thời lượng trên ảnh phim bị chữ tối trên nền tối */
+.badge.dur, .badge.new { color: #fff; }
+/* Giao diện sáng: chữ phụ trên ô Danh mục nằm trên ảnh nên luôn sáng */
+html.light .catcard .catsub { color: #EDE6DD; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+/* Giao diện sáng: ô "Nghe bài hát hợp phim này" có nền tối nên tên bài phải sáng */
+html.light .dsong .dst { color: #F4F1EC; }
+.mobile .bdgns { font-size: 13px; } .mobile .bdgnear { margin-top: -4px; }
+/* Điện thoại: nút Mã QR khi xem phim (2 mã: mở trong app, mở bằng YouTube) */
+#pl-send.mob { position: fixed; left: 0; top: 0; right: 0; bottom: 0; width: auto; height: auto; z-index: 10001; align-items: flex-end; background: rgba(5,6,10,.6); }
+#pl-send.mob .psend.m { width: 100%; max-width: 560px; margin: 0 auto; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; animation: psUp .25s ease-out; }
+@keyframes psUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.psend.m .psmh { display: flex; gap: 12px; align-items: flex-start; }
+.psend.m .psmh > div:first-child { flex: 1; min-width: 0; }
+.psend.m .psk { font-size: 12px; letter-spacing: .16em; }
+.psend.m .psn { font-size: 18px; margin: 6px 0 2px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.psend.m .psx { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+.psend.m .pss { font-size: 13px; }
+.psend.m .psqs { gap: 10px; margin-top: 14px; }
+.psend.m .psc { flex: 1; min-width: 0; flex-direction: column; gap: 8px; padding: 12px 10px; border-radius: 18px; text-align: center; }
+.psend.m .psq { padding: 8px; border-radius: 12px; width: 100%; max-width: 170px; }
+.psend.m .psq svg { width: 100%; height: auto; aspect-ratio: 1; }
+.psend.m .pslb { font-size: 12px; line-height: 1.35; } .psend.m .pslb b { justify-content: center; font-size: 16px; margin-bottom: 2px; gap: 6px; }
+.psend.m .ytlogo { width: 26px; height: 19px; border-radius: 5px; font-size: 11px; }
+.psend.m .pscp { width: 100%; padding: 9px 6px; border-radius: 12px; background: rgba(255,255,255,.1); font-size: 13px; font-weight: 700; cursor: pointer; }
+.psend.m .psshare { margin-top: 12px; padding: 13px; border-radius: 14px; background: #E8B04B; color: #1a1206; font-weight: 800; text-align: center; font-size: 15px; cursor: pointer; }
+/* Nghe bài hát hợp phim: dòng tiêu đề nằm trên cùng */
+.dsong { flex-wrap: wrap; row-gap: 14px; }
+.dsong > .dsk { flex: 0 0 100%; }
+.mobile .dsong { row-gap: 10px; }
+html.light .dsong .dst, .dsong .dst { color: #F4F1EC; }
+/* Xem trước: giữ lâu trên ảnh phim, phim phát ngay trong ảnh */
+.card.pvcard .thumb { outline: 4px solid #E8B04B; outline-offset: -4px; }
+.card.pvcard { transform: scale(1.06); z-index: 5; position: relative; }
+.pvbox { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 6; background: #000; border-radius: inherit; overflow: hidden; }
+.pvyt, .pvyt iframe { position: absolute; left: 0; top: 0; width: 100% !important; height: 100% !important; border: 0; pointer-events: none; }
+.pvbox:not(.live) .pvyt { opacity: 0; }
+.pvbox:not(.live)::before { content: ""; position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px; border-radius: 50%; border: 4px solid rgba(255,255,255,.25); border-top-color: #E8B04B; animation: pvspin .8s linear infinite; }
+@keyframes pvspin { to { transform: rotate(360deg); } }
+.pvtag { position: absolute; left: 10px; top: 10px; z-index: 2; display: flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px; background: rgba(0,0,0,.65); color: #fff; font-size: 15px; font-weight: 800; }
+.pvtag i { width: 9px; height: 9px; border-radius: 50%; background: #E5486B; box-shadow: 0 0 8px #E5486B; animation: pvblink 1s infinite; }
+@keyframes pvblink { 50% { opacity: .3; } }
+.pvmt { position: absolute; right: 10px; top: 10px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
+.pvsec { position: absolute; right: 10px; bottom: 14px; z-index: 2; padding: 3px 9px; border-radius: 7px; background: rgba(0,0,0,.65); color: #F3D27A; font-size: 15px; font-weight: 800; }
+.pvpb { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; z-index: 2; background: rgba(255,255,255,.25); } .pvpb b { display: block; height: 100%; width: 0; background: #E8B04B; transition: width .25s linear; }
+.pvhint { position: absolute; left: 10px; bottom: 14px; z-index: 2; padding: 3px 9px; border-radius: 7px; background: rgba(0,0,0,.65); color: #fff; font-size: 14px; font-weight: 700; }
+.mobile .pvtag { font-size: 11px; padding: 3px 8px; left: 6px; top: 6px; } .mobile .pvmt { width: 30px; height: 30px; font-size: 14px; right: 6px; top: 6px; }
+.mobile .pvsec { font-size: 11px; right: 6px; bottom: 9px; } .mobile .pvpb { height: 4px; }
+/* Kiểu B (karaoke): chữ rõ trên ảnh sáng */
+.mv-kara .mvshade { background: linear-gradient(180deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.35) 20%, rgba(0,0,0,.45) 38%, rgba(0,0,0,.62) 55%, rgba(0,0,0,.88) 74%, rgba(0,0,0,.96) 100%); }
+.mv-kara .mvkick, .mv-kara .mvsub, .mv-kara .mvlhead, .mv-kara .mvnote { text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 2px 12px rgba(0,0,0,.8); }
+.mv-kara .mvsub { color: #E4E6EC; }
+.mv-kara .mvnote { color: rgba(255,255,255,.75); }
+.mv-kara .mvl { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 3px 16px rgba(0,0,0,.85); }
+.mv-kara .mvl.p1 { opacity: .72; }
+.mv-kara .mvl.nx1 { opacity: .9; }
+.mv-kara .mvl.cur { filter: drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 3px 12px rgba(0,0,0,.8)); }
+.mobile .mv-kara .mvctrl { gap: 6px; justify-content: center; max-width: 100%; } .mobile .mv-kara .mvbtn.sm { width: 40px; height: 40px; } .mobile .mv-kara .mvbtn.md { width: 50px; height: 50px; } .mobile .mv-kara .mvbtn.lg { width: 66px; height: 66px; }
+.mobile .mv-kara .mvctrl { gap: 4px; } .mobile .mv-kara .mvbtn.sm { width: 36px; height: 36px; } .mobile .mv-kara .mvbtn.md { width: 44px; height: 44px; } .mobile .mv-kara .mvbtn.lg { width: 60px; height: 60px; } .mobile .mv-kara .mvbtn svg { width: 19px; height: 19px; } .mobile .mv-kara .mvbtn.lg svg { width: 26px; height: 26px; }
+/* Nút Sáng/Tối */
+.thbtn { width: 52px; height: 52px; flex: none; border-radius: 50%; margin-left: auto; margin-right: 14px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); color: #E8B04B; cursor: pointer; }
+.thbtn svg { width: 28px; height: 28px; }
+.thbtn.focus { outline: 4px solid var(--ring); outline-offset: 2px; }
+.thbtn + .whobtn { margin-left: 0; }
+html.light .thbtn { background: rgba(0,0,0,.06); color: #8A5A0E; }
+.mobile .thbtn { display: none; }
+.mthbtn { display: none; }
+.mobile .mthbtn { display: flex; position: absolute; right: 14px; top: calc(10px + env(safe-area-inset-top)); width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; background: rgba(232,176,75,.16); color: #E8B04B; box-shadow: 0 0 0 1.5px rgba(232,176,75,.6); cursor: pointer; z-index: 3; }
+.mobile .mthbtn svg { width: 22px; height: 22px; }
+html.light.mobile .mthbtn { color: #8A5A0E; background: rgba(232,176,75,.2); }
+html.mobile.mscrolled .mthbtn { display: none; }
+html.wholock .thbtn, html.wholock .mthbtn { pointer-events: none !important; opacity: .28; }
+html.mobile.wholock .mthbtn { display: none !important; }
+#mhead { position: relative; }
+/* Điện thoại: nút Sáng/Tối nhỏ cỡ chữ "TV", ngang hàng logo */
+.mobile .mthbtn { width: 28px; height: 28px; top: calc(13px + env(safe-area-inset-top)); right: 16px; box-shadow: 0 0 0 1px rgba(232,176,75,.55); }
+.mobile .mthbtn svg { width: 16px; height: 16px; }
+/* Viền nút Sáng/Tối cao bằng chữ "TV" */
+.mobile .mthbtn { width: 20px; height: 20px; top: calc(16.5px + env(safe-area-inset-top)); right: 16px; background: transparent; box-shadow: 0 0 0 1.5px currentColor; }
+.mobile .mthbtn svg { width: 12px; height: 12px; }
+.mobile .mthbtn::after { content: ""; position: absolute; left: -12px; top: -12px; right: -12px; bottom: -12px; }
+.mobile .mthbtn, html.light.mobile .mthbtn { width: 18px; height: 18px; top: calc(17.5px + env(safe-area-inset-top)); background: transparent; }
+.mobile .mthbtn svg { width: 11px; height: 11px; }
+/* Remote điện thoại: mã QR trên TV */
+#rcqr { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 9500; background: rgba(5,6,10,.82); display: flex; align-items: center; justify-content: center; }
+.rcbox { width: 1180px; padding: 50px 60px; border-radius: 34px; background: linear-gradient(160deg, #1b2030, #151922); border: 1px solid #2a3042; display: flex; gap: 56px; align-items: center; color: #F4F1EC; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.rcq { background: #fff; padding: 18px; border-radius: 22px; flex: none; } .rcq svg { display: block; width: 320px; height: 320px; }
+.rck { font-size: 22px; letter-spacing: .18em; font-weight: 800; color: #E8B04B; } .rch { font-size: 46px; font-weight: 900; margin: 12px 0 18px; line-height: 1.15; }
+.rcl { font-size: 25px; line-height: 1.6; color: #C9CDD6; } .rcf { margin-top: 22px; font-size: 22px; color: #9aa0ae; } .rcf b { color: #F3D27A; font-size: 30px; letter-spacing: .2em; }
+.mobile #rcqr { position: fixed; width: auto; height: auto; inset: 0; } .mobile .rcbox { width: auto; margin: 14px; padding: 22px; flex-direction: column; gap: 16px; } .mobile .rcq svg { width: 200px; height: 200px; } .mobile .rch { font-size: 22px; } .mobile .rcl { font-size: 14px; } .mobile .rcf { font-size: 13px; } .mobile .rcf b { font-size: 16px; } .mobile .rck { font-size: 12px; }
+/* Còn xem không? */
+#pl-still { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 9; display: flex; align-items: center; justify-content: center; background: rgba(5,6,10,.82); }
+.stbox { width: 900px; padding: 50px; border-radius: 34px; background: linear-gradient(160deg, #1b2030, #151922); border: 1px solid #2a3042; text-align: center; color: #F4F1EC; }
+.stk { font-size: 22px; letter-spacing: .18em; font-weight: 800; color: #E8B04B; } .stt { font-size: 64px; font-weight: 900; margin: 10px 0; } .sts { font-size: 26px; color: #9aa0ae; } .sts b { color: #F3D27A; }
+.stb { display: flex; gap: 20px; justify-content: center; margin-top: 34px; }
+.mobile #pl-still { position: fixed; width: auto; height: auto; inset: 0; z-index: 10002; } .mobile .stbox { width: auto; margin: 16px; padding: 26px 18px; } .mobile .stt { font-size: 30px; } .mobile .sts { font-size: 14px; } .mobile .stk { font-size: 12px; }
+
+/* 2.35: Sáng/Tối theo giờ */
+.thbtn { position: relative; }
+.thbtn em, .mthbtn em { position: absolute; right: -6px; bottom: -5px; font-style: normal; font-size: 16px; line-height: 1; font-weight: 900; background: #E8B04B; color: #1a1206; border-radius: 6px; padding: 2px 4px; }
+.mobile .mthbtn em { font-size: 9px; padding: 1px 3px; right: -5px; bottom: -4px; }
+html.light .thbtn em, html.light .mthbtn em { background: #8A5A0E; color: #fff; }
+.thfade { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 99999; pointer-events: none; opacity: 0; transition: opacity .4s; background: #0B0D12; }
+.thfade.tolight { background: #F5F3EE; }
+.thfade.on { opacity: 1; }
+.thday { margin: -4px 0 14px; padding: 16px 22px 18px; border-radius: 18px; background: rgba(255,255,255,.05); }
+.thlb { font-size: 22px; color: #9aa0ae; margin-bottom: 10px; }
+.thbar { position: relative; height: 30px; border-radius: 9px; overflow: hidden; display: flex; }
+.thbar i { display: block; height: 100%; }
+.thbar i.n { background: #1f2740; } .thbar i.d { background: #F3D27A; }
+.thbar b { position: absolute; top: 0; width: 4px; margin-left: -2px; height: 100%; background: #E8762B; border-radius: 2px; }
+.thtk { display: flex; justify-content: space-between; font-size: 18px; color: #7a8191; margin-top: 6px; }
+html.light .thday { background: rgba(0,0,0,.05); }
+html.light .thbar i.n { background: #3a4462; }
+.mobile .thday { margin: -2px 0 10px; padding: 12px 14px 14px; border-radius: 16px; }
+.mobile .thlb { font-size: 12px; margin-bottom: 8px; }
+.mobile .thbar { height: 24px; border-radius: 8px; }
+.mobile .thtk { font-size: 10.5px; margin-top: 5px; }
+
+/* 2.36: Tìm theo cảnh trong phim */
+.smode { display: flex; align-items: center; gap: 12px; margin: -6px 0 18px; }
+.smlb { font-size: 22px; color: var(--c-9aa0ae); font-weight: 600; }
+.smb { padding: 10px 22px; border-radius: 999px; background: var(--c-151922); font-size: 22px; font-weight: 800; color: var(--c-c9cdd6, #C9CDD6); cursor: pointer; }
+.smb.on { background: #E8B04B; color: #1a1206; }
+.smb.focus { outline: 4px solid var(--ring); outline-offset: 3px; }
+.sctip { font-size: 22px; margin: -6px 0 16px; }
+.scres { display: flex; flex-direction: column; gap: 18px; }
+.scrow { background: var(--c-151922); border-radius: 20px; padding: 14px; }
+.scmain { display: flex; gap: 20px; align-items: center; border-radius: 14px; cursor: pointer; }
+.scmain.focus { outline: 4px solid var(--ring); outline-offset: 6px; }
+.scimg { width: 220px; height: 124px; border-radius: 12px; background: #232838 center/cover no-repeat; flex: none; }
+.sct { flex: 1; min-width: 0; }
+.scti { font-size: 28px; font-weight: 800; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.scm { font-size: 20px; color: var(--c-9aa0ae); margin-top: 6px; }
+.sccnt { flex: none; width: 110px; text-align: center; font-size: 18px; color: var(--c-9aa0ae); line-height: 1.2; }
+.sccnt b { display: block; font-size: 40px; color: #E8B04B; }
+.sceps { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.scep { font-size: 19px; background: #232838; color: #C9CDD6; border-radius: 10px; padding: 8px 14px; max-width: 100%; cursor: pointer; line-height: 1.35; }
+.scep b { color: #F4F1EC; }
+.scep em { font-style: normal; color: #F3D27A; font-weight: 800; }
+.scep.focus { outline: 4px solid var(--ring); outline-offset: 2px; }
+.scmore { font-size: 18px; color: var(--c-9aa0ae); align-self: center; }
+html.light .scep { background: #ECE7DD; color: #3a3f4c; } html.light .scep b { color: #1d2230; } html.light .scep em { color: #8A5A0E; }
+html.light .scimg { background-color: #ddd5c7; } html.light .sccnt b { color: #9a6a12; }
+html.light .smb.on, html.light .smb.on { color: #1a1206; }
+.mobile .smode { margin: 0 0 10px; gap: 8px; }
+.mobile .smlb { font-size: 12px; }
+.mobile .smb { font-size: 12.5px; padding: 6px 12px; }
+.mobile .sctip { font-size: 12px; margin: -2px 0 10px; }
+.mobile .scres { gap: 10px; }
+.mobile .scrow { padding: 10px; border-radius: 14px; }
+.mobile .scmain { gap: 10px; }
+.mobile .scimg { width: 110px; height: 62px; border-radius: 9px; }
+.mobile .scti { font-size: 14.5px; }
+.mobile .scm { font-size: 11.5px; margin-top: 3px; }
+.mobile .sccnt { width: 52px; font-size: 10px; } .mobile .sccnt b { font-size: 20px; }
+.mobile .sceps { gap: 6px; margin-top: 8px; }
+.mobile .scep { font-size: 12px; padding: 5px 9px; border-radius: 8px; }
+.mobile .scmore { font-size: 11px; }
+/* 2.36: Chế độ khách */
+.wtmp { display: inline-block; margin-top: 6px; font-size: 16px; font-weight: 900; letter-spacing: .06em; background: #3DBE73; color: #06210f; border-radius: 8px; padding: 3px 10px; }
+.mobile .wtmp { font-size: 9.5px; padding: 2px 6px; border-radius: 6px; margin-top: 4px; }
+.smb.dis { background: transparent; border: 2px dashed var(--c-2a3042); color: var(--c-9aa0ae); }
+.mobile .smb.dis { border-width: 1px; }
+/* 2.36.2: giữ màn hình sáng ở trang Nhạc */
+.mvwake { display: none; }
+.mobile .mvwake { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 2px; padding: 6px 12px; border-radius: 999px; background: rgba(232,176,75,.16); box-shadow: 0 0 0 1.5px rgba(232,176,75,.6); color: #F3D27A; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.mobile .mvwake i { font-style: normal; font-weight: 600; color: #C9CDD6; }
+.mobile .mvwake.off { background: rgba(255,255,255,.06); box-shadow: 0 0 0 1px rgba(255,255,255,.18); color: #C9CDD6; }
+html.light.mobile .mvwake { color: #8A5A0E; background: rgba(232,176,75,.18); } html.light.mobile .mvwake i { color: #5a5f6c; }
+html.light.mobile .mvwake.off { color: #5a5f6c; background: rgba(0,0,0,.05); box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+.mobile .mvwake.bg { background: rgba(61,190,115,.14); box-shadow: 0 0 0 1.5px rgba(61,190,115,.55); color: #8fe0b0; }
+html.light.mobile .mvwake.bg { color: #1E6B33; background: rgba(61,190,115,.14); }
+/* 2.37: Xem tiếp trên máy khác */
+.rocard { display: flex; gap: 12px; align-items: center; margin: 4px 12px 10px; padding: 12px; border-radius: 18px; background: linear-gradient(135deg, #2a2112, #151922); box-shadow: 0 0 0 1.5px rgba(232,176,75,.55); position: relative; cursor: pointer; }
+.rocard .roimg { width: 118px; height: 66px; border-radius: 10px; background: #232838 center/cover no-repeat; flex: none; }
+.rocard .rot { flex: 1; min-width: 0; }
+.rok { font-size: 10.5px; font-weight: 900; letter-spacing: .08em; color: #E8B04B; }
+.rocard b { display: block; font-size: 14px; margin-top: 2px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rocard small { display: block; color: #9aa0ae; font-size: 11.5px; margin-top: 3px; }
+.ropg { height: 4px; border-radius: 2px; background: #2a3042; margin-top: 6px; overflow: hidden; } .ropg i { display: block; height: 100%; background: #E8B04B; border-radius: 2px; }
+.rox { position: absolute; right: 8px; top: 6px; font-size: 13px; color: #9aa0ae; padding: 4px 6px; }
+.robtns { display: flex; gap: 8px; margin: -2px 12px 14px; }
+.robtns div { flex: 1; text-align: center; font-size: 13px; font-weight: 800; border-radius: 12px; padding: 10px 0; cursor: pointer; }
+.robtns .roa { background: #E8B04B; color: #1a1206; } .robtns .rob { background: #1d2230; color: #C9CDD6; }
+html.light .rocard { background: linear-gradient(135deg, #FBF1DC, #fff); } html.light .rocard small { color: #5a5f6c; } html.light .rok { color: #8A5A0E; }
+html.light .robtns .rob { background: #ECE7DD; color: #1d2230; } html.light .ropg { background: #e6e1d6; }
+.rotv { position: absolute; left: 960px; top: 860px; transform: translate(-50%, 30px); width: 1100px; display: flex; gap: 22px; align-items: center; padding: 18px 22px 22px; border-radius: 22px; background: rgba(21,25,34,.97); box-shadow: 0 0 0 3px #E8B04B, 0 20px 60px rgba(0,0,0,.6); z-index: 9000; opacity: 0; transition: opacity .3s, transform .3s; color: #F4F1EC; }
+.rotv.on { opacity: 1; transform: translate(-50%, 0); }
+.rotv .roimg { width: 220px; height: 124px; border-radius: 14px; background: #232838 center/cover no-repeat; flex: none; }
+.rotv .rot { flex: 1; min-width: 0; } .rotv b { display: block; font-size: 30px; } .rotv small { display: block; color: #9aa0ae; font-size: 22px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rotv .ropg { height: 6px; margin-top: 12px; }
+.rogo { flex: none; background: #E8B04B; color: #1a1206; font-weight: 900; font-size: 26px; border-radius: 16px; padding: 16px 22px; }
+.rogo span { font-size: 16px; background: rgba(0,0,0,.15); border-radius: 6px; padding: 2px 6px; margin-left: 6px; vertical-align: 3px; }
+.rocd { position: absolute; left: 22px; right: 22px; bottom: 8px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rotv.on .rocd i { display: block; height: 100%; background: #E8B04B; animation: rocd 10s linear forwards; }
+@keyframes rocd { from { width: 100%; } to { width: 0; } }
+html.light .rotv { background: rgba(255,255,255,.98); color: #1d2230; } html.light .rotv small { color: #5a5f6c; }

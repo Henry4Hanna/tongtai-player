@@ -115,7 +115,13 @@
     var sub = o.sub != null ? o.sub : subline(item);
     if (sub) c.appendChild(el('div', 'csub', sub));
     c._item = item;
-    c._ok = function () { if (o.onSelect) o.onSelect(item); };
+    c._ok = function () {
+      if (w.Player && w.Player.previewOn && w.Player.previewOn(c)) { w.Player.previewOpen(); return; }   // đang xem trước: mở phim từ chỗ đó
+      if (o.onSelect) o.onSelect(item);
+    };
+    // Giữ lâu trên ảnh phim: xem trước ngay trong ảnh (không áp dụng cho hoạt hình nhiều tập, phim demo)
+    if (!(item.kind === 'anime' && (item.eps || 0) > 1) && item.id && String(item.id).indexOf('demo') !== 0 && item.kind !== 'ep')
+      c._hold = function () { if (w.Player && w.Player.preview) w.Player.preview(c, t, item); };
     return c;
   }
 
@@ -190,12 +196,12 @@
   }
 
   var toastT = 0;
-  function toast(msg) {
+  function toast(msg, ms) {
     var t = d.getElementById('toast');
     t.textContent = msg;
     t.classList.remove('hidden');
     clearTimeout(toastT);
-    toastT = setTimeout(function () { t.classList.add('hidden'); }, 2600);
+    toastT = setTimeout(function () { t.classList.add('hidden'); }, ms || 2600);
   }
 
   var ICON_PLAY = '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M6 3l15 9-15 9z" fill="currentColor"/></svg>';

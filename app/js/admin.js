@@ -701,6 +701,7 @@
     cb2.onclick = function () { if (!confirm('Tắt ' + dorm.length + ' kênh ngủ đông? (bật lại lúc nào cũng được)')) return; dorm.forEach(function (c) { c.on = false; }); saveChannels('Tắt ' + dorm.length + ' kênh ngủ đông').then(function () { go('channels'); }); };
     var cbx = el('div', 'idb'); cbx.appendChild(cb1); cbx.appendChild(cb2); chk.appendChild(cbx); chk.appendChild(cm);
     var two = el('div', 'two'); two.appendChild(ac); two.appendChild(chk); view.appendChild(two);
+    rankCard(view, L);
     var c = card('Danh sách kênh', 'Thứ tự ở đây = thứ tự trong app');
     var hb = el('button', 'btn sm', '↶ Lịch sử'); hb.style.marginLeft = 'auto'; hb.onclick = function () { historyView('channels'); };
     c.querySelector('h2').appendChild(hb);
@@ -738,6 +739,82 @@
     [].forEach.call($('c-tab').children, function (b) { b.onclick = function () { CH.tab = b.dataset.t; [].forEach.call($('c-tab').children, function (q) { q.classList.toggle('on', q === b); }); rowsPaint(); }; });
     $('c-q').oninput = function () { CH.q = this.value; rowsPaint(); };
     rowsPaint();
+  }
+
+  /* Xếp hạng kênh 30 ngày + kênh không ai xem (2.36) */
+  function rankCard(view, L) {
+    var rc = card('Xếp hạng kênh · 30 ngày', 'Phút xem của cả nhà, lấy từ máy chủ thống kê (không tốn đơn vị)');
+    var body = el('div', 'crbody', '<div class="muted">Đang tải…</div>');
+    rc.appendChild(body); view.appendChild(rc);
+    var keep = {}; try { keep = JSON.parse(localStorage.getItem('adm.chkeep') || '{}'); } catch (e) { keep = {}; }
+    api('/a/chrank').then(function (j) {
+      if (!j || !j.ok) throw new Error((j && j.error) || 'lỗi');
+      var byKey = {}, byId = {}; (j.list || []).forEach(function (x) { byKey[nn(x.ch)] = x; if (x.cid) byId[x.cid] = x; });
+      function statOf(c) { return (c.id && byId[c.id]) || (c.title && byKey[nn(c.title)]) || byKey[nn(c.name)] || null; }
+      var mine = {}; L.forEach(function (c) { mine[nn(c.title || c.name)] = c; mine[nn(c.name)] = c; });
+      var list = j.list || [], max = list.length ? list[0].s || 1 : 1;
+      body.innerHTML = '';
+      if (!list.length) body.appendChild(el('div', 'muted', 'Chưa có dữ liệu xem phim trong 30 ngày (cần STATS_URL trong app).'));
+      var top = el('div', 'crtop'), N = 8;
+      function row(x, i) {
+        var tot = x.s || 1, inList = !!mine[nn(x.ch)];
+        var r = el('div', 'crrow');
+        r.innerHTML = '<span class="crn">' + (i + 1) + '</span><span class="crnm">' + esc(x.ch) + (inList ? '' : ' <small>ngoài danh sách</small>') + '</span>' +
+          '<span class="crbar"><i style="width:' + Math.max(2, x.s / max * 100).toFixed(1) + '%"></i></span><span class="crv">' + Math.round(x.s / 60).toLocaleString('vi-VN') + '′</span>';
+        var who = el('div', 'crwho', x.who.slice(0, 3).map(function (p) { return esc(p.name) + ' ' + Math.round(p.s / tot * 100) + '%'; }).join(' · '));
+        top.appendChild(r); top.appendChild(who);
+      }
+      list.slice(0, N).forEach(row);
+      body.appendChild(top);
+      if (list.length > N) {
+        var more = el('button', 'btn sm', 'Xem tất cả ' + list.length + ' kênh');
+        more.onclick = function () { top.innerHTML = ''; list.forEach(row); more.remove(); };
+        body.appendChild(more);
+      }
+      // Kênh đang bật mà 30 ngày không ai xem (dưới 5 phút)
+      var unk = 0;
+      var dead = L.filter(function (c) {
+        if (c.on === false || keep[nn(c.name)] > Date.now()) return false;
+        var x = statOf(c);
+        if (!x && !c.title) { unk++; return false; }   // chưa có tên hiển thị: chưa so được, không gợi ý tắt
+        return !x || x.s < 300;
+      });
+      var dc = el('div', 'crdead');
+      dc.appendChild(el('h3', '', 'Không ai xem 30 ngày <span>' + dead.length + ' kênh</span>'));
+      var unkNote = unk ? el('div', 'muted crunk', unk + ' kênh chưa có tên hiển thị nên chưa so được với lượt xem. Bấm “Cập nhật ảnh tất cả” ở trên để lấy tên, hoặc chờ vài ngày (bản 2.36 ghi thêm mã kênh mỗi lần xem).') : null;
+      if (!dead.length) { dc.appendChild(el('div', 'muted', 'Kênh nào đang bật cũng có người xem. Tốt!')); if (unkNote) dc.appendChild(unkNote); body.appendChild(dc); return; }
+      dc.appendChild(el('div', 'muted', 'Tắt bớt để tiết kiệm đơn vị YouTube: mỗi kênh tốn khoảng 1 đơn vị mỗi lần app cập nhật phim mới.'));
+      if (unkNote) dc.appendChild(unkNote);
+      var SHOWN = 8;
+      dead.forEach(function (c, di) {
+        var x = statOf(c);
+        var r = el('div', 'crd');
+        r.innerHTML = '<div class="crdn"><b>' + esc(c.title || c.name) + '</b><small>' + (x ? Math.round(x.s / 60) + ' phút' : '0 phút') + (c.last ? ' · phim mới nhất ' + esc(String(c.last).slice(0, 10)) : '') + '</small></div>';
+        var bo = el('button', 'btn dark sm', 'Tắt'), bk = el('button', 'btn sm', 'Giữ');
+        bo.onclick = function () {
+          c.on = false; bo.disabled = bk.disabled = true;
+          saveChannels('Tắt kênh ' + (c.title || c.name) + ' (không ai xem 30 ngày)').then(function () { r.classList.add('done'); r.querySelector('small').textContent = 'Đã tắt · bật lại trong danh sách bên dưới hoặc ↶ Lịch sử'; }).catch(function () { c.on = true; bo.disabled = bk.disabled = false; });
+        };
+        bk.onclick = function () { keep[nn(c.name)] = Date.now() + 30 * 86400e3; try { localStorage.setItem('adm.chkeep', JSON.stringify(keep)); } catch (e) { /* bỏ qua */ } r.remove(); };
+        r.appendChild(bo); r.appendChild(bk); dc.appendChild(r);
+        if (di >= SHOWN) r.style.display = 'none';
+      });
+      if (dead.length > SHOWN) {
+        var mo = el('button', 'btn sm crmore', 'Xem thêm ' + (dead.length - SHOWN) + ' kênh');
+        mo.onclick = function () { [].forEach.call(dc.querySelectorAll('.crd'), function (x) { x.style.display = ''; }); mo.remove(); };
+        dc.appendChild(mo);
+      }
+      if (dead.length > 1) {
+        var all = el('button', 'btn dark sm', 'Tắt cả ' + dead.length + ' kênh');
+        all.onclick = function () {
+          if (!confirm('Tắt ' + dead.length + ' kênh không ai xem? (bật lại lúc nào cũng được)')) return;
+          dead.forEach(function (c) { c.on = false; });
+          saveChannels('Tắt ' + dead.length + ' kênh không ai xem 30 ngày').then(function () { go('channels'); });
+        };
+        dc.appendChild(all);
+      }
+      body.appendChild(dc);
+    }).catch(function (e) { body.innerHTML = '<div class="muted">Chưa xem được xếp hạng: ' + esc(e.message) + '</div>'; });
   }
   function saveChannels(msg) {
     var m = $('c-msg') || $('ce-msg');
@@ -1100,34 +1177,48 @@
   function card(title, sub) { var c = el('section', 'card'); c.appendChild(el('h2', '', esc(title) + (sub ? '<span>' + esc(sub) + '</span>' : ''))); return c; }
 
   /* ---------- Khóa tìm kiếm theo hồ sơ: lưu trong channels.json (policy.searchLock), mọi máy đọc được ---------- */
-  function searchLockCard(profs) {
-    var c = card('Khóa tìm kiếm theo hồ sơ', 'tiết kiệm đơn vị YouTube');
+  function searchLockCard(profs, sToday) {
+    var c = card('Tìm kiếm', 'tiết kiệm đơn vị YouTube');
     var box = el('div', 'slk', '<div class="muted">Đang tải…</div>'); c.appendChild(box);
     var people = [], seen = {};
     function addP(id, n, u) { if (!id || seen[id]) { if (seen[id] && u) seen[id].u = u; return; } seen[id] = { id: id, n: n || id, u: u || 0 }; people.push(seen[id]); }
     (profs || []).forEach(function (p) { addP(p.id, p.name, p.unitsToday); });
-    addP('guest', 'Guest');
+    addP('guest', 'Khách');
     Object.keys(LOCALP).forEach(function (k) { addP(k, LOCALP[k].name); });
     api('/a/channels').catch(function () { return null; }).then(function (j) {
-      var live = !!(j && j.ok), data = (j && j.data) || {}, pol = data.policy || {}, on = {};
+      var live = !!(j && j.ok), data = (j && j.data) || {}, pol = data.policy || {}, on = {}, ns = pol.nameSearch === true;
       (pol.searchLock || []).forEach(function (x) { on[x.id] = 1; if (!seen[x.id]) addP(x.id, x.n); });
       if (live) { CH.sha = j.sha; CH.live = true; if (data.v >= 2) CH.list = data.channels; }
       box.innerHTML = '';
-      box.appendChild(el('div', 'muted', 'Hồ sơ bị khóa thì trang Tìm kiếm trong app không dùng được (mỗi lần tìm tốn 100 đơn vị). Phim ở Trang chủ, Kênh, Danh mục vẫn xem bình thường.'));
+      // 2.36: công tắc chung "Cho phép tìm theo tên phim" (YouTube, 100 đơn vị/lần). Mặc định tắt
+      var ms = el('label', 'nsm');
+      function paintNs() {
+        ms.className = 'nsm' + (ns ? ' on' : '');
+        ms.querySelector('.nst').innerHTML = 'Cho phép tìm theo tên phim <span class="nsp">' + (ns ? 'ĐANG BẬT' : 'ĐANG TẮT') + '</span>';
+        ms.querySelector('.nss').innerHTML = ns ? 'Hôm nay cả nhà đã tìm ' + nf(sToday) + ' lần · ' + nf(sToday * 100) + ' đơn vị' :
+          'Bật: app tìm phim mới trên YouTube, mỗi lần tìm tốn <b>100 đơn vị</b>.<br>Tắt: app chỉ tìm trong phim đã tải từ các kênh (theo tên và theo cảnh), <b>không tốn đơn vị</b>.';
+        sub2.classList.toggle('dim', !ns);
+      }
+      ms.innerHTML = '<div class="nsx"><b class="nst"></b><small class="nss"></small></div><span class="sw big"><input type="checkbox"' + (ns ? ' checked' : '') + '><i></i></span>';
+      box.appendChild(ms);
+      var sub2 = el('div', 'nsub');
+      sub2.appendChild(el('h3', '', 'Khóa riêng từng hồ sơ'));
+      sub2.appendChild(el('div', 'muted', 'Chỉ dùng khi đã bật ở trên: hồ sơ bị khóa vẫn không tìm trên YouTube được, chỉ tìm trong phim đã có. Phim ở Trang chủ, Kênh, Danh mục vẫn xem bình thường.'));
+      ms.querySelector('input').onchange = function () { ns = this.checked; paintNs(); btn.disabled = !live; msg.textContent = ''; };
       var list = el('div', 'slkl');
       people.forEach(function (p) {
         var r = el('label', 'slkr' + (on[p.id] ? ' on' : ''), av(p.n, p.id, 28) + '<span class="n">' + esc(p.n) + '</span><span class="muted">' + (p.u ? nf(p.u) + ' đơn vị hôm nay' : '') + '</span><span class="sw"><input type="checkbox"' + (on[p.id] ? ' checked' : '') + '><i></i></span>');
         r.querySelector('input').onchange = function () { if (this.checked) on[p.id] = 1; else delete on[p.id]; r.classList.toggle('on', this.checked); btn.disabled = !live; msg.textContent = ''; };
         list.appendChild(r);
       });
-      box.appendChild(list);
+      sub2.appendChild(list); box.appendChild(sub2); paintNs();
       var bar = el('div', 'slkb'), btn = el('button', 'btn sm', 'Lưu'), msg = el('span', 'muted', live ? '' : 'Chưa nối GitHub nên chưa lưu được (xem HUONG-DAN-ADMIN, bước Nối GitHub).');
       btn.disabled = true;
       btn.onclick = function () {
         btn.disabled = true; msg.textContent = 'Đang lưu…';
         var lock = people.filter(function (p) { return on[p.id]; }).map(function (p) { return { id: p.id, n: p.n }; });
         var chl = CH.list || data.channels || [];
-        api('/a/channels', { method: 'POST', body: JSON.stringify({ sha: CH.sha, message: lock.length ? 'Khóa tìm kiếm: ' + lock.map(function (x) { return x.n; }).join(', ') : 'Mở khóa tìm kiếm cho mọi hồ sơ', channels: chl, policy: { searchLock: lock } }) }).then(function (r) {
+        api('/a/channels', { method: 'POST', body: JSON.stringify({ sha: CH.sha, message: (ns ? 'Bật' : 'Tắt') + ' tìm theo tên phim' + (lock.length ? ' · khóa: ' + lock.map(function (x) { return x.n; }).join(', ') : ''), channels: chl, policy: { searchLock: lock, nameSearch: ns } }) }).then(function (r) {
           if (!r.ok) throw new Error(r.error || 'lỗi');
           CH.sha = r.sha; CH.list = r.data.channels;
           msg.innerHTML = '<b style="color:#1E6B33">Đã lưu.</b> Các máy nhận trong vòng 3 giờ (hoặc khi mở lại app).';
@@ -1135,6 +1226,52 @@
       };
       bar.appendChild(btn); bar.appendChild(msg); box.appendChild(bar);
     });
+    return c;
+  }
+
+
+  /* ---------- 2.37: Sức khỏe app ---------- */
+  function healthCard(fresh) {
+    var c = card('Sức khỏe app', 'Tự kiểm tra mỗi lần mở trang · không tốn đơn vị YouTube');
+    c.classList.add('hcard');
+    var body = el('div', '', '<div class="muted">Đang kiểm tra…</div>'); c.appendChild(body);
+    var ver = (window.APP_CONFIG && window.APP_CONFIG.VERSION) || '';
+    api('/a/health?v=' + encodeURIComponent(ver) + (fresh ? '&fresh=1' : '')).then(function (j) {
+      if (!j || !j.ok) throw new Error((j && j.error) || 'lỗi');
+      body.innerHTML = '';
+      var sm = el('div', 'hsum');
+      sm.innerHTML = '<div class="hg"><b>' + nf(j.cnt.ok) + '</b>bình thường</div><div class="hy"><b>' + nf(j.cnt.warn) + '</b>nên xem</div><div class="hr"><b>' + nf(j.cnt.bad) + '</b>cần sửa</div>';
+      body.appendChild(sm);
+      var nav = document.querySelector('.nav[data-v="overview"]'); if (nav) nav.classList.toggle('hdot', j.cnt.bad > 0);
+      j.items.forEach(function (it) {
+        var r = el('div', 'hit');
+        r.innerHTML = '<span class="hd ' + it.lv + '"></span><div class="ht"><b>' + esc(it.t) + '</b><small>' + esc(it.d || '') + '</small></div>';
+        var a = it.act, b = null;
+        if (a && a.k === 'channel') { b = el('button', 'btn dark sm', 'Sửa kênh'); b.onclick = function () { go('channels'); }; }
+        if (a && a.k === 'channels') { b = el('button', 'btn sm', 'Xem'); b.onclick = function () { go('channels'); }; }
+        if (a && a.k === 'devices') { b = el('button', 'btn sm', 'Chi tiết'); b.onclick = function () { go('devices'); }; }
+        if (a && a.k === 'hide') {
+          b = el('button', 'btn sm', 'Ẩn phim');
+          b.onclick = function () {
+            var names = a.films.map(function (f) { return '• ' + f.t + ' (lỗi ' + f.n + ' lần)'; }).join('\n');
+            if (!confirm('Ẩn ' + a.films.length + ' phim này trên mọi máy?\n\n' + names + '\n\nCác máy nhận trong vòng 3 giờ.')) return;
+            b.disabled = true; b.textContent = 'Đang lưu…';
+            api('/a/channels').then(function (g) {
+              if (!g.ok) throw new Error(g.error || 'Chưa nối GitHub');
+              var pol = (g.data && g.data.policy) || {}, hide = (pol.hide || []).slice();
+              a.films.forEach(function (f) { if (hide.indexOf(f.id) < 0) hide.push(f.id); });
+              return api('/a/channels', { method: 'POST', body: JSON.stringify({ sha: g.sha, message: 'Ẩn ' + a.films.length + ' phim hay lỗi', channels: g.data.channels || [], policy: { hide: hide } }) });
+            }).then(function (k) { if (!k.ok) throw new Error(k.error || 'lỗi'); r.classList.add('done'); b.textContent = 'Đã ẩn'; })
+              .catch(function (e) { b.disabled = false; b.textContent = 'Ẩn phim'; alert('Chưa ẩn được: ' + e.message); });
+          };
+        }
+        if (b) r.appendChild(b);
+        body.appendChild(r);
+      });
+      var rf = el('button', 'btn sm', 'Kiểm tra lại ngay'); rf.style.marginTop = '10px';
+      rf.onclick = function () { c.parentNode.replaceChild(healthCard(true), c); };
+      body.appendChild(rf);
+    }).catch(function (e) { body.innerHTML = '<div class="muted">Chưa kiểm tra được: ' + esc(e.message) + '</div>'; });
     return c;
   }
 
@@ -1155,6 +1292,7 @@
         ['Hồ sơ dùng app', k.profiles, j.profiles[0] ? j.profiles[0].name + ' xem nhiều nhất' : ''], ['Đơn vị YouTube hôm nay', nf(k.unitsToday) + ' / 10.000', 'Đặt lại lúc ' + when(j.quotaResetAt)]]
         .forEach(function (x) { var c = el('section', 'card kpi', '<div class="t">' + x[0] + '</div><div class="v">' + x[1] + '</div><div class="s">' + esc(x[2]) + '</div>'); ks.appendChild(c); });
       v.appendChild(ks);
+      v.appendChild(healthCard());   // 2.37: Sức khỏe app
       var series = j.profiles.map(function (p) { return { key: p.id, name: p.name, color: color(p.id) }; });
       var ch = card('Thời gian xem mỗi ngày theo hồ sơ', 'rê chuột vào cột để xem chi tiết');
       ch.appendChild(el('div', 'legend', series.map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('')));
@@ -1177,7 +1315,7 @@
       uc.appendChild(ub);
       uc.appendChild(el('div', '', '<div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:13px">' + j.profiles.map(function (p) { return '<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + color(p.id) + ';margin-right:6px"></i>' + esc(p.name) + ': <b>' + nf(p.unitsToday) + '</b></span>'; }).join('') + '</div><div class="muted" style="margin-top:10px">Mỗi lần tìm kiếm tốn 100 đơn vị; tải phim của một kênh tốn 1 đơn vị. Số này tính từ khi bật máy chủ thống kê.</div>'));
       right.appendChild(uc);
-      right.appendChild(searchLockCard(j.profiles));
+      right.appendChild(searchLockCard(j.profiles, j.searchToday || 0));
       r2.appendChild(t); r2.appendChild(right); v.appendChild(r2);
       var mu = j.music;   // nhạc: bài nghe nhiều nhất (lượt nghe quá 30 giây)
       var mc = card('Nhạc được nghe nhiều nhất', mu && mu.n ? nf(mu.n) + ' lượt nghe · chỉ đếm bài nghe quá 30 giây' : 'Chưa có lượt nghe nào trong khoảng này');

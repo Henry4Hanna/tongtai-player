@@ -147,6 +147,18 @@
     var title = el('div', 'mvtitle', '');
     var sub = el('div', 'mvsub', '');
     meta.appendChild(kicker); meta.appendChild(title); meta.appendChild(sub);
+    var wk = el('div', 'mvwake');   // ☀ Màn hình luôn sáng (điện thoại)
+    function paintWake() {
+      if (Wake.bg()) { wk.style.display = ''; wk.className = 'mvwake bg'; wk.innerHTML = '🔒 Nghe được cả khi khóa máy <i>· màn hình tự tắt như thường</i>'; return; }
+      wk.className = 'mvwake';
+      var sh = Wake.shown(); wk.style.display = sh ? '' : 'none'; if (!sh) return;
+      var o = Wake.isOn(); wk.classList.toggle('off', !o);
+      wk.innerHTML = o ? '☀ Màn hình luôn sáng <i>· chạm để tắt</i>' : '🌙 Máy tự khóa như thường <i>· chạm để giữ sáng</i>';
+    }
+    wk.onclick = function () { if (Wake.bg()) { if (w.UI) w.UI.toast('🔒 Khóa máy hoặc mở app khác vẫn nghe. Tắt trong Cài đặt → Nhạc → Nghe nhạc khi khóa máy', 4500); return; } var o = Wake.toggle(); paintWake(); if (w.UI) w.UI.toast(o ? '☀ Màn hình luôn sáng ở trang Nhạc' : '🌙 Máy sẽ tự khóa như thường (khóa màn hình là iPhone dừng nhạc)', 3500); };
+    meta.appendChild(wk); paintWake();
+    var wkT = setInterval(function () { if (!wk.parentNode || !d.body.contains(wk)) { clearInterval(wkT); return; } paintWake(); }, 1000);
+    try { if (Wake.shown() && !w.localStorage.getItem('tt.wakeTip')) { w.localStorage.setItem('tt.wakeTip', '1'); setTimeout(function () { if (w.UI) w.UI.toast('☀ Ở trang Nhạc, màn hình luôn sáng để nhạc không bị tắt', 4500); }, 1200); } } catch (e) { /* bỏ qua */ }
     var msum = el('div', 'mvsum');   // tóm tắt bài (điện thoại: luôn hiện dưới tên bài)
     meta.appendChild(msum);
     left.appendChild(meta);
@@ -529,5 +541,68 @@
     return { name: 'lrcsync', el: v };
   }
 
-  w.MusicPage = { open: MusicPage, list: SongList, sync: LrcSync, times: lineTimes, songOfDay: songOfDay, songForFilm: songForFilm, songImage: songImage, openSong: openSong, sleep: function () { w.Screens.push(SleepSheet()); }, sleepText: sleepText };
+
+  /* ---------- 2.36.2: giữ màn hình sáng ở trang Nhạc (điện thoại) ----------
+     iPhone tự khóa màn hình sau 30 giây / 1 phút thì nhạc dừng. Ở trang Nhạc: xin "Screen Wake Lock" (iOS 16.4+),
+     máy cũ dùng một video im lặng 16×16 phát lặp (video đang phát thì máy không tự khóa).
+     Tắt khi rời trang Nhạc, khi hết hẹn giờ tắt nhạc, hoặc khi chạm nhãn ☀. */
+  var Wake = (function () {
+    var lock = null, vid = null, active = false, tempOff = false, sleepSeen = false, wasPage = false;
+    var MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAANJbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAnN0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHrbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAUABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABlm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAVZzdGJsAAAAtnN0c2QAAAAAAAAAAQAAAKZhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALGF2Y0MBQsAK/+EAFWdCwAraewEQAAADABAAAAMAoPEiagEABGjOD8gAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAALUAAAC1AAAAAYc3R0cwAAAAAAAAABAAAACgAACAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAACgAAAAEAAAA8c3RzegAAAAAAAAAAAAAACgAAAoMAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAJAAAACQAAAAkAAAAUc3RjbwAAAAAAAAABAAADeQAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAALcbWRhdAAAAm0GBf//adxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxIG1lPWhleCBzdWJtZT0yIHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTAgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0wIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PTAgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTUgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBH///w9FAAEqv4AAAAAFQZogEfUAAAAFQZpAEfUAAAAFQZpgEfUAAAAFQZqAEfUAAAAFQZqgEfUAAAAFQZrAEfUAAAAFQZrgEfUAAAAFQZsAEPUAAAAFQZsgP9Q=';
+    function phone() { return d.documentElement.classList.contains('mobile'); }
+    function page() { try { var c = w.Screens && w.Screens.current(); return !!c && c.name === 'music' && !(w.Player && w.Player.isOpen()); } catch (e) { return false; } }
+    function bg() { return !!(w.Music && w.Music.bgOn && w.Music.bgOn()); }
+    function setting() { return !!(w.Settings && w.Settings.get('MUSIC_WAKE')) && !bg(); }   // nghe được khi khóa máy thì không cần giữ sáng
+    function useVideo() {
+      if (!vid) {
+        vid = d.createElement('video');
+        vid.muted = true; vid.loop = true; vid.playsInline = true;
+        vid.setAttribute('muted', ''); vid.setAttribute('playsinline', ''); vid.setAttribute('aria-hidden', 'true');
+        vid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1';
+        vid.src = MP4;
+        d.body.appendChild(vid);
+      }
+      var pr = vid.play(); if (pr && pr.catch) pr.catch(function () { /* chờ lần chạm sau */ });
+    }
+    function on() {
+      active = true;
+      if (navigator.wakeLock && navigator.wakeLock.request) {
+        if (lock) return;
+        navigator.wakeLock.request('screen').then(function (l) {
+          if (!active) { l.release(); return; }
+          lock = l; l.addEventListener('release', function () { lock = null; });
+        }).catch(function () { useVideo(); });
+      } else useVideo();
+    }
+    function off() {
+      active = false;
+      if (lock) { try { lock.release(); } catch (e) { /* bỏ qua */ } lock = null; }
+      if (vid) { try { vid.pause(); } catch (e) { /* bỏ qua */ } if (vid.parentNode) vid.parentNode.removeChild(vid); vid = null; }
+    }
+    function want() { return phone() && page() && setting() && !tempOff && !d.hidden; }
+    function tick() {
+      var pg = page();
+      if (!pg && wasPage) tempOff = false;   // rời trang Nhạc: lần sau vào lại thì giữ sáng như thường
+      wasPage = pg;
+      // hết hẹn giờ tắt nhạc: cho máy tự khóa
+      try {
+        var S = w.Music && w.Music.S, si = S && S.sleepInfo ? S.sleepInfo() : null;
+        if (si) sleepSeen = true;
+        else if (sleepSeen) { sleepSeen = false; if (S.userPaused && S.userPaused()) tempOff = true; }
+      } catch (e) { /* bỏ qua */ }
+      if (want()) { if (!active || (!lock && !vid)) on(); else if (vid && vid.paused) useVideo(); }
+      else if (active) off();
+    }
+    setInterval(tick, 1000);
+    d.addEventListener('visibilitychange', function () { setTimeout(tick, 300); });
+    w.addEventListener('pointerdown', function () { if (active && vid && vid.paused) useVideo(); if (want() && !lock && !vid) on(); }, true);
+    return {
+      bg: function () { return phone() && bg(); },
+      shown: function () { return phone() && setting(); },
+      isOn: function () { return phone() && setting() && !tempOff; },
+      toggle: function () { tempOff = !tempOff; tick(); return !tempOff; },
+      tick: tick
+    };
+  })();
+  w.MusicPage = { open: MusicPage, wake: Wake, list: SongList, sync: LrcSync, times: lineTimes, songOfDay: songOfDay, songForFilm: songForFilm, songImage: songImage, openSong: openSong, sleep: function () { w.Screens.push(SleepSheet()); }, sleepText: sleepText };
 })(window, document);

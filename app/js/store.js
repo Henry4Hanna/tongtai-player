@@ -15,13 +15,20 @@
   var PER_PROFILE = { prog: 1, recent: 1, favs: 1, sq: 1, stats: 1 };
   var prof = 'guest';
   try { prof = w.localStorage.getItem(P + 'profile') || 'guest'; } catch (e) { /* bỏ qua */ }
-  function pk(k) { return PER_PROFILE[k] && prof !== 'guest' ? k + '@' + prof : k; }
+  // Chế độ khách (2.36): hồ sơ Guest dùng ngăn tạm '@khach', không đồng bộ, tự xóa khi tắt app / đổi hồ sơ.
+  // Dữ liệu cũ của Guest (khóa gốc) vẫn giữ nguyên, tắt chế độ khách là thấy lại.
+  function guestMode() { try { return ((get('prefs', {}) || {}).settings || {}).GUEST_MODE !== false; } catch (e) { return true; } }
+  function tmpGuest() { return prof === 'guest' && guestMode(); }
+  var TMP_KEYS = ['prog', 'recent', 'favs', 'sq', 'stats', 'stamps'];
+  function wipeGuest() { TMP_KEYS.forEach(function (k) { try { w.localStorage.removeItem(P + k + '@khach'); } catch (e) { /* bỏ qua */ } }); }
+  try { if (!w.sessionStorage.getItem(P + 'sess')) { w.sessionStorage.setItem(P + 'sess', '1'); wipeGuest(); } } catch (e) { wipeGuest(); }   // mở app mới
+  function pk(k) { if (PER_PROFILE[k] && tmpGuest()) return k + '@khach'; return PER_PROFILE[k] && prof !== 'guest' ? k + '@' + prof : k; }
   function stampsKey(suffix) { return suffix ? 'stamps@' + suffix : 'stamps'; }
   var applying = false;
   function set(k, v) {
     try { w.localStorage.setItem(P + k, JSON.stringify(v)); } catch (e) { /* đầy bộ nhớ: bỏ qua */ }
     var at = k.indexOf('@'), base = at > 0 ? k.slice(0, at) : k, suffix = at > 0 ? k.slice(at + 1) : '';
-    if (SYNC_KEYS[base] && !applying) {
+    if (SYNC_KEYS[base] && !applying && suffix !== 'khach') {
       var sk = stampsKey(suffix), st = get(sk, {});
       st[base] = Date.now();
       try { w.localStorage.setItem(P + sk, JSON.stringify(st)); } catch (e) { /* bỏ qua */ }
@@ -123,7 +130,7 @@
     profile: function () { return prof; },
     profiles: function () {
       var pr = get('prefs', {}), list = pr.profiles || [];
-      var out = [{ id: 'guest', name: 'Guest', c: 0, av: pr.guestAv, pinH: pr.guestPin }];
+      var out = [{ id: 'guest', name: guestMode() ? 'Khách' : 'Guest', c: 0, av: pr.guestAv, pinH: pr.guestPin, tmp: guestMode() }];
       list.forEach(function (x) { if (x && x.id && x.id !== 'guest') out.push(x); });
       // Hồ sơ chưa chọn hình (Guest, hồ sơ tạo từ bản cũ): tự gán một con thú chưa ai dùng (Guest ưu tiên gấu trúc)
       var used = {}, PREF = [3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
@@ -142,9 +149,13 @@
       var me = Store.profiles().filter(function (x) { return x.id === prof; })[0];
       return me ? me.name : 'Guest';
     },
+    guestMode: guestMode, tmpGuest: tmpGuest,
     setProfile: function (id) {
       if (!Store.profiles().some(function (x) { return x.id === id; })) id = 'guest';
+      if (prof === 'guest' && id !== 'guest') wipeGuest();   // Khách rời đi: xóa sạch
+      var enterGuest = id === 'guest' && prof !== 'guest';
       prof = id;
+      if (enterGuest && guestMode()) setTimeout(function () { try { if (w.UI && w.UI.toast) w.UI.toast('🦊 Đang xem bằng hồ sơ Khách · không lưu lịch sử, xem dở, tìm kiếm', 5000); } catch (e) { /* bỏ qua */ } }, 700);
       try { w.localStorage.setItem(P + 'profile', id); } catch (e) { /* bỏ qua */ }
       tog = []; set('together', []);   // chọn một người = thôi xem chung
     },
@@ -229,6 +240,7 @@
     // id = hồ sơ (bỏ trống = hồ sơ đang xem)
     stats: function (id) {
       if (!id || id === prof) return pget('stats', {});
+      if (id === 'guest' && guestMode()) return get('stats@khach', {});   // Khách: chỉ trong lần mở app này (giới hạn giờ vẫn tính)
       return get(id === 'guest' ? 'stats' : 'stats@' + id, {});
     },
     clearStats: function () { pset('stats', {}); },

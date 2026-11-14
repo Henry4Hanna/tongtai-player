@@ -49,9 +49,9 @@
     if (queue.length > 60) queue.splice(0, queue.length - 60);
   }
 
-  function send(beacon) {
+  function send(beacon, ping) {
     var u = base();
-    if (!u || !queue.length) return;
+    if (!u || (!queue.length && !ping)) return;
     var info = kind();
     info.v = C().VERSION || '';
     info.ua = (navigator.userAgent || '').slice(0, 300);
@@ -69,6 +69,7 @@
         var r = JSON.parse(x.responseText || '{}');
         if (r.blocked && !blocked) { blocked = true; showBlocked(); }
         if (r.q != null && w.Api && w.Api.famSet) w.Api.famSet(r.q);   // tổng đơn vị cả nhà hôm nay → tiết kiệm tự động
+        if (r.open && r.open.length && w.Screens && w.Screens.openFromPhone) w.Screens.openFromPhone(r.open[r.open.length - 1]);   // 2.36: Mở trên TV từ thông báo
       } catch (e) { /* bỏ qua */ }
     };
     x.onerror = x.ontimeout = function () { queue = sent.concat(queue).slice(-60); };   // mất mạng: gửi lại lần sau
@@ -87,7 +88,20 @@
       units = { search: 0, other: 0 }; queries = []; rates = []; plays = [];
     }
     activeMs = 0; lastBeat = now;
-    send(false);
+    favSync();
+    send(false, !d.hidden);   // 2.36: hỏi máy chủ mỗi phút (phim gửi từ điện thoại)
+  }
+  // 2.36: báo máy chủ kênh yêu thích của hồ sơ (để báo phim mới lên điện thoại). Gửi khi đổi, hoặc mỗi ngày một lần
+  function favSync() {
+    try {
+      if (!w.Store || !w.Store.favChs || tg()) return;
+      var p = prof().p; if (!p || p === 'guest') return;
+      var l = w.Store.favChs().filter(function (c) { return c && /^UC[\w-]{20,}$/.test(c.id || ''); }).map(function (c) { return { id: c.id, t: String(c.name || c.title || '').slice(0, 60) }; });
+      var sig = JSON.stringify(l), k = 'favsent', m = w.Store.keep(k) || {}, day = new Date().toDateString();
+      if (m[p] && m[p].s === sig && m[p].d === day) return;
+      event('fav', { ch: l });
+      m[p] = { s: sig, d: day }; w.Store.keep(k, m);
+    } catch (e) { /* bỏ qua */ }
   }
   var lastFilm = null;
   function curFilm() { return lastFilm ? { id: lastFilm.id, t: lastFilm.t } : null; }
@@ -148,22 +162,35 @@
     return String(C2.ADMIN_PAGE || '');
   }
 
+  function tg() { return !!(w.Store && w.Store.tmpGuest && w.Store.tmpGuest()); }
   var T = {
-    on: function () { return !!base(); },
+    on: function () { return !!base(); }, base: function () { return base(); },
     // gọi từ api.js mỗi lần gọi YouTube thành công
     units: function (path) { if (!base()) return; if (path === 'search') units.search++; else units.other++; },
     // gọi từ player.js mỗi khi cộng dồn thời gian xem
     watch: function (secs, item, pos, dur) {
       if (!base() || !(secs > 0) || !item) return;
+      if (tg()) return;   // Khách: không ghi thống kê
       var id = String(item.id || item.vid || item.title || '').slice(0, 40);
       lastFilm = { id: id, t: item.title || '' };
-      var a = watchAcc[id] || (watchAcc[id] = { id: id, t: String(item.title || '').slice(0, 160), c: String(item.ch || '').slice(0, 80), s: 0, pos: 0, dur: 0 });
+      var a = watchAcc[id] || (watchAcc[id] = { id: id, t: String(item.title || '').slice(0, 160), c: String(item.ch || '').slice(0, 80), ci: String(item.chId || '').slice(0, 40), s: 0, pos: 0, dur: 0 });
       a.s = Math.round((a.s + secs) * 10) / 10; a.pos = Math.round(pos || 0); a.dur = Math.round(dur || 0);
     },
-    search: function (q) { if (base() && q) queries.push(String(q).slice(0, 80)); },
+    search: function (q) { if (base() && q && !tg()) queries.push(String(q).slice(0, 80)); },
     rate: function (item, r) { if (base() && item && item.id) { rates.push({ id: String(item.id).slice(0, 40), t: String(item.title || '').slice(0, 160), c: String(item.ch || '').slice(0, 80), r: r }); beat(true); } },
-    play: function (f, t) { if (base() && f) plays.push({ f: String(f).slice(0, 120), t: String(t || '').slice(0, 160) }); },
+    play: function (f, t) { if (base() && f && !tg()) plays.push({ f: String(f).slice(0, 120), t: String(t || '').slice(0, 160) }); },
     flush: function () { beat(true); },
+    // 2.37: lỗi phát phim (trang quản trị → Sức khỏe app)
+    perr: function (item, code) {
+      if (!base() || !item || !item.id) return;
+      event('perr', { c: String(code).slice(0, 12), v: { id: String(item.id).slice(0, 20), t: String(item.title || '').slice(0, 140) } });
+    },
+    // 2.36: lời nhắn gia đình → báo lên điện thoại người nhận (nếu họ bật thông báo)
+    msg: function (toId, item, note) {
+      if (!base() || !item || !toId) return;
+      event('msg', { to: String(toId).slice(0, 40), note: String(note || '').slice(0, 120), v: { id: String(item.id || '').slice(0, 20), t: String(item.title || '').slice(0, 140), img: String(item.thumb || '').slice(0, 300), ch: String(item.ch || '').slice(0, 80) } });
+      send(false);
+    },
     id: devId,
     sha256: sha256, adminEmail: adminEmail, adminPage: adminPage
   };

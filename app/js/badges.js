@@ -81,8 +81,10 @@
     if (b.id === 'ontime') return r.u.ontime ? (r.c.ot || 0) : (r.c.otNow || 0);
     return r.c[b.cur || b.c] || 0;
   }
+  function skip(pid) { return pid === 'guest' && Store.guestMode && Store.guestMode(); }   // Khách: không có huy hiệu
   function check(pid, m) {
     pid = pid || Store.profile();
+    if (skip(pid)) return [];
     var own = !m; m = m || all();
     var before = own ? JSON.stringify(m[pid] || null) : '';
     var r = rec(m, pid), got = [];
@@ -102,6 +104,7 @@
   }
   function add(key, n, pid) {
     pid = pid || Store.profile();
+    if (skip(pid)) return;
     var m = all(), r = rec(m, pid);
     bump(r, key, n == null ? 1 : n);
     check(pid, m); save(m);
@@ -109,6 +112,7 @@
   // mở app / đổi hồ sơ: chuỗi ngày, ngủ sớm của những tối trước, sinh nhật
   function open(pid, isBday) {
     pid = pid || Store.profile();
+    if (skip(pid)) return;
     var m = all(), r = rec(m, pid), today = dk();
     if (r.c.last !== today) {
       var y = dk(Date.now() - 864e5);
@@ -132,6 +136,7 @@
       if (document.hidden) return;
       var n = new Date(), mm = n.getHours() * 60 + n.getMinutes();
       if (n.getHours() < 17) return;
+      if (skip(Store.profile())) return;
       var m = all(), r = rec(m, Store.profile()), k = dk();
       if (r.sd[k] === mm) return;
       r.sd[k] = mm; Store.applyRaw(K, m);   // không cần đồng bộ ngay

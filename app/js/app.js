@@ -5,7 +5,7 @@
 
   function registerKeys() {
     try {
-      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop', 'ColorF2Yellow']
+      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop', 'ColorF2Yellow', 'ColorF1Green']
         .forEach(function (k) { w.tizen.tvinputdevice.registerKey(k); });
     } catch (e) { /* chạy ngoài TV */ }
   }
@@ -87,6 +87,7 @@
         } else w.Nav.ok();
         break;
       }
+      case 404: { if (w.Remote) w.Remote.show(); break; }   // nút XANH LÁ trên remote: điều khiển bằng điện thoại
       case 405: case 89: {   // nút VÀNG (hoặc phím Y): hành động nhanh của màn hình (ví dụ xóa phim ở Lịch sử)
         var sc = w.Screens.current && w.Screens.current();
         if (sc && sc.onYellow) sc.onYellow(); else return;
@@ -139,8 +140,15 @@
     d.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('.f') && Date.now() - lpAt < 1500) e.preventDefault(); });
   }
 
+  var downF = null, downAt = 0, downX = 0, downY = 0;
   function setupPointer() {
     setupLongPress();
+    d.addEventListener('pointerdown', function (e) {
+      downF = e.target.closest ? e.target.closest('.f') : null; downAt = Date.now(); downX = e.clientX; downY = e.clientY;
+      w.lastKeyAt = Date.now();
+    }, true);
+    d.addEventListener('pointermove', function (e) { if (downF && Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 12) downF = null; }, true);
+    d.addEventListener('pointercancel', function () { downF = null; }, true);
     // Bấm vào ô nào thì chọn và mở ô đó
     d.addEventListener('click', function (e) {
       var t = e.target;
@@ -161,6 +169,8 @@
       var shown = d.querySelectorAll('.showdel');
       if (shown.length && !(t.closest && t.closest('.showdel'))) { [].forEach.call(shown, function (x) { x.classList.remove('showdel'); }); return; }
       var f = t.closest && t.closest('.f');
+      // Điện thoại: lấy đúng ô dưới ngón tay lúc vừa chạm (trang có thể nhảy giữa lúc chạm và lúc nhả)
+      if (downF && Date.now() - downAt < 900 && d.body.contains(downF) && (!f || f !== downF)) f = downF;
       if (!f) return;
       w.lastKeyAt = Date.now();
       w.Nav.focus(f);
@@ -251,7 +261,10 @@
     // cuộn xuống: thu gọn đầu trang
     d.addEventListener('scroll', function (e) {
       if (!w.UI.isMobile() || !e.target.classList || !e.target.classList.contains('view')) return;
-      d.documentElement.classList.toggle('mscrolled', e.target.scrollTop > 60);
+      // có khoảng đệm (thu gọn khi > 80, mở lại khi < 20): tránh đầu trang co giãn liên tục làm trang nhảy dưới ngón tay
+      var st = e.target.scrollTop, on = d.documentElement.classList.contains('mscrolled');
+      if (!on && st > 80) d.documentElement.classList.add('mscrolled');
+      else if (on && st < 20) d.documentElement.classList.remove('mscrolled');
     }, true);
     setInterval(function () {
       var a = d.querySelector('#tabs .tab.active');

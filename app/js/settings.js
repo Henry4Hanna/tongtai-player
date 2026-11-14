@@ -3,6 +3,7 @@
   'use strict';
   var C = w.APP_CONFIG;
   var KEY = 'settings';
+  var IS_TV = !!(w.tizen || w.AndroidApp);
 
   // Mã PIN không lưu dạng chữ thường, chỉ lưu dấu băm (nhìn vào mã sao lưu cũng không thấy PIN)
   function pinHash(v) {
@@ -21,12 +22,12 @@
     HOME_ORDER: ['cont', 'favch', 'fresh', 'hot', 'rec', 'top', 'movie', 'anime'], SHOW_FRESH: true, SHOW_HOT: true, SHOW_MOVIE: true, SHOW_REC: true, SHOW_TOP10: true, SHOW_ANIME: true,
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
-    THEME: C.THEME || 'dark',
+    THEME: IS_TV && (!C.THEME || C.THEME === 'dark') ? 'time' : (C.THEME || 'dark'), THEME_HOURS: C.THEME_HOURS || '6-18',
     CLOCK_12: C.CLOCK_12 !== false, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SAVER_MUSIC: C.SAVER_MUSIC !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
-    AUTO_NEXT: C.AUTO_NEXT !== false, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
-    AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
+    AUTO_NEXT: C.AUTO_NEXT !== false, PREVIEW_SECS: C.PREVIEW_SECS == null ? 20 : C.PREVIEW_SECS, STILL_HOURS: C.STILL_HOURS == null ? 2 : C.STILL_HOURS, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
+    GUEST_MODE: C.GUEST_MODE !== false, MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
 
   // Danh sách kênh gốc trong config.js
@@ -96,7 +97,7 @@
 
   /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
      Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
-  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, THEME: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, MUSIC_WAKE: 1, MUSIC_BG: 1, THEME: 1, THEME_HOURS: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, PREVIEW_SECS: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
     SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {
@@ -136,22 +137,97 @@
     if (w.appClock) try { w.appClock(); } catch (e) { /* chưa khởi động */ }
   }
 
-  // Giao diện Tối / Sáng / Tự động (theo máy). Ghi nhớ nhanh để lần mở sau không bị chớp màu.
+  // Giao diện Tối / Sáng / Theo giờ / Theo máy. Ghi nhớ nhanh để lần mở sau không bị chớp màu.
   var mq = null;
-  function applyTheme() {
-    var t = C.THEME || 'dark', light = t === 'light';
+  // Theo giờ: THEME_HOURS = 'a-b' (giờ thập phân), sáng từ a tới b
+  function themeHours() {
+    var p = String(C.THEME_HOURS || '6-18').split('-'), a = parseFloat(p[0]), b = parseFloat(p[1]);
+    if (!(a >= 0 && b > a && b <= 24)) { a = 6; b = 18; }
+    return [a, b];
+  }
+  function hNow(d) { d = d || new Date(); return d.getHours() + d.getMinutes() / 60; }
+  function byClock() { var x = themeHours(), h = hNow(); return h >= x[0] && h < x[1]; }
+  function nextSwitch() {   // thời điểm đổi sáng/tối kế tiếp (ms)
+    var x = themeHours(), n = new Date(), h = hNow(n), t = new Date(n.getTime());
+    var at = h < x[0] ? x[0] : h < x[1] ? x[1] : x[0] + 24;
+    t.setHours(0, 0, 0, 0);
+    return t.getTime() + at * 3600000;
+  }
+  function fmtH(h) {
+    h = h % 24; var H = Math.floor(h), m = Math.round((h - H) * 60), mm = (m < 10 ? '0' : '') + m;
+    if (C.CLOCK_12 !== false) return (H % 12 || 12) + ':' + mm + (H < 12 ? ' AM' : ' PM');
+    return H + ':' + mm;
+  }
+  // Đổi tạm bằng nút ☀/🌙 khi đang tự động: giữ tới mốc kế tiếp
+  function ovr() {
+    try {
+      var o = JSON.parse(w.localStorage.getItem('tt.themeOvr') || 'null');
+      if (o && o.until > Date.now() && o.p === w.Store.profile() && o.m === C.THEME && o.h === C.THEME_HOURS) return o;
+    } catch (e) { /* bỏ qua */ }
+    return null;
+  }
+  function natural() {
+    var t = C.THEME || 'dark';
+    if (t === 'light') return true;
+    if (t === 'time') return byClock();
     if (t === 'auto') {
       try {
         mq = mq || w.matchMedia('(prefers-color-scheme: light)');
-        light = !!mq.matches;
-        if (!applyTheme.bound && mq.addListener) { applyTheme.bound = true; mq.addListener(function () { if (C.THEME === 'auto') applyTheme(); }); }
-      } catch (e) { light = false; }
+        if (!applyTheme.bound && mq.addListener) {
+          applyTheme.bound = true;
+          mq.addListener(function () { if (C.THEME === 'auto') { try { w.localStorage.removeItem('tt.themeOvr'); } catch (e) { /* bỏ qua */ } applyTheme(); } });
+        }
+        return !!mq.matches;
+      } catch (e) { return false; }
     }
+    return false;
+  }
+  function wantLight() { var o = ovr(); return o ? o.v === 'light' : natural(); }
+  function themeAuto() { return C.THEME === 'time' || C.THEME === 'auto'; }
+  // v = 'light' | 'dark'. Trả về { back: true } nếu quay về đúng theo giờ/theo máy
+  function themeTemp(v) {
+    if ((v === 'light') === natural()) {
+      try { w.localStorage.removeItem('tt.themeOvr'); } catch (e) { /* bỏ qua */ }
+      applyTheme();
+      return { back: true };
+    }
+    var until = C.THEME === 'time' ? nextSwitch() : Date.now() + 12 * 3600000;
+    try { w.localStorage.setItem('tt.themeOvr', JSON.stringify({ p: w.Store.profile(), v: v, until: until, m: C.THEME, h: C.THEME_HOURS })); } catch (e) { /* bỏ qua */ }
+    applyTheme();
+    return { until: until, at: C.THEME === 'time' ? fmtH(hNow(new Date(until))) : '' };
+  }
+  // Chuyển êm: phủ một lớp màu mờ dần rồi đổi
+  function fadeTo(light) {
+    var b = document.body;
+    if (!b) { applyTheme(); return; }
+    var o = document.createElement('div');
+    o.className = 'thfade' + (light ? ' tolight' : '');
+    b.appendChild(o);
+    setTimeout(function () { o.className += ' on'; }, 20);
+    setTimeout(function () {
+      applyTheme();
+      o.className = o.className.replace(' on', '');
+      setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 500);
+    }, 420);
+  }
+  // Mỗi 30 giây: tới giờ thì đổi. Đang xem phim thì chờ đóng phim
+  setInterval(function () {
+    try {
+      if (!w.Store || !C.THEME) return;
+      var want = wantLight(), cur = document.documentElement.classList.contains('light');
+      if (want === cur) return;
+      if (w.Player && w.Player.isOpen && w.Player.isOpen()) return;
+      fadeTo(want);
+    } catch (e) { /* bỏ qua */ }
+  }, 30000);
+  function applyTheme() {
+    var light = wantLight();
     var h = document.documentElement;
     if (light) h.classList.add('light'); else h.classList.remove('light');
     var m = document.querySelector('meta[name="theme-color"]');
     if (m) m.setAttribute('content', light ? '#F5F3EE' : '#0B0D12');
     try { w.localStorage.setItem('tt.themeFast', light ? 'light' : 'dark'); } catch (e) { /* bỏ qua */ }
+    try { if (w.Screens && w.Screens.paintTheme) w.Screens.paintTheme(); } catch (e) { /* bỏ qua */ }
   }
 
   function set(k, v) {
@@ -234,6 +310,7 @@
 
   apply();
   w.Settings = {
+    themeAuto: themeAuto, themeTemp: themeTemp, themeHours: themeHours, themeLight: wantLight, themeFmt: fmtH,
     get: get, set: set, reset: reset, apply: apply, estimate: estimate, base: BASE,
     checkPin: function (v) { return pinHash(v) === get('PIN_H'); },
     perProfile: function (k) { return !!PP[k]; },

@@ -197,8 +197,14 @@
     if (m === 'auto' || m == null) { if (autoIdx < 0) autoIdx = Math.floor(Math.random() * TRACKS.length); return autoIdx; }
     var i = +m; return i >= 0 && i < TRACKS.length ? i : 0;
   }
+  // 2.37: nghe nhạc khi khóa máy / mở app khác (trang Nhạc, điện thoại). Mặc định bật
+  function bgOn() { try { return cfg().MUSIC_BG !== false && !w.tizen && !w.AndroidApp; } catch (e) { return false; } }
   function onMusicPage() {
     try {
+      if (d.hidden && bgOn() && !(w.Player && w.Player.isOpen())) {   // màn hình khóa: vẫn tính là đang ở trang Nhạc
+        var c0 = w.Screens && w.Screens.current && w.Screens.current();
+        return !!c0 && c0.name === 'music';
+      }
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;
       var c = w.Screens && w.Screens.current && w.Screens.current();
       return !!c && (c.name === 'music' || c.name === 'lrcsync' || c.name === 'songquiz' || c.name === 'sleep' || c.name === 'askfilm');
@@ -348,9 +354,9 @@
     }
     // iPhone/iPad không cho đổi audio.volume: đi qua Web Audio (GainNode) để chỉnh được âm lượng như máy khác
     var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    var actx = null, gn = null, gv = 1;
+    var actx = null, gn = null, gv = 1, auG = null, auP = null, kind = 'g';
     function graph() {
-      if (!IOS || gn || !au) return;
+      if (!IOS || gn || !au || au !== auG) return;
       try {
         if (!actx) actx = new (w.AudioContext || w.webkitAudioContext)();
         if (actx.state !== 'running') { actx.resume(); return; }
@@ -358,11 +364,32 @@
         src0.connect(gn); gn.connect(actx.destination);
       } catch (e) { IOS = false; }
     }
-    function vget() { return gn ? gv : el().volume; }
-    function vset(v) { gv = v; if (gn) { try { gn.gain.value = v; } catch (e) { /* bỏ qua */ } } else { try { el().volume = v; } catch (e) { /* bỏ qua */ } } }
+    function vget() { return gn && au === auG ? gv : el().volume; }
+    function vset(v) { gv = v; if (gn && au === auG) { try { gn.gain.value = v; } catch (e) { /* bỏ qua */ } } else { try { el().volume = v; } catch (e) { /* bỏ qua */ } } }
+    // iPhone + trang Nhạc + nghe khi khóa máy: dùng phần tử nhạc thường (không qua Web Audio, iOS ngắt Web Audio khi khóa máy)
+    function wantKind() { return IOS && bgOn() && onMusicPage() ? 'p' : 'g'; }
+    function swapKind() {
+      var k = wantKind();
+      if (k === kind || !au) { kind = k; return; }
+      var old = au, t = old.currentTime || 0, s = old.src, playingNow = !old.paused && want;
+      kind = k; au = null; el();
+      if (old !== au) {
+        try { old.pause(); } catch (e) { /* bỏ qua */ }
+        if (s) {
+          if (au.src !== s) au.src = s;
+          var go = function () { try { au.currentTime = t; } catch (e) { /* bỏ qua */ } };
+          if (au.readyState >= 1) go(); else au.addEventListener('loadedmetadata', go, { once: true });
+          vset(svol());
+          if (playingNow) { var pr = au.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        }
+      }
+    }
     function el() {
       if (au) return au;
+      if (kind === 'p' && auP) return (au = auP);
+      if (kind !== 'p' && auG) return (au = auG);
       au = new Audio(); au.preload = 'auto';
+      if (kind === 'p') auP = au; else auG = au;
       au.addEventListener('ended', function () {
         if (sleepEnd) { sleepEnd = false; userPaused = true; want = false; paintPill(); if (w.UI && w.UI.toast) w.UI.toast('🌙 Hết bài, đã tắt nhạc'); return; }
         next();
@@ -390,6 +417,26 @@
       var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* chờ lần bấm đầu */ });
       fade(svol(), 1500);
       paintPill();
+      session();
+    }
+    // Màn hình khóa / tai nghe / Bluetooth: tên bài, ảnh, nút dừng / qua bài
+    function session() {
+      var ms = navigator.mediaSession; if (!ms || !list || !list[idx]) return;
+      try {
+        var s = list[idx], img = '';
+        try { img = w.MusicPage && w.MusicPage.songImage ? w.MusicPage.songImage(idx) : ''; } catch (e) { img = ''; }
+        if (img) { try { img = new URL(img, w.location.href).href; } catch (e) { /* bỏ qua */ } }
+        ms.metadata = new w.MediaMetadata({ title: s.title || 'Nhạc của tôi', artist: 'Ryan Nguyen', album: 'Tổng Tài TV', artwork: img ? [{ src: img, sizes: '512x512' }] : [] });
+        if (!session.bound) {
+          session.bound = true;
+          var h = function (n, f) { try { ms.setActionHandler(n, f); } catch (e) { /* trình duyệt không hỗ trợ */ } };
+          h('play', function () { userPaused = false; resume(); paintPill(); });
+          h('pause', function () { userPaused = true; pause(); });
+          h('nexttrack', function () { userPaused = false; next(); });
+          h('previoustrack', function () { userPaused = false; if (au && au.currentTime > 4) au.currentTime = 0; else { pos = (pos - 1 + order.length) % order.length; play(order[pos]); } });
+          h('seekto', function (e) { if (au && e && isFinite(e.seekTime)) au.currentTime = e.seekTime; });
+        }
+      } catch (e) { /* bỏ qua */ }
     }
     function next() { if (!list || !list.length) return; pos = (pos + 1) % order.length; if (pos === 0 && cfg().MUSIC === 'songsx') shuffle(); play(order[pos]); }
     function pause() {
@@ -420,6 +467,8 @@
     }
     function tick() {
       count(); sleepTick();
+      swapKind();
+      try { if (navigator.mediaSession) navigator.mediaSession.playbackState = au && !au.paused ? 'playing' : 'paused'; } catch (e) { /* bỏ qua */ }
       if (sleeping) return;
       var m = cfg().MUSIC, page = onMusicPage(), mode = (m === 'songs' || m === 'songsx' || m == null) || page;
       if (wasPage && !page) userPaused = false;   // rời trang Nhạc: Trang chủ phát lại như thường
@@ -502,7 +551,7 @@
     songIndex: function () { return Songs.index(); },
     playSong: function (i) { Songs.play(i); },
     S: Songs,   // trang Nhạc dùng trực tiếp: song, all, time, duration, toggle, prev, next, seek…
-    onPage: onMusicPage,
+    onPage: onMusicPage, bgOn: bgOn,
     reloadSongs: function () { return Songs.load(true); },
     songsSource: function () { return Songs.source(); },
     next: function () {

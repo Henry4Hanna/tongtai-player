@@ -5,7 +5,7 @@
 
   function registerKeys() {
     try {
-      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop', 'ColorF2Yellow', 'ColorF1Green']
+      ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop', 'ColorF0Red', 'ColorF1Green', 'ColorF2Yellow', 'ColorF3Blue']
         .forEach(function (k) { w.tizen.tvinputdevice.registerKey(k); });
     } catch (e) { /* chạy ngoài TV */ }
   }
@@ -62,7 +62,7 @@
       if (e.preventDefault) e.preventDefault();
       return;
     }
-    if (w.Player.isOpen()) {
+    if (w.Player.isOpen() && !(w.Player.isMini && w.Player.isMini())) {
       w.Player.key(k);
       e.preventDefault();
       return;
@@ -87,12 +87,14 @@
         } else w.Nav.ok();
         break;
       }
+      case 403: { colorRed(); break; }   // 2.39: nút ĐỎ: Yêu thích phim đang chọn
       case 404: { if (w.Remote) w.Remote.show(); break; }   // nút XANH LÁ trên remote: điều khiển bằng điện thoại
-      case 405: case 89: {   // nút VÀNG (hoặc phím Y): hành động nhanh của màn hình (ví dụ xóa phim ở Lịch sử)
+      case 405: case 89: {   // nút VÀNG (hoặc phím Y): hành động nhanh của màn hình (ví dụ xóa phim ở Lịch sử), không có thì Bốc thăm
         var sc = w.Screens.current && w.Screens.current();
-        if (sc && sc.onYellow) sc.onYellow(); else return;
+        if (sc && sc.onYellow) sc.onYellow(); else if (k === 405 && w.Screens.dice) w.Screens.dice(); else return;
         break;
       }
+      case 406: { w.Screens.goTab('search'); break; }   // 2.39: nút XANH DƯƠNG: Tìm kiếm
       case 10009: case 27: case 8: w.Screens.back(); break;
       default: return;
     }
@@ -153,7 +155,9 @@
     d.addEventListener('click', function (e) {
       var t = e.target;
       if (bootOn) { hideBoot(); return; }
-      if (w.Player.isOpen()) {
+      if (w.Player.isOpen() && w.Player.isMini && w.Player.isMini()) {   // 2.38.1: phim thu nhỏ: bấm ngoài khung là dùng app như thường
+        if (t.closest && t.closest('#player')) { w.Player.miniClick(t); return; }
+      } else if (w.Player.isOpen()) {
         var ub = t.closest && t.closest('.upbtn');
         if (ub) { w.Player.upClick(ub.getAttribute('data-act')); return; }
         var pb = t.closest && t.closest('.plb');
@@ -227,6 +231,7 @@
     bar.className = 'mbar';
     bar.innerHTML = '<div class="mbtn mmenu"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div>' +
       '<div class="mtitle"></div>' +
+      '<div class="mbtn mdice" title="Bốc thăm phim">🎲</div>' +
       '<div class="mbtn msearch"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>';
     mh.appendChild(bar);
     d.getElementById('topbar').appendChild(mh);
@@ -252,12 +257,17 @@
         it.onclick = function (e) { e.stopPropagation(); dr.classList.add('hidden'); w.Screens.goTab(t.dataset.tab); };
         panel.appendChild(it);
       });
+      if (w.RemoteTV && w.UI.isMobile()) {   // 2.37.1: Remote TV (chỉ điện thoại)
+        panel.appendChild(Object.assign(d.createElement('div'), { className: 'mdsep' }));
+        panel.appendChild(w.RemoteTV.menuItem(function () { dr.classList.add('hidden'); }));
+      }
     }
     dr.appendChild(panel);
     dr.onclick = function (e) { e.stopPropagation(); dr.classList.add('hidden'); };
     d.getElementById('app').appendChild(dr);
     bar.querySelector('.mmenu').onclick = function (e) { e.stopPropagation(); fillDrawer(); dr.classList.remove('hidden'); };
     bar.querySelector('.msearch').onclick = function (e) { e.stopPropagation(); w.Screens.goTab('search'); };
+    bar.querySelector('.mdice').onclick = function (e) { e.stopPropagation(); if (w.Screens.dice) w.Screens.dice(); };
     // cuộn xuống: thu gọn đầu trang
     d.addEventListener('scroll', function (e) {
       if (!w.UI.isMobile() || !e.target.classList || !e.target.classList.contains('view')) return;
@@ -279,7 +289,7 @@
     function bkGo(e) {
       if (e) { e.stopPropagation(); if (e.type === 'touchend') e.preventDefault(); }
       if (Date.now() - bkT < 600) return; bkT = Date.now();   // chạm trên iPhone: touchend + click chỉ tính 1 lần
-      if (w.Player.isOpen()) w.Player.close(); else w.Screens.back();
+      if (w.Player.isOpen() && !(w.Player.isMini && w.Player.isMini())) w.Player.close(); else w.Screens.back();
     }
     bk.onclick = bkGo;
     bk.addEventListener('touchend', bkGo, { passive: false });
@@ -287,10 +297,11 @@
     d.documentElement.className += ' webmode';
     // Điện thoại: chỉ hiện nút Quay lại khi có trang để quay lại
     setInterval(function () {
-      var need = w.Player.isOpen() || (w.Screens.depth && w.Screens.depth() > 1) || !w.UI.isMobile();
+      var full = w.Player.isOpen() && !(w.Player.isMini && w.Player.isMini());
+      var need = full || (w.Screens.depth && w.Screens.depth() > 1) || !w.UI.isMobile();
       bk.style.display = need ? '' : 'none';
-      bk.classList.toggle('inplayer', w.Player.isOpen());
-      var tx = w.Player.isOpen() && w.UI.isMobile() ? '✕ Đóng' : '‹ Quay lại';
+      bk.classList.toggle('inplayer', full);
+      var tx = full && w.UI.isMobile() ? '✕ Đóng' : '‹ Quay lại';
       if (bk.textContent !== tx) bk.textContent = tx;   // không viết lại liên tục (iPhone bỏ lỡ cú chạm)
     }, 300);
   }
@@ -351,6 +362,7 @@
   }
   function afterBoot() {
     if (w.Season) setTimeout(w.Season.greetOnce, 600);
+    setTimeout(colorHint, 2500);
     if (w.__sendItem) {   // vừa quét mã "Gửi sang điện thoại"
       var it = w.__sendItem; w.__sendItem = null;
       if (w.Screens.paintWho) w.Screens.paintWho();
@@ -361,6 +373,30 @@
     if (w.APP_CONFIG.ASK_PROFILE !== false && w.Screens.who && !w.Player.isOpen()) w.Screens.who(true);
     else if (w.Screens.afterBoot) w.Screens.afterBoot();   // không hỏi hồ sơ: chúc sinh nhật (nếu hôm nay)
   }
+
+  // 2.39: nút ĐỎ: thêm / bỏ phim đang chọn khỏi Danh sách của tôi
+  function colorRed() {
+    var c = w.Nav && w.Nav.cur, it = c && c._item;
+    if (!it) { var sc = w.Screens.current && w.Screens.current(); it = sc && sc.item; }
+    if (!it || !it.id) { w.UI.toast('Chọn một phim rồi bấm nút đỏ để thêm vào Danh sách'); return; }
+    var had = w.Store.isFav(it);
+    w.Store.toggleFav(it);
+    w.UI.toast(had ? 'Đã bỏ “' + (it.title || 'phim') + '” khỏi Danh sách' : '❤ Đã thêm “' + (it.title || 'phim') + '” vào Danh sách');
+  }
+  // 2.39: bảng nhắc phím màu (Samsung), hiện 3 lần đầu
+  function colorHint() {
+    if (!w.tizen || d.documentElement.classList.contains('mobile')) return;
+    var n = +(w.Store.keep('colorHint') || 0); if (n >= 3) return;
+    w.Store.keep('colorHint', n + 1);
+    var b = d.createElement('div'); b.id = 'colorhint';
+    b.innerHTML = '<div class="chh">Phím màu trên remote</div>' +
+      [['#E5484D', 'Yêu thích phim đang chọn'], ['#3DBE6B', 'Remote điện thoại'], ['#F2C230', 'Bốc thăm phim'], ['#3B82F6', 'Tìm kiếm']]
+        .map(function (x) { return '<div class="chr"><i style="background:' + x[0] + '"></i>' + x[1] + '</div>'; }).join('') +
+      '<div class="chn">Bảng này hiện ' + (3 - n - 1 > 0 ? 'thêm ' + (3 - n - 1) + ' lần' : 'lần cuối') + ' · xem lại trong Hướng dẫn</div>';
+    (d.getElementById('app') || d.body).appendChild(b);
+    setTimeout(function () { b.classList.add('out'); setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 600); }, 9000);
+  }
+  w.colorHint = colorHint;
 
   // Mất mạng / có mạng lại: báo ngay bằng câu dễ hiểu
   w.addEventListener('offline', function () { if (w.UI) w.UI.toast('Mất mạng: kiểm tra Wi-Fi hoặc dây mạng. Phim đã tải vẫn xem lại được trong danh sách.'); });

@@ -203,3 +203,35 @@ html.mobile .quizstrip .qst { flex: 1 1 calc(100% - 70px); }
 html.mobile .quizstrip .btn { flex: 1 1 0; justify-content: center; }
 html.mobile .msgimg { height: 190px !important; padding: 0 !important; aspect-ratio: auto !important; flex: none; }
 html.mobile .msgcard { margin-top: 16px; }
+/* 2.37.1: Remote TV trong menu */
+.mdsep { height: 1px; background: rgba(255,255,255,.1); margin: 10px 8px; }
+html.light .mdsep { background: #DCD6CB; }
+.mditem.mdrc { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-top: 2px; background: linear-gradient(135deg, rgba(232,176,75,.18), rgba(232,176,75,.06)); box-shadow: inset 0 0 0 1.5px rgba(232,176,75,.55); }
+html.light .mditem.mdrc { background: linear-gradient(135deg, #FCF3DF, #F4E3BC); box-shadow: inset 0 0 0 1.5px #E2B24E; }
+.mdrci { width: 34px; height: 34px; flex: none; display: block; }
+.mdrct { flex: 1; min-width: 0; } .mdrct b { display: block; font-size: 15px; } .mdrct small { display: block; font-size: 11px; font-weight: 600; opacity: .7; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mdrcs i { font-style: normal; font-size: 9.5px; font-weight: 900; color: #1E6B33; background: #DDF2E3; border-radius: 6px; padding: 2px 6px; }
+.rcov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 10050; opacity: 0; transition: opacity .2s; }
+.rcov.on { opacity: 1; }
+.rcsheet { background: rgba(0,0,0,.45); display: flex; align-items: flex-end; }
+.rcs { white-space: normal; box-sizing: border-box; width: 100%; background: #151922; color: #F4F1EC; border-radius: 24px 24px 0 0; padding: 14px 18px calc(24px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,.3); }
+html.light .rcs { background: #FBFAF7; color: #1d2230; }
+.rchandle { width: 40px; height: 5px; border-radius: 3px; background: rgba(128,128,128,.4); margin: 0 auto 10px; }
+.rcs h3 { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; font-size: 19px; }
+.rcico { width: 32px; height: 32px; display: inline-block; flex: none; }
+.rcp { font-size: 13px; line-height: 1.5; opacity: .85; }
+.rccode { display: block; width: 210px; margin: 16px auto 12px; text-align: center; font-size: 34px; font-weight: 900; letter-spacing: .45em; padding: 10px 0 10px .45em; border-radius: 16px; border: 2px solid #E2B24E; background: transparent; color: inherit; text-transform: uppercase; outline: none; font-family: inherit; }
+.rcgo { background: #E8B04B; color: #1a1206; font-weight: 900; text-align: center; border-radius: 14px; padding: 13px; font-size: 16px; cursor: pointer; }
+.rcmsg { font-size: 12.5px; text-align: center; margin-top: 8px; min-height: 1em; color: #E8A23B; }
+.rcor { text-align: center; font-size: 12px; opacity: .6; margin: 12px 0 6px; }
+.rctv { display: flex; align-items: center; gap: 8px; padding: 11px 12px; border-radius: 12px; background: rgba(128,128,128,.12); margin-top: 6px; font-size: 14px; cursor: pointer; }
+.rctv b { flex: 1; } .rctv small { font-size: 10.5px; font-weight: 900; color: #3DBE73; } .rctv small.off { color: inherit; opacity: .5; font-weight: 700; }
+.rcfoot { margin-top: 12px; font-size: 12px; opacity: .65; }
+.rcfull { background: #0B0D12; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+.rch { display: flex; align-items: center; gap: 10px; padding: 12px 14px 6px; color: #F4F1EC; }
+.rcht { flex: 1; min-width: 0; } .rcht b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .rcht small { display: block; font-size: 11px; font-weight: 800; color: #9aa0ae; } .rcht small.on { color: #3DBE73; }
+.rcchg { font-size: 12px; font-weight: 800; color: #E8B04B; padding: 6px 8px; cursor: pointer; }
+.rcx { width: 34px; height: 34px; border-radius: 50%; background: #1d2230; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; }
+.rcframe { flex: 1; width: 100%; border: 0; background: #0B0D12; }
+.mbar .mtitle { flex: 1; text-align: center; margin-left: 36px; }
+.mbar .mdice { width: 36px; font-size: 19px; }

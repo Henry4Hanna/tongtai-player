@@ -1,13 +1,16 @@
 /* Đăng nhập Google và đồng bộ lịch sử xem, tiến độ, danh sách, cài đặt giữa các máy.
-   Dữ liệu lưu trong thư mục ẩn của app trên Google Drive của bạn (appDataFolder):
-   chỉ app này đọc được, không hiện trong Drive, không ai khác xem được.
+   2.38.5: dữ liệu lưu trong thư mục "Tổng Tài TV" trên Google Drive của bạn (file TongTaiTV-dongbo.json
+   và các bản sao lưu). Quyền drive.file: app chỉ thấy file do chính nó tạo, không đọc file khác của bạn.
+   (Trước đây lưu trong thư mục ẩn appDataFolder, nhưng Google không cho TV xin quyền đó; bản web tự chuyển sang.)
    - TV (Samsung, Android TV): đăng nhập bằng mã trên google.com/device (không cần gõ mật khẩu trên TV).
    - Trình duyệt (máy tính, iPhone): cửa sổ đăng nhập Google. */
 (function (w) {
   'use strict';
   var d = document, C = w.APP_CONFIG;
-  var SCOPE = 'openid email https://www.googleapis.com/auth/drive.appdata';
-  var FILE = 'tongtai-sync.json';
+  var SCOPE_TV = 'openid email https://www.googleapis.com/auth/drive.file';
+  var SCOPE_WEB = SCOPE_TV + ' https://www.googleapis.com/auth/drive.appdata';   // appdata chỉ để chuyển dữ liệu cũ
+  var FILE = 'tongtai-sync.json';            // tên cũ (thư mục ẩn, Gist)
+  var FILE2 = 'TongTaiTV-dongbo.json', FOLDER = 'Tổng Tài TV', DAPI = 'https://www.googleapis.com/drive/v3/files';
   var isWeb = /^https?:/.test(w.location.protocol) && !w.AndroidApp && !w.tizen;
 
   function S() { return w.Store.raw('google', null); }
@@ -61,7 +64,7 @@
   function startDevice() {
     if (!tvId() || !tvSecret()) return Promise.reject({ config: true });
     return http('POST', 'https://oauth2.googleapis.com/device/code',
-      { 'Content-Type': 'application/x-www-form-urlencoded' }, form({ client_id: tvId(), scope: SCOPE }))
+      { 'Content-Type': 'application/x-www-form-urlencoded' }, form({ client_id: tvId(), scope: SCOPE_TV }))
       .then(function (r) {
         var stop = false, wait = (r.interval || 5) * 1000, until = Date.now() + (r.expires_in || 1800) * 1000;
         function poll() {
@@ -108,11 +111,11 @@
       return new Promise(function (resolve, reject) {
         var old = S();
         tokenClient = w.google.accounts.oauth2.initTokenClient({
-          client_id: webId(), scope: SCOPE, prompt: silent ? '' : 'select_account',
+          client_id: webId(), scope: SCOPE_WEB, prompt: silent ? '' : 'select_account',
           hint: old && old.email ? old.email : undefined,
           callback: function (t) {
             if (!t || t.error) return reject(t || {});
-            var acc = { kind: 'web', access: t.access_token, exp: Date.now() + ((+t.expires_in || 3600) - 60) * 1000, email: old && old.email || '' };
+            var acc = { kind: 'web', scope: t.scope || SCOPE_WEB, access: t.access_token, exp: Date.now() + ((+t.expires_in || 3600) - 60) * 1000, email: old && old.email || '' };
             save(acc);
             http('GET', 'https://www.googleapis.com/oauth2/v3/userinfo', { Authorization: 'Bearer ' + acc.access })
               .then(function (u) { acc.email = u.email || acc.email; save(acc); resolve(acc); }, function () { resolve(acc); });
@@ -129,6 +132,7 @@
   function token() {
     var a = S();
     if (!a) return Promise.reject({ nologin: true });
+    if (a.kind === 'web' && a.access && String(a.scope || '').indexOf('drive.file') < 0) { a.access = ''; a.needTap = true; save(a); return Promise.reject({ needTap: true }); }   // 2.38.5: đăng nhập lại 1 lần để có quyền mới
     if (a.access && a.exp > Date.now()) return Promise.resolve(a.access);
     if (a.kind === 'device' && a.refresh) {
       return http('POST', 'https://oauth2.googleapis.com/token', { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -168,32 +172,66 @@
       return http(method, url, h, body);
     });
   }
-  function findFile() {
-    var id = w.Store.raw('syncFile', '');
+  function qs(x) { return encodeURIComponent(x); }
+  var dirP = null;
+  function folderId() {   // thư mục "Tổng Tài TV" (app tự tạo lần đầu)
+    var id = w.Store.raw('syncDir', '');
     if (id) return Promise.resolve(id);
-    return drive('GET', 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=' +
-      encodeURIComponent("name='" + FILE + "'")).then(function (r) {
+    if (dirP) return dirP;
+    dirP = drive('GET', DAPI + '?spaces=drive&fields=files(id)&q=' + qs("name='" + FOLDER + "' and mimeType='application/vnd.google-apps.folder' and trashed=false"))
+      .then(function (r) {
+        var f = (r && r.files || [])[0];
+        if (f) return f.id;
+        return drive('POST', DAPI + '?fields=id', JSON.stringify({ name: FOLDER, mimeType: 'application/vnd.google-apps.folder' }), 'application/json').then(function (x) { return x.id; });
+      })
+      .then(function (fid) { dirP = null; w.Store.applyRaw('syncDir', fid); return fid; }, function (e) { dirP = null; throw e; });
+    return dirP;
+  }
+  function multipart(meta, json) {
+    var b = 'tongtai' + Date.now();
+    return { b: b, body: '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) +
+      '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + json + '\r\n--' + b + '--' };
+  }
+  function createIn(name, json) {
+    return folderId().then(function (fid) {
+      var m = multipart({ name: name, parents: [fid] }, json);
+      return drive('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', m.body, 'multipart/related; boundary=' + m.b);
+    });
+  }
+  // dữ liệu cũ trong thư mục ẩn (chỉ bản web có quyền đọc) → chép sang file mới một lần
+  function migrateOld() {
+    var a = S();
+    if (!a || a.kind !== 'web') return Promise.resolve('');
+    return drive('GET', DAPI + '?spaces=appDataFolder&fields=files(id)&q=' + qs("name='" + FILE + "'")).then(function (r) {
       var f = (r && r.files || [])[0];
-      if (f) w.Store.applyRaw('syncFile', f.id);
-      return f ? f.id : '';
+      if (!f) return '';
+      return drive('GET', DAPI + '/' + f.id + '?alt=media').then(function (data) {
+        if (!data) return '';
+        return upload('', data).then(function (x) { return x && x.id || ''; });
+      });
+    }).catch(function () { return ''; });
+  }
+  function findFile() {
+    var id = w.Store.raw('syncFile2', '');
+    if (id) return Promise.resolve(id);
+    return drive('GET', DAPI + '?spaces=drive&fields=files(id,name,modifiedTime)&orderBy=modifiedTime%20desc&q=' +
+      qs("name='" + FILE2 + "' and trashed=false")).then(function (r) {
+      var f = (r && r.files || [])[0];
+      if (f) { w.Store.applyRaw('syncFile2', f.id); return f.id; }
+      return migrateOld();
     });
   }
   function download(id) {
     if (!id) return Promise.resolve(null);
-    return drive('GET', 'https://www.googleapis.com/drive/v3/files/' + id + '?alt=media').catch(function (e) {
-      if (e && e.status === 404) { w.Store.applyRaw('syncFile', ''); return null; }
+    return drive('GET', DAPI + '/' + id + '?alt=media').catch(function (e) {
+      if (e && e.status === 404) { w.Store.applyRaw('syncFile2', ''); return null; }
       throw e;
     });
   }
   function upload(id, data) {
     var json = JSON.stringify(data);
     if (id) return drive('PATCH', 'https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', json, 'application/json');
-    var b = 'tongtai' + Date.now();
-    var body = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
-      JSON.stringify({ name: FILE, parents: ['appDataFolder'] }) + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' +
-      json + '\r\n--' + b + '--';
-    return drive('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', body, 'multipart/related; boundary=' + b)
-      .then(function (r) { if (r && r.id) w.Store.applyRaw('syncFile', r.id); return r; });
+    return createIn(FILE2, json).then(function (r) { if (r && r.id) w.Store.applyRaw('syncFile2', r.id); return r; });
   }
 
   /* ---------- GitHub Gist: cách đồng bộ khác, không cần đăng nhập Google ----------
@@ -482,7 +520,7 @@
   }
   function logout() {
     w.Store.applyRaw('google', null);
-    w.Store.applyRaw('syncFile', '');
+    w.Store.applyRaw('syncFile', ''); w.Store.applyRaw('syncFile2', ''); w.Store.applyRaw('syncDir', '');
     if (!ghToken()) w.Store.applyRaw('syncAt', 0);
     try { if (isWeb && w.google && w.google.accounts) w.google.accounts.oauth2.revoke(''); } catch (e) { /* bỏ qua */ }
     notify();
@@ -503,28 +541,33 @@
   function ymd(t) { var x = new Date(t), m = x.getMonth() + 1, dd = x.getDate(); return x.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd; }
   function backupData() { var m = snapshot(); m.kind = 'backup'; m.app = C.VERSION; return m; }
   function driveBackups() {
-    return drive('GET', 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=100&fields=files(id,name,modifiedTime)&q=' +
-      encodeURIComponent("name contains '" + BKP + "-'")).then(function (r) {
-      return ((r && r.files) || []).sort(function (x, y) { return String(y.name).localeCompare(String(x.name)); });
+    var a = S();
+    var mine = folderId().then(function (fid) {
+      return drive('GET', DAPI + '?spaces=drive&pageSize=100&fields=files(id,name,modifiedTime)&q=' +
+        qs("name contains '" + BKP + "-' and trashed=false and '" + fid + "' in parents"));
+    });
+    var old = a && a.kind === 'web'   // bản sao lưu cũ trong thư mục ẩn (bản web) vẫn khôi phục được
+      ? drive('GET', DAPI + '?spaces=appDataFolder&pageSize=100&fields=files(id,name,modifiedTime)&q=' + qs("name contains '" + BKP + "-'")).catch(function () { return null; })
+      : Promise.resolve(null);
+    return Promise.all([mine, old]).then(function (rs) {
+      var seen = {}, out = [];
+      ((rs[0] && rs[0].files) || []).concat(((rs[1] && rs[1].files) || []).map(function (f) { f.old = true; return f; })).forEach(function (f) {
+        if (seen[f.name]) return; seen[f.name] = 1; out.push(f);
+      });
+      return out.sort(function (x, y) { return String(y.name).localeCompare(String(x.name)); });
     });
   }
   function driveBackup(data) {
     var name = BKP + '-' + ymd(Date.now()) + '.json', json = JSON.stringify(data);
     return driveBackups().then(function (list) {
-      var same = list.filter(function (f) { return f.name === name; })[0];
+      var same = list.filter(function (f) { return f.name === name && !f.old; })[0];
       var put;
       if (same) put = drive('PATCH', 'https://www.googleapis.com/upload/drive/v3/files/' + same.id + '?uploadType=media', json, 'application/json');
-      else {
-        var b = 'ttbk' + Date.now();
-        var body = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: name, parents: ['appDataFolder'] }) +
-          '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + json + '\r\n--' + b + '--';
-        put = drive('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', body, 'multipart/related; boundary=' + b);
-        list = [{ name: name }].concat(list);
-      }
+      else { put = createIn(name, json); list = [{ name: name }].concat(list.filter(function (f) { return f.name !== name; })); }
       return put.then(function () {
         // giữ 4 bản gần nhất
         return Promise.all(list.slice(4).filter(function (f) { return f.id; }).map(function (f) {
-          return drive('DELETE', 'https://www.googleapis.com/drive/v3/files/' + f.id).catch(function () { /* bỏ qua */ });
+          return drive('DELETE', DAPI + '/' + f.id).catch(function () { /* bỏ qua */ });
         }));
       });
     });

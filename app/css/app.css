@@ -882,7 +882,7 @@ html.wholock #webback { display: none !important; }
 .mvl.past { opacity: .26; }
 .mvl.nx1 { opacity: .66; } .mvl.nx2 { opacity: .5; } .mvl.nx3 { opacity: .38; } .mvl.far { opacity: .26; }
 .mvl.cur { opacity: 1; font-size: 54px; font-weight: 800; line-height: 1.22; color: transparent;
-  background-image: linear-gradient(#F6CF7A, #E8B04B), linear-gradient(#fff, #fff); background-repeat: no-repeat; background-size: 0% 100%, 100% 100%;
+  background-image: linear-gradient(#F6CF7A, #E8B04B), linear-gradient(#E2C285, #C99A4E);   /* 2.38.3: cả dòng vàng như logo (kể cả lúc dừng); chạy theo chữ: phần chưa hát vàng nhạt hơn */ background-repeat: no-repeat; background-size: 0% 100%, 100% 100%;
   -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 0 18px rgba(232,176,75,.35)); }
 .mvnote { font-size: 16px; color: rgba(255,255,255,.5); margin-top: 8px; }
 
@@ -1574,7 +1574,7 @@ html.light .dsong .dst, .dsong .dst { color: #F4F1EC; }
 .mv-kara .mvl { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 3px 16px rgba(0,0,0,.85); }
 .mv-kara .mvl.p1 { opacity: .72; }
 .mv-kara .mvl.nx1 { opacity: .9; }
-.mv-kara .mvl.cur { filter: drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 3px 12px rgba(0,0,0,.8)); }
+.mv-kara .mvl.cur { color: transparent; text-shadow: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 3px 12px rgba(0,0,0,.8)); }
 .mobile .mv-kara .mvctrl { gap: 6px; justify-content: center; max-width: 100%; } .mobile .mv-kara .mvbtn.sm { width: 40px; height: 40px; } .mobile .mv-kara .mvbtn.md { width: 50px; height: 50px; } .mobile .mv-kara .mvbtn.lg { width: 66px; height: 66px; }
 .mobile .mv-kara .mvctrl { gap: 4px; } .mobile .mv-kara .mvbtn.sm { width: 36px; height: 36px; } .mobile .mv-kara .mvbtn.md { width: 44px; height: 44px; } .mobile .mv-kara .mvbtn.lg { width: 60px; height: 60px; } .mobile .mv-kara .mvbtn svg { width: 19px; height: 19px; } .mobile .mv-kara .mvbtn.lg svg { width: 26px; height: 26px; }
 /* Nút Sáng/Tối */
@@ -1716,3 +1716,129 @@ html.light .robtns .rob { background: #ECE7DD; color: #1d2230; } html.light .rop
 .rotv.on .rocd i { display: block; height: 100%; background: #E8B04B; animation: rocd 10s linear forwards; }
 @keyframes rocd { from { width: 100%; } to { width: 0; } }
 html.light .rotv { background: rgba(255,255,255,.98); color: #1d2230; } html.light .rotv small { color: #5a5f6c; }
+/* 2.38: hẹn giờ tắt phim, đồng hồ ở góc */
+#pl-sleepbadge { position: absolute; right: 40px; top: 34px; z-index: 30; background: rgba(21,25,34,.86); color: #F3D27A; font-size: 24px; font-weight: 800; padding: 8px 18px; border-radius: 999px; box-shadow: 0 0 0 2px rgba(232,176,75,.55); pointer-events: none; }
+#pl-sleepbadge.hidden { display: none; }
+.mobile #pl-sleepbadge { font-size: 12px; padding: 4px 10px; right: 12px; top: calc(10px + env(safe-area-inset-top)); }
+/* 2.38: Bốc thăm phim */
+.btn.dicebtn { background: linear-gradient(135deg, #3a2c12, #1d1a14); color: #F3D27A; box-shadow: inset 0 0 0 2px #E8B04B; }
+html.light .btn.dicebtn { background: linear-gradient(135deg, #FCF3DF, #F4E3BC); color: #8A5A0E; }
+.dice { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 9500; background: rgba(5,6,10,.88); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .25s; }
+.dice.on { opacity: 1; }
+.dicebox { display: flex; align-items: center; gap: 48px; color: #F4F1EC; }
+.dreel { width: 300px; height: 510px; overflow: hidden; border-radius: 22px; position: relative; box-shadow: 0 0 0 3px #2a3042; }
+.dreel::before, .dreel::after { content: ""; position: absolute; left: 0; right: 0; height: 170px; z-index: 2; pointer-events: none; }
+.dreel::before { top: 0; background: linear-gradient(rgba(5,6,10,.9), rgba(5,6,10,.4)); } .dreel::after { bottom: 0; background: linear-gradient(rgba(5,6,10,.4), rgba(5,6,10,.9)); }
+.dreel.hit { box-shadow: 0 0 0 4px #E8B04B, 0 0 40px rgba(232,176,75,.35); }
+.dstrip { padding-top: 170px; }
+.dcell { width: 300px; height: 160px; margin-bottom: 10px; background: #1d2230 center/cover no-repeat; border-radius: 14px; }
+.dres { width: 620px; }
+.dres .dk { font-size: 20px; font-weight: 900; letter-spacing: .12em; color: #E8B04B; }
+.dres h3 { font-size: 48px; margin: 10px 0 12px; line-height: 1.15; }
+.dres p { font-size: 24px; color: #9aa0ae; margin: 0 0 26px; line-height: 1.5; } .dres p b { color: #F3D27A; }
+.dbtns { display: flex; gap: 16px; flex-wrap: wrap; }
+.mobile .dice { position: fixed; }
+.mobile .dicebox { flex-direction: column; gap: 18px; padding: 0 18px; }
+.mobile .dreel { width: 200px; height: 276px; border-radius: 16px; }
+.mobile .dreel::before, .mobile .dreel::after { height: 92px; }
+.mobile .dstrip { padding-top: 92px; } .mobile .dcell { width: 200px; height: 84px; margin-bottom: 8px; border-radius: 10px; }
+.mobile .dres { width: auto; max-width: 340px; text-align: center; }
+.mobile .dres .dk { font-size: 11px; } .mobile .dres h3 { font-size: 21px; margin: 6px 0 8px; } .mobile .dres p { font-size: 12.5px; margin-bottom: 14px; }
+.mobile .dbtns { justify-content: center; gap: 8px; }
+.mdice { font-size: 19px; width: 36px; }
+/* 2.38: phim từ link YouTube */
+.lkcard { display: flex; gap: 22px; align-items: center; background: var(--c-151922); border-radius: 20px; padding: 14px; margin-bottom: 18px; }
+.lkimg { position: relative; width: 360px; height: 202px; border-radius: 14px; background: #232838 center/cover no-repeat; flex: none; }
+.lkdur { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.75); color: #fff; font-size: 18px; font-weight: 700; padding: 3px 8px; border-radius: 7px; }
+.lkt { flex: 1; min-width: 0; } .lkk { font-size: 18px; font-weight: 900; letter-spacing: .08em; color: #E8B04B; }
+.lkt b { display: block; font-size: 32px; margin: 8px 0; line-height: 1.25; } .lkt small { font-size: 20px; color: var(--c-9aa0ae); }
+.lkbtns { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+html.light .lkk { color: #8A5A0E; }
+.mobile .lkcard { flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 16px; }
+.mobile .lkimg { width: 100%; height: auto; aspect-ratio: 16/9; border-radius: 0; }
+.mobile .lkdur { font-size: 11px; }
+.mobile .lkt { padding: 10px 12px 12px; } .mobile .lkk { font-size: 10.5px; } .mobile .lkt b { font-size: 15px; margin: 4px 0; } .mobile .lkt small { font-size: 11.5px; }
+.mobile .lkbtns { gap: 8px; }
+
+/* 2.39: màn hình "Tập tiếp" lớn trên TV */
+#pl-next.big { display: block; background: #0B0D12; }
+.upb-bg { position: absolute; inset: 0; left: 0; top: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: blur(14px) brightness(.32); transform: scale(1.08); }
+.upb { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #F4F1EC; }
+.upb-rate { display: flex; align-items: center; gap: 14px; font-size: 24px; color: #cfd3dc; margin-bottom: 26px; }
+.upb-rate > span { margin-right: 6px; }
+.upbtn.sm { height: 52px; line-height: 52px; padding: 0 26px; font-size: 22px; margin: 0; }
+.upb-h { font-size: 30px; color: #aab1c0; margin-bottom: 26px; } .upb-h b { color: #F4F1EC; }
+.upb-card { position: relative; width: 960px; height: 540px; border-radius: 28px; background-size: cover; background-position: center; background-color: #1D2230; box-shadow: 0 30px 90px rgba(0,0,0,.7); overflow: hidden; }
+.upb-lb { position: absolute; left: 0; right: 0; bottom: 0; padding: 70px 40px 30px; background: linear-gradient(transparent, rgba(0,0,0,.88)); }
+.upb-k { font-size: 24px; font-weight: 800; color: #E8B04B; letter-spacing: 2px; }
+.upb-t { font-size: 44px; font-weight: 800; line-height: 1.2; margin-top: 6px; max-height: 106px; overflow: hidden; }
+.upb-s { font-size: 24px; color: #cfd3dc; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upb-ring { position: absolute; right: 28px; top: 28px; }
+.upb-btns { display: flex; justify-content: center; margin-top: 40px; }
+.upbtn.big { height: 80px; line-height: 80px; padding: 0 52px; font-size: 32px; border-radius: 40px; margin: 0 14px; background: #2A3040; }
+.upbtn.big.gold { background: #E8B04B; color: #1a1206; }
+.upbtn.big.focus { outline: none; box-shadow: 0 0 0 5px #0B0D12, 0 0 0 10px #F4F1EC; }
+
+/* 2.39: giữ ◀/▶ khi xem phim: dải ảnh tua nhanh */
+#pl-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 520px; z-index: 7; padding: 0 96px; background: linear-gradient(0deg, rgba(0,0,0,.92), rgba(0,0,0,.6) 60%, transparent); display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 70px; box-sizing: border-box; }
+#pl-strip.hidden { display: none; }
+.stp-row { display: flex; align-items: flex-end; }
+.stp-c { flex: 1; margin: 0 11px; opacity: .65; }
+.stp-c.empty { visibility: hidden; }
+.stp-im { height: 170px; border-radius: 14px; background-size: cover; background-position: center; background-color: #1D2230; }
+.stp-t { font-size: 24px; text-align: center; margin-top: 8px; color: #F4F1EC; }
+.stp-c.on { flex: 1.4; opacity: 1; }
+.stp-c.on .stp-im { height: 240px; box-shadow: 0 0 0 6px #E8B04B; }
+.stp-c.on .stp-t { font-size: 32px; font-weight: 800; color: #E8B04B; }
+.stp-bar { position: relative; height: 8px; border-radius: 4px; background: rgba(255,255,255,.25); margin: 30px 11px 0; }
+.stp-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: #E8B04B; border-radius: 4px; }
+.stp-h { font-size: 22px; color: #aab1c0; text-align: center; margin-top: 18px; }
+
+/* 2.39: Tóm tắt phim (giữ OK trên ô phim) */
+.sumv { position: relative; }
+.sumbg { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-size: cover; background-position: center; filter: blur(14px) brightness(.35); transform: scale(1.06); }
+.sumbox { position: relative; display: flex; margin: 110px auto 0; width: 1300px; padding: 44px; border-radius: 28px; background: rgba(21,25,34,.95); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 30px 80px rgba(0,0,0,.6); color: #F4F1EC; text-align: left; }
+.sumim { flex: none; width: 480px; height: 300px; border-radius: 20px; background-size: cover; background-position: center; background-color: #1D2230; margin-right: 40px; }
+.sumtx { min-width: 0; flex: 1; }
+.sumk { font-size: 22px; font-weight: 800; letter-spacing: 2px; color: #E8B04B; }
+.sumt { font-size: 40px; font-weight: 800; line-height: 1.2; margin: 8px 0 18px; max-height: 98px; overflow: hidden; }
+.suml { font-size: 27px; line-height: 1.5; color: #dfe2ea; }
+.sumli { padding-left: 28px; position: relative; margin-bottom: 6px; } .sumli:before { content: '•'; position: absolute; left: 4px; color: #E8B04B; }
+.sumli.none { color: #9AA0AE; padding-left: 0; } .sumli.none:before { content: ''; }
+.summ { font-size: 23px; color: #9AA0AE; margin: 16px 0 26px; }
+.sumtx .btns { justify-content: flex-start; }
+
+/* 2.39: bảng nhắc phím màu */
+#colorhint { position: absolute; right: 56px; bottom: 60px; z-index: 50; width: 560px; padding: 28px 32px; border-radius: 26px; background: rgba(21,25,34,.96); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 24px 70px rgba(0,0,0,.55); color: #F4F1EC; transition: opacity .5s; }
+#colorhint.out { opacity: 0; }
+#colorhint .chh { font-size: 24px; color: #aab1c0; margin-bottom: 14px; }
+#colorhint .chr { display: flex; align-items: center; font-size: 29px; font-weight: 600; margin: 10px 0; }
+#colorhint .chr i { width: 56px; height: 34px; border-radius: 10px; margin-right: 18px; flex: none; }
+#colorhint .chn { font-size: 20px; color: #9AA0AE; margin-top: 14px; }
+.sumbox .btn:not(.gold) { background: #2A3040; color: #F4F1EC; }
+.sumbox .btn.focus:not(.gold) { background: #F4F1EC; color: #0B0D12; }
+
+/* 2.39.2: điện thoại: nút ⓘ trên ô phim + bảng Tóm tắt trượt lên */
+.cinfo { display: none; }
+.mobile .cinfo { display: flex; position: absolute; right: 6px; top: 6px; z-index: 5; width: 26px; height: 26px; border-radius: 50%; background: rgba(11,13,18,.78); border: 1.5px solid rgba(255,255,255,.55); color: #fff; align-items: center; justify-content: center; font: italic 700 14px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
+.mobile .cinfo:after { content: ''; position: absolute; left: -9px; top: -9px; right: -9px; bottom: -9px; }   /* vùng chạm rộng hơn nút */
+.mobile .thumb:has(.cdel) .cinfo { right: 46px; }
+.mobile .pvcard .cinfo, .mobile .card.showdel .cinfo { display: none; }
+.sumov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9000; background: rgba(0,0,0,0); transition: background .25s; }
+.sumov.on { background: rgba(0,0,0,.55); }
+.sumsh { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88vh; overflow-y: auto; box-sizing: border-box; padding: 10px 18px calc(22px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0; background: #151922; color: #F4F1EC; box-shadow: 0 -10px 40px rgba(0,0,0,.6); transform: translateY(100%); transition: transform .26s ease; }
+.sumov.on .sumsh { transform: translateY(0); }
+.sumgrab { width: 40px; height: 5px; border-radius: 3px; background: #3a4152; margin: 0 auto 12px; }
+.sumsim { height: 190px; border-radius: 16px; background-size: cover; background-position: center; background-color: #1D2230; }
+.sumsh .sumk { font-size: 11px; margin-top: 14px; }
+.sumsh .sumt { font-size: 20px; margin: 4px 0 10px; max-height: none; }
+.sumsh .suml { font-size: 14.5px; }
+.sumsh .sumli { padding-left: 16px; } .sumsh .sumli:before { left: 2px; }
+.sumsh .sumli.none { padding-left: 0; }
+.sumsh .summ { font-size: 12.5px; margin: 10px 0 16px; }
+.sumbt { display: flex; gap: 10px; margin-top: 10px; }
+.sumb { flex: 1; height: 46px; border-radius: 23px; background: #2A3040; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; cursor: pointer; }
+.sumb.y { background: #E8B04B; color: #1a1206; flex: 1.4; }
+.mobile .thumb:has(.cinfo) .badge.cat { right: 38px; }   /* chừa chỗ cho nút ⓘ */
+.mobile .row-hot .thumb:has(.cinfo) .badge.cat { right: 6px; }
+.mobile .thumb:has(.cdel) .badge.cat { right: 76px; }

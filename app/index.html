@@ -101,6 +101,7 @@
 <script>
   // Lỗi JavaScript hiện thẳng lên màn hình để chụp ảnh gửi lại
   window.onerror = function (msg, src, line, col) {
+    if (/webapis\.js/.test(String(src || ''))) return;   // 2.38.4: lỗi trong thư viện của Samsung, không phải của app
     var b = document.getElementById('booterr');
     if (!b) return;
     b.style.display = 'block';

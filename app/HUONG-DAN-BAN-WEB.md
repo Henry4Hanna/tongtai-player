@@ -300,3 +300,31 @@ Lỗi Google “Access blocked … has not completed the Google verification pro
 - Phiên bản 2.9.3 (05/11/2026): mọi thẻ phim đều có nhãn Danh mục (kể cả hàng “Đang hot” và trên điện thoại); nhãn AI nhận biết theo cờ “nội dung tổng hợp” của YouTube (đáng tin hơn đoán chữ) và nhiều tên công cụ AI; đổi Chất lượng có tác dụng (app đổi kích thước khung phát, YouTube mất vài giây mới đổi); nút “Bình luận” trong trang chi tiết phim (Hay nhất / Mới nhất, cần API key, 1 đơn vị hạn mức mỗi lần). Sau khi cập nhật, bấm Cài đặt → Cập nhật ngay để nhãn AI được tính lại.
 - Phiên bản 2.9.2: bấm ▲ 2 lần nhanh bật/tắt phụ đề; bỏ tên GitHub và đầu API key khỏi mục Hướng dẫn; giữ nguyên phần Client ID như trước.
 - Phiên bản 2.9.1: số thứ hạng “Đang hot” nằm trong ảnh (điện thoại); sửa lỗi dán key không hiện; nhập API key trong Cài đặt; thêm giao diện Sáng/Tối.
+
+## Điện thoại làm remote và “Còn xem không?” (bản 2.34.0)
+- Bấm nút **Xanh lá** trên remote TV (hoặc Cài đặt → Remote → **Điều khiển bằng điện thoại**), quét mã QR bằng điện thoại. Cả nhà quét cùng lúc được. Bấm phím bất kỳ trên remote để đóng mã.
+- Trên điện thoại: mũi tên, OK, Quay lại, Trang chủ, tạm dừng, tua ±10 giây, phụ đề, tập sau, đóng phim, Lịch sử, Thể loại, Nhạc, gõ chữ để tìm phim. Màn hình điện thoại hiện phim đang phát trên TV.
+- **Còn xem không?**: xem liên tục nhiều giờ mà không bấm phím nào, phim tự tạm dừng và hỏi. 60 giây không ai trả lời thì phim tự tắt (đỡ chạy cả đêm khi ngủ quên). Chỉnh trong Cài đặt → Xem phim: Tắt / 1 / 2 / 3 giờ (mặc định 2 giờ).
+
+- **Vuốt (2.35.0):** trên trang remote bấm công tắc **Vuốt** để dùng như touchpad: vuốt = mũi tên, vuốt rồi giữ = chạy liên tục, chạm = OK, chạm 2 ngón = Quay lại.
+
+## Sáng / Tối theo giờ (bản 2.35.0)
+- Cài đặt → Giao diện → **Giao diện Tối / Sáng** chọn **Theo giờ**: ban ngày sáng, buổi tối tự chuyển tối. Dòng **Giờ đổi giao diện** chọn 6:00→18:00, 6:00→19:00, 7:00→18:00, 7:00→19:00 hoặc 5:30→17:30. TV mặc định Theo giờ.
+- Nút ☀/🌙 có chữ **A** khi đang tự động. Bấm nút là đổi tạm tới mốc giờ kế tiếp, rồi tự quay lại theo giờ. Đang xem phim thì chờ đóng phim mới đổi.
+
+## Bản 2.36.0
+- **Tìm theo cảnh trong phim:** Tìm kiếm → công tắc **Cảnh trong phim**, gõ “bị tát”, “mang thai”, “giả nghèo”… App tìm trong tên và mô tả từng tập đã tải về, gom theo phim, phim khớp nhiều tập lên đầu. Không tốn đơn vị YouTube.
+- **Chế độ khách:** hồ sơ Guest thành **Khách** (nhãn KHÔNG LƯU). Khách xem xong không để lại lịch sử, xem dở, tìm kiếm; không tính vào thống kê, huy hiệu, thi đua. Lọc lứa tuổi và giới hạn giờ vẫn áp dụng. Lịch sử cũ của Guest không bị xóa: tắt Chế độ khách (Cài đặt → Hồ sơ người xem, cần mã PIN) là thấy lại.
+- **Báo phim mới lên điện thoại:** trên trang remote (quét mã QR trên TV) → **🔔 Báo phim mới lên điện thoại** → chọn hồ sơ → Bật. Kênh yêu thích ra tập mới hoặc có lời nhắn gia đình thì điện thoại báo; bấm **Mở trên TV** là TV đang mở app phát trong khoảng 1 phút. iPhone: iOS 16.4 trở lên, phải Thêm vào MH chính rồi mở từ biểu tượng đó.
+- **Bản 2.36.1:** tìm phim mới trên YouTube mặc định **tắt**. Người quản lý bật trong trang quản trị → Tổng quan → ô Tìm kiếm. Khi tắt, trang Tìm kiếm tìm trong phim đã có (theo tên và cảnh), không tốn đơn vị.
+- **Bản 2.36.2:** trên điện thoại, ở trang Nhạc màn hình luôn sáng (iPhone tự khóa màn hình là dừng nhạc). Chạm nhãn **☀ Màn hình luôn sáng** để tắt, hoặc Cài đặt → Nhạc → Giữ màn hình sáng ở trang Nhạc. Bấm nút khóa bên hông thì nhạc vẫn dừng.
+- **Bản 2.37.0:** **Nghe nhạc khi khóa máy** (điện thoại, trang Nhạc; Cài đặt → Nhạc). **Xem tiếp trên máy khác:** cùng hồ sơ, đang xem dở trên TV thì mở điện thoại thấy khung “Đang xem trên TV…”, bấm Xem tiếp ở đây; ngược lại TV hiện khung nhỏ 10 giây, bấm OK.
+- **Bản 2.37.1:** điện thoại có **Remote TV** trong menu ☰ (dưới Cài đặt). Nối 1 lần: trên TV bấm nút **Xanh lá** để hiện mã 4 chữ, nhập mã đó trên điện thoại (hoặc chọn TV trong danh sách). Sau đó bấm Remote TV là điều khiển được ngay trong app.
+- **Bản 2.38.0:** 🎲 **Bốc thăm phim** (TV: nút cạnh Xem ngay; điện thoại: nút 🎲 cạnh nút tìm). **Hẹn giờ tắt phim** (nút Hẹn giờ khi xem phim): Tắt → 15 → 30 → 60 → 90 phút → Hết tập này → Hết 2 tập; 30 giây cuối nhỏ tiếng dần, góc màn hình có đồng hồ đếm ngược. **Dán link YouTube** vào Tìm kiếm để mở phim (playlist ra cả bộ). Điện thoại: **Tiết kiệm dữ liệu di động** trong Cài đặt → Xem phim.
+- **Bản 2.38.1:** điện thoại có **phim thu nhỏ**: đang xem bấm nút **⌄** (cạnh ✕ Đóng) hoặc vuốt xuống. Phim thu vào góc, vẫn chạy khi lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt.
+- **Bản 2.38.3:** trang Nhạc kiểu karaoke: câu đang hát ở giữa màn hình giờ **màu vàng** như logo (trước là chữ trắng).
+- **Bản 2.38.4:** màn hình chờ nét hơn (ảnh bìa lớn nhất), sửa chiếc lá trên logo có lúc hiện to, bỏ báo lỗi webapis.js. Bản Samsung đổi mã gói thành **TongTaiTV2** (`config.xml`).
+- **Bản 2.39.2:** điện thoại: nút **ⓘ** ở góc ô phim mở bảng **Tóm tắt** trượt lên (Xem phim · ＋ Danh sách · 📺 Lên TV · ✕ Xóa khỏi hàng); giữ lâu vẫn xem trước 20 giây.
+- **Bản 2.39.1:** hiệu ứng rơi Ít 2 · Vừa 4 · Nhiều 6 hình; **Nhạc nền Trang chủ** bật/tắt trong Cài đặt; **mã remote TV giữ cố định** (TV Samsung cài lại app vẫn giữ mã; mã giữ 1 năm). TV đã lỡ đổi mã: Cài đặt → Kết nối → **Mã remote của TV này** → nhập mã cũ. Cần deploy lại máy chủ quản trị.
+- **Bản 2.39.0:** phím màu (đỏ Yêu thích · xanh lá Remote · vàng Bốc thăm · xanh dương Tìm kiếm), giữ OK trên ô phim = **Tóm tắt**, ◀ 2 lần = xem lại có phụ đề tạm, giữ ◀/▶ = dải ảnh tua nhanh, màn hình **Tập tiếp** lớn (đếm 10 giây). Remote điện thoại: nút 🎤 nói tên phim, ô dán link **Mở trên TV / Xem sau**, Android Chia sẻ → Remote TV. Hàng **Xem sau** trên Trang chủ TV. Cần deploy lại máy chủ quản trị.
+- **Bản 2.38.5:** **Đồng bộ Google trên TV chạy được.** Dữ liệu chuyển từ thư mục ẩn sang thư mục **Tổng Tài TV** trên Google Drive (file `TongTaiTV-dongbo.json` + 4 bản sao lưu). Bản web/điện thoại hỏi đăng nhập Google lại **một lần** để cho phép quyền mới, rồi tự chép dữ liệu cũ sang. Đừng xóa thư mục này trên Drive.

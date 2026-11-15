@@ -27,7 +27,7 @@
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
     AUTO_NEXT: C.AUTO_NEXT !== false, PREVIEW_SECS: C.PREVIEW_SECS == null ? 20 : C.PREVIEW_SECS, STILL_HOURS: C.STILL_HOURS == null ? 2 : C.STILL_HOURS, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
-    GUEST_MODE: C.GUEST_MODE !== false, MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
+    GUEST_MODE: C.GUEST_MODE !== false, DATA_SAVER: C.DATA_SAVER || 'auto', DATA_Q: C.DATA_Q || 'large', MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, HOME_MUSIC: C.HOME_MUSIC !== false, AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
 
   // Danh sách kênh gốc trong config.js
@@ -97,7 +97,7 @@
 
   /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
      Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
-  var PP = { HOME_ORDER: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, MUSIC_WAKE: 1, MUSIC_BG: 1, THEME: 1, THEME_HOURS: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, PREVIEW_SECS: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+  var PP = { HOME_ORDER: 1, HOME_MUSIC: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, MUSIC_WAKE: 1, MUSIC_BG: 1, THEME: 1, THEME_HOURS: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, PREVIEW_SECS: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
     SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {
@@ -319,5 +319,33 @@
     pinIsDefault: function () { return get('PIN_H') === pinHash('1234'); },
     hides: hides, hitWord: hitWord, addWord: addWord, removeWord: removeWord,
     channels: allChannels, addChannel: addChannel, setChannelType: setChannelType, removeChannel: removeChannel
+  };
+
+  /* ---------- 2.38: Tiết kiệm dữ liệu 4G/5G (chỉ điện thoại) ----------
+     Android: navigator.connection.type cho biết Wi-Fi hay di động. iPhone không có: đo tốc độ tải 1 ảnh nhỏ, chậm thì coi như 4G/5G. */
+  var DS = { slow: false, measured: 0 };
+  function dsMobile() { return d0().documentElement.classList.contains('mobile') && !w.tizen && !w.AndroidApp; }
+  function d0() { return w.document; }
+  function dsCell() {
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (c && c.type) return c.type === 'cellular' ? '4G/5G' : (c.type === 'wifi' || c.type === 'ethernet' ? '' : (c.saveData ? 'tiết kiệm' : ''));
+    if (c && c.saveData) return 'tiết kiệm';
+    if (c && c.effectiveType && /2g|3g/.test(c.effectiveType)) return 'mạng chậm';
+    return DS.slow ? 'mạng chậm' : '';
+  }
+  function dsMeasure() {
+    if (!dsMobile() || (navigator.connection && navigator.connection.type)) return;
+    if (Date.now() - DS.measured < 10 * 60e3) return;
+    DS.measured = Date.now();
+    var im = new Image(), t0 = Date.now();
+    im.onload = function () { DS.slow = Date.now() - t0 > 1500; };
+    im.onerror = function () { /* bỏ qua */ };
+    im.src = 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg?tt=' + t0;
+  }
+  setTimeout(dsMeasure, 5000); setInterval(dsMeasure, 10 * 60e3);
+  w.DataSaver = {
+    on: function () { if (!dsMobile()) return false; var m = C.DATA_SAVER || 'auto'; return m === 'on' ? true : m === 'off' ? false : !!dsCell(); },
+    why: function () { var m = C.DATA_SAVER || 'auto'; return m === 'on' ? 'tiết kiệm dữ liệu' : 'tiết kiệm ' + (dsCell() || '4G/5G'); },
+    q: function () { return C.DATA_Q === 'medium' ? 'medium' : 'large'; }
   };
 })(window);

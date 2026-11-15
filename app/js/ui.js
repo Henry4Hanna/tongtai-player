@@ -120,8 +120,21 @@
       if (o.onSelect) o.onSelect(item);
     };
     // Giữ lâu trên ảnh phim: xem trước ngay trong ảnh (không áp dụng cho hoạt hình nhiều tập, phim demo)
-    if (!(item.kind === 'anime' && (item.eps || 0) > 1) && item.id && String(item.id).indexOf('demo') !== 0 && item.kind !== 'ep')
-      c._hold = function () { if (w.Player && w.Player.preview) w.Player.preview(c, t, item); };
+    // 2.39: giữ OK = Tóm tắt phim (có nút Xem thử = xem trước trong ảnh như trước)
+    var canPv = !(item.kind === 'anime' && (item.eps || 0) > 1) && item.id && String(item.id).indexOf('demo') !== 0 && item.kind !== 'ep';
+    function pv() { if (w.Player && w.Player.preview) w.Player.preview(c, t, item); }
+    // 2.39.2: điện thoại: nút ⓘ ở góc ảnh mở bảng Tóm tắt (giữ lâu vẫn xem trước như cũ)
+    if (isMobile() && item.id && String(item.id).indexOf('demo') !== 0) {
+      var ib = el('div', 'cinfo', 'i');
+      ib.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); if (w.Screens && w.Screens.sheet) w.Screens.sheet(item, o.onSelect, c); });
+      ib.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+      t.appendChild(ib);
+    }
+    if (item.id && String(item.id).indexOf('demo') !== 0)
+      c._hold = function () {
+        if (w.Screens && w.Screens.summary && !isMobile()) w.Screens.summary(item, o.onSelect, canPv ? pv : null);
+        else if (canPv) pv();
+      };
     return c;
   }
 

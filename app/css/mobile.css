@@ -203,3 +203,20 @@ html.mobile, html.mobile body { overflow: hidden; height: 100%; }
 .mobile .bkqr-p { font-size: 13px; text-align: left; }
 
 .mobile .histhint { padding: 0 14px 6px; font-size: 12px; }
+
+/* 2.38.1: phim thu nhỏ */
+#pl-min, #pl-minibar { display: none; }
+.mobile #pl-min { display: flex; position: fixed; right: 94px; top: calc(12px + env(safe-area-inset-top)); width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: rgba(21,25,34,.92); color: #F4F1EC; box-shadow: 0 6px 20px rgba(0,0,0,.5); z-index: 10001; cursor: pointer; }
+.mobile #pl-min svg { width: 18px; height: 18px; }
+.mobile #player.mini { left: auto; top: auto; right: 10px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 200px; height: auto; border-radius: 14px; overflow: hidden; z-index: 9000; box-shadow: 0 12px 30px rgba(0,0,0,.55), 0 0 0 1.5px rgba(232,176,75,.6); touch-action: none; }
+.mobile #player.mini.mleft { right: auto; left: 10px; }
+.mobile #player.mini.mtop { bottom: auto; top: calc(70px + env(safe-area-inset-top)); }
+.mobile #player.mini #yt-host { position: relative; width: 200px !important; height: 112px !important; pointer-events: none; }
+.mobile #player.mini #pl-ui, .mobile #player.mini #pl-msg, .mobile #player.mini #pl-min, .mobile #player.mini #pl-sleepbadge, .mobile #player.mini #pl-still { display: none !important; }
+.mobile #player.mini #pl-minibar { display: block; background: #151922; color: #F4F1EC; }
+#pl-minibar .mpb { height: 3px; background: #2a3042; } #pl-minibar .mpb i { display: block; height: 100%; width: 0; background: #E8B04B; }
+#pl-minibar .mrow { display: flex; align-items: center; gap: 6px; padding: 6px 8px; }
+#pl-minibar b { flex: 1; min-width: 0; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pl-minibar span { width: 28px; height: 28px; border-radius: 50%; background: #232838; display: flex; align-items: center; justify-content: center; font-size: 12px; flex: none; cursor: pointer; }
+.mobile .pl-top { right: 150px; }
+html.plmini.mobile #toast { bottom: calc(190px + env(safe-area-inset-bottom)); }

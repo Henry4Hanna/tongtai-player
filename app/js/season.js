@@ -141,7 +141,10 @@
     var app = d.getElementById('app'), bar = d.getElementById('topbar');
     // hình nhỏ trên logo
     if (th.badge) [].slice.call(d.querySelectorAll('#topbar > .brand, #mhead .mlogo')).forEach(function (brand) {
-      var b = d.createElement('div'); b.className = 'sbadge'; b.innerHTML = shape(th.badge); brand.appendChild(b);
+      var b = d.createElement('div'); b.className = 'sbadge'; b.innerHTML = shape(th.badge);
+      var bz = isMobile() ? 22 : 34; b.style.width = b.style.height = bz + 'px'; b.style.overflow = 'hidden';   // 2.38.4: ghi cứng cỡ, TV có lúc vẽ to tướng che logo
+      var bs = b.querySelector('svg'); if (bs) { bs.setAttribute('width', bz); bs.setAttribute('height', bz); }
+      brand.appendChild(b);
     });
     // dây đèn dưới thanh trên cùng
     if (bar && th.garland) {
@@ -159,7 +162,7 @@
     // hạt rơi / bay lên
     if (fx && app && th.fx) {
       var o = d.createElement('div'); o.id = 'season'; if (th.rise) o.className = 'rise';
-      var cnt = ({ low: isMobile() ? 4 : 8, mid: isMobile() ? 9 : 18, high: isMobile() ? 16 : 32 })[lv] || 4, out = '';
+      var cnt = ({ low: 2, mid: 4, high: 6 })[lv] || 2, out = '';   // 2.39.1: Ít 2 · Vừa 4 · Nhiều 6 (điện thoại và TV như nhau)
       for (var k = 0; k < cnt; k++) {
         var sz = Math.round((isMobile() ? 14 : 26) + Math.random() * (isMobile() ? 12 : 26));
         var dur = (11 + Math.random() * 10).toFixed(1), del = (-Math.random() * 20).toFixed(1);

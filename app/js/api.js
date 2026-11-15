@@ -854,6 +854,70 @@
     });
   }
 
+
+  /* ---------- 2.38: Bốc thăm phim ----------
+     1 phim CHƯA XEM từ các kênh đã tải, ưu tiên thể loại hồ sơ hay xem, đúng lứa tuổi. Không tốn đơn vị. */
+  function diceGenres(it) { try { return catsOf(it) || []; } catch (e) { return []; } }
+  function dice(avoid) {
+    var safe = function (p) { return p.catch(function () { return []; }); };
+    return Promise.all([safe(mergeChannels('drama')), safe(mergeChannels('movie'))]).then(function (r) {
+      var seen = {}, all = [];
+      r.forEach(function (l) { l.forEach(function (f) { if (!seen[f.id]) { seen[f.id] = 1; all.push(f); } }); });
+      all = notBlocked(all).filter(function (f) { return !(w.Settings && w.Settings.hides && w.Settings.hides(f)); });
+      var watched = {}; Store.recent().forEach(function (x) { if (x.item) watched[x.item.id] = 1; });
+      var fresh = all.filter(function (f) { return !watched[f.id] && !Store.getProgress(f.id) && (!avoid || avoid.indexOf(f.id) < 0) && (f.dur || 0) >= 600; });
+      if (!fresh.length) fresh = all.filter(function (f) { return !avoid || avoid.indexOf(f.id) < 0; });
+      if (!fresh.length) return null;
+      // thể loại hồ sơ hay xem (30 phim gần nhất)
+      var cnt = {};
+      Store.recent().slice(0, 30).forEach(function (x) { if (x.item) diceGenres(x.item).forEach(function (g) { cnt[g] = (cnt[g] || 0) + 1; }); });
+      var top = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }).slice(0, 3);
+      var pick = null, why = [];
+      if (top.length && Math.random() < 0.8) {
+        var fit = fresh.filter(function (f) { return diceGenres(f).some(function (g) { return top.indexOf(g) >= 0; }); });
+        if (fit.length) { pick = fit[Math.floor(Math.random() * fit.length)]; why = diceGenres(pick).filter(function (g) { return top.indexOf(g) >= 0; }).slice(0, 2); }
+      }
+      if (!pick) pick = fresh[Math.floor(Math.random() * fresh.length)];
+      var reel = []; for (var i = 0; i < 9; i++) reel.push(all[Math.floor(Math.random() * all.length)]);
+      return { item: pick, why: why, reel: reel };
+    });
+  }
+
+
+  /* ---------- 2.38: Thêm phim bằng link YouTube (1 đơn vị) ---------- */
+  function parseYt(s) {
+    s = String(s || '').trim();
+    if (!/youtu\.?be|youtube\.com/i.test(s)) return null;
+    var v = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/.exec(s), l = /[?&]list=([A-Za-z0-9_-]{10,})/.exec(s);
+    if (!v && !l) return null;
+    return { v: v ? v[1] : '', list: l ? l[1] : '' };
+  }
+  function fromLink(link) {
+    if (!hasKey()) return Promise.reject({ message: 'Chưa có khóa YouTube API' });
+    var hidden = hiddenSet();
+    var one = function (id) {
+      return videoDetails([id]).then(function (vs) {
+        var v = vs[0]; if (!v) throw { message: 'Không tìm thấy video này (đã xóa hoặc để riêng tư)' };
+        var st = v.status || {};
+        if (st.embeddable === false) throw { message: 'Chủ video không cho phát trong ứng dụng khác. Mở bằng app YouTube nhé' };
+        var f = toFilm(v, 'link'); f.kind = 'film'; f.fromLink = 1;
+        if (Store.isBlocked(f.id) || hidden[f.id]) throw { message: 'Phim này đã bị ẩn' };
+        if (w.Settings && w.Settings.hides && w.Settings.hides(f)) throw { message: 'Phim này bị lọc theo lứa tuổi của hồ sơ' };
+        addPool([f]);
+        return f;
+      });
+    };
+    if (link.list && !/^(RD|UL|LL|WL)/.test(link.list)) {
+      return call('playlists', { part: 'snippet,contentDetails', id: link.list, maxResults: 1 }).then(function (r) {
+        var p = (r.items || [])[0];
+        if (!p) { if (link.v) return one(link.v); throw { message: 'Không tìm thấy danh sách phát này' }; }
+        var sn = p.snippet || {};
+        return { id: p.id, kind: 'anime', title: sn.title, ch: sn.channelTitle, chId: sn.channelId, thumb: pick(sn.thumbnails, CARD), hero: pick(sn.thumbnails, HERO), eps: (p.contentDetails || {}).itemCount || 0, desc: (sn.description || '').slice(0, 280), fromLink: 1, startV: link.v };
+      });
+    }
+    return one(link.v);
+  }
+
   function demoChannels() {
     return (C.CHANNELS || []).map(function (c, i) { return { name: c.name, id: 'demo-ch' + i, title: c.name, thumb: '' }; });
   }
@@ -974,7 +1038,7 @@
   }
   function fP(fn) { return function () { return fn.apply(null, arguments).then(fl); }; }
 
-  w.Api = { sceneSearch: sceneSearch, nameSearchOn: nameSearchOn, ytSearchOk: ytSearchOk, searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
+  w.Api = { dice: dice, parseYt: parseYt, fromLink: fromLink, sceneSearch: sceneSearch, nameSearchOn: nameSearchOn, ytSearchOk: ytSearchOk, searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
     updateUrls: updateUrls,
     details: function (ids) { return videoDetails(ids); },
     comments: comments, hasKey: hasKey, films: fP(films), anime: fP(anime), animeAll: fP(animeAll), episodes: fP(episodes),

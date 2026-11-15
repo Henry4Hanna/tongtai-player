@@ -216,7 +216,7 @@
     try {
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;   // màn hình chờ: im lặng
       var c = w.Screens && w.Screens.current && w.Screens.current();
-      return !!c && (c.name === 'home' || c.name === 'songs');   // màn hình Chọn bài cũng phát để nghe thử
+      return !!c && ((c.name === 'home' && cfg().HOME_MUSIC !== false) || c.name === 'songs');   // màn hình Chọn bài cũng phát để nghe thử · 2.39.1: tắt được nhạc Trang chủ
     } catch (e) { return false; }
   }
   var d = document;

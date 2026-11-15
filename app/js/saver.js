@@ -69,8 +69,16 @@
     if (!items.length) { box.classList.add('noimg'); return; }
     var it = items[idx % items.length]; idx++;
     var src = it.hero || it.thumb;
+    // 2.38.4: ảnh YouTube nhỏ (hq/mq/sd) → thử ảnh lớn nhất cho nét trên TV, không có thì lùi dần
+    var ym = /^(https?:\/\/i\d?\.ytimg\.com\/vi\/[^\/]+\/)(?:hq|mq|sd)?default\.jpg/.exec(src || '');
+    var tries = ym ? [ym[1] + 'maxresdefault.jpg', ym[1] + 'sddefault.jpg', src] : [src];
     var img = new Image();
-    img.onload = img.onerror = function () {
+    img.onerror = function () { if (tries.length > 1) { tries.shift(); img.src = src = tries[0]; } else show(); };
+    img.onload = function () {
+      if (img.naturalWidth && img.naturalWidth <= 120 && tries.length > 1) { tries.shift(); img.src = src = tries[0]; return; }   // YouTube trả ảnh xám 120×90 khi không có bản lớn
+      show();
+    };
+    function show() {
       if (!on) return;
       var nl = layers[1 - cur], ol = layers[cur];
       nl.style.backgroundImage = 'url("' + src.replace(/"/g, '%22') + '")';
@@ -86,8 +94,8 @@
       box.querySelector('.svch').textContent = (it.ch || '') + (it.eps > 1 ? ' · ' + it.eps + ' tập' : '');
       info.classList.add('in');
       box.classList.toggle('alt', idx % 2 === 0);   // đổi góc đồng hồ, tránh in hình lên màn TV
-    };
-    img.src = src;
+    }
+    img.src = src = tries[0];
   }
 
   // câu thoại ngẫu nhiên, không lặp lại câu vừa hiện

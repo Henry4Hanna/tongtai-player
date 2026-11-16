@@ -233,8 +233,17 @@ html.light .rcs { background: #FBFAF7; color: #1d2230; }
 .rcchg { font-size: 12px; font-weight: 800; color: var(--acc, #E8B04B); padding: 6px 8px; cursor: pointer; }
 .rcx { width: 34px; height: 34px; border-radius: 50%; background: #1d2230; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; }
 .rcframe { flex: 1; width: 100%; border: 0; background: #0B0D12; }
-.mbar .mtitle { flex: 1; text-align: center; margin-left: 36px; }
+.mbar .mtitle { flex: 1; text-align: center; margin-left: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mbar .mdice { width: 36px; font-size: 19px; }
+.mbar .mrc { width: 34px; color: var(--acc, #E8B04B); }
+/* 2.41.3: remote có viền vuông bo góc, cỡ bằng viên xí ngầu; hình người xem cạnh xí ngầu */
+.mrcb { width: 23px; height: 23px; box-sizing: border-box; border-radius: 6px; border: 1.8px solid currentColor; display: flex; align-items: center; justify-content: center; background: rgba(232,176,75,.12); }
+.mrcb svg { width: 17px; height: 17px; }
+.mbar .mwho { width: auto; min-width: 30px; padding: 0 3px; }
+.mbar .mwho:empty { display: none; }
+.mwho .wav.mw { width: 23px; height: 23px; border-radius: 50%; font-size: 12px; flex: none; box-shadow: 0 0 0 1.5px var(--c-151922, #151922); }
+.mwho .wav.mw.stk { margin-left: -8px; }
+html.light .mwho .wav.mw { box-shadow: 0 0 0 1.5px #F6F3EE; }
 /* 2.40: nhiều TV trong nhà */
 .rcmulti .rcrow { padding: 12px; gap: 10px; }
 .rcrow .rctvi { font-size: 22px; }

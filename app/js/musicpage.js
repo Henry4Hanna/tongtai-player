@@ -331,7 +331,7 @@
       var has = !!(song && (song.sum || (song.ex && song.ex.length)));
       msum.innerHTML = has ? sumHTML(song, 'mvs') : '';
       msum.style.display = has ? '' : 'none';
-      intro.innerHTML = has ? '<div class="mvik">GIỚI THIỆU BÀI HÁT</div>' + sumHTML(song, 'mvi') +
+      intro.innerHTML = has ? '<div class="mvik"><span class="mvik0">♪ NHẠC DẠO · </span>GIỚI THIỆU BÀI HÁT</div>' + sumHTML(song, 'mvi') +
         (times.length && times[0] > 3 ? '<div class="mvin">♪ Lời bắt đầu ở ' + fmt(times[0]) + '</div>' : '') : '';
       lyr.classList.toggle('hasintro', has);
     }

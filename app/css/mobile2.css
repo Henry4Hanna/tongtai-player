@@ -221,7 +221,7 @@ html.light .rcs { background: #FBFAF7; color: #1d2230; }
 .rcico { width: 32px; height: 32px; display: inline-block; flex: none; }
 .rcp { font-size: 13px; line-height: 1.5; opacity: .85; }
 .rccode { display: block; width: 210px; margin: 16px auto 12px; text-align: center; font-size: 34px; font-weight: 900; letter-spacing: .45em; padding: 10px 0 10px .45em; border-radius: 16px; border: 2px solid #E2B24E; background: transparent; color: inherit; text-transform: uppercase; outline: none; font-family: inherit; }
-.rcgo { background: #E8B04B; color: #1a1206; font-weight: 900; text-align: center; border-radius: 14px; padding: 13px; font-size: 16px; cursor: pointer; }
+.rcgo { background: var(--acc, #E8B04B); color: #1a1206; font-weight: 900; text-align: center; border-radius: 14px; padding: 13px; font-size: 16px; cursor: pointer; }
 .rcmsg { font-size: 12.5px; text-align: center; margin-top: 8px; min-height: 1em; color: #E8A23B; }
 .rcor { text-align: center; font-size: 12px; opacity: .6; margin: 12px 0 6px; }
 .rctv { display: flex; align-items: center; gap: 8px; padding: 11px 12px; border-radius: 12px; background: rgba(128,128,128,.12); margin-top: 6px; font-size: 14px; cursor: pointer; }
@@ -230,8 +230,26 @@ html.light .rcs { background: #FBFAF7; color: #1d2230; }
 .rcfull { background: #0B0D12; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
 .rch { display: flex; align-items: center; gap: 10px; padding: 12px 14px 6px; color: #F4F1EC; }
 .rcht { flex: 1; min-width: 0; } .rcht b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .rcht small { display: block; font-size: 11px; font-weight: 800; color: #9aa0ae; } .rcht small.on { color: #3DBE73; }
-.rcchg { font-size: 12px; font-weight: 800; color: #E8B04B; padding: 6px 8px; cursor: pointer; }
+.rcchg { font-size: 12px; font-weight: 800; color: var(--acc, #E8B04B); padding: 6px 8px; cursor: pointer; }
 .rcx { width: 34px; height: 34px; border-radius: 50%; background: #1d2230; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; }
 .rcframe { flex: 1; width: 100%; border: 0; background: #0B0D12; }
 .mbar .mtitle { flex: 1; text-align: center; margin-left: 36px; }
 .mbar .mdice { width: 36px; font-size: 19px; }
+/* 2.40: nhiều TV trong nhà */
+.rcmulti .rcrow { padding: 12px; gap: 10px; }
+.rcrow .rctvi { font-size: 22px; }
+.rcrow .rctvt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rcrow .rctvt b { flex: none; font-size: 15px; }
+.rcrow .rctvt small { font-size: 11.5px; font-weight: 600; color: inherit; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcrow .rcdot { width: 10px; height: 10px; border-radius: 50%; background: #666; flex: none; }
+.rcrow .rcdot.on { background: #3DBE73; }
+.rcrow .rcmore { padding: 4px 8px; font-weight: 900; opacity: .7; }
+.rcrow.cur { box-shadow: inset 0 0 0 2px var(--acc, #E8B04B); }
+.rcrow.gone { opacity: .5; }
+.rcadd { margin-top: 12px; }
+.rcht { cursor: pointer; }
+/* 2.41: điện thoại theo màu hồ sơ (khi hồ sơ chọn màu khác vàng) */
+html.mobile[style*="--acc"] .dinfo .btns .btn.gold { background: var(--acc); color: #1a1206; box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+html.mobile[style*="--acc"] .rt { background: none; color: var(--acc); -webkit-text-fill-color: var(--acc); }
+html.mobile[style*="--acc"] .rowhead::after { background: var(--acc); }
+html.mobile[style*="--acc"] .mtitle { color: var(--acc); }

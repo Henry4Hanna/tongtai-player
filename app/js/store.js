@@ -158,6 +158,7 @@
       if (enterGuest && guestMode()) setTimeout(function () { try { if (w.UI && w.UI.toast) w.UI.toast('🦊 Đang xem bằng hồ sơ Khách · không lưu lịch sử, xem dở, tìm kiếm', 5000); } catch (e) { /* bỏ qua */ } }, 700);
       try { w.localStorage.setItem(P + 'profile', id); } catch (e) { /* bỏ qua */ }
       tog = []; set('together', []);   // chọn một người = thôi xem chung
+      Store.applyAccent();   // 2.41
     },
     // Mã PIN riêng của hồ sơ (lưu dạng băm). hash = null để bỏ mã
     setProfilePin: function (id, hash) {
@@ -165,6 +166,25 @@
       if (id === 'guest') { if (hash) m.guestPin = hash; else delete m.guestPin; }
       else (m.profiles || []).forEach(function (x) { if (x.id === id) { if (hash) x.pinH = hash; else delete x.pinH; } });
       set('prefs', m);
+    },
+    // 2.41: màu nhấn riêng của hồ sơ
+    setAccent: function (id, c) {
+      var m = get('prefs', {});
+      if (id === 'guest') { if (c) m.guestAcc = c; else delete m.guestAcc; }
+      else (m.profiles || []).forEach(function (x) { if (x.id === id) { if (c) x.acc = c; else delete x.acc; } });
+      set('prefs', m);
+      Store.applyAccent();
+    },
+    accentOf: function (id) {
+      if (id === 'guest') return (get('prefs', {}).guestAcc) || '';
+      var x = Store.profiles().filter(function (y) { return y.id === id; })[0];
+      return (x && x.acc) || '';
+    },
+    applyAccent: function () {
+      try {
+        var c = Store.accentOf(prof), r = w.document.documentElement;
+        if (/^#[0-9A-Fa-f]{6}$/.test(c || '')) r.style.setProperty('--acc', c); else r.style.removeProperty('--acc');
+      } catch (e) { /* bỏ qua */ }
     },
     // Đổi hình con thú của một hồ sơ (Guest cũng đổi được)
     setAvatar: function (id, av) {
@@ -341,4 +361,5 @@
   });
 
   w.Store = Store;
+  Store.applyAccent();   // 2.41: màu của hồ sơ đang dùng
 })(window);

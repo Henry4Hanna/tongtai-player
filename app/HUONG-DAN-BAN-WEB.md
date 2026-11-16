@@ -324,6 +324,13 @@ Lỗi Google “Access blocked … has not completed the Google verification pro
 - **Bản 2.38.1:** điện thoại có **phim thu nhỏ**: đang xem bấm nút **⌄** (cạnh ✕ Đóng) hoặc vuốt xuống. Phim thu vào góc, vẫn chạy khi lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt.
 - **Bản 2.38.3:** trang Nhạc kiểu karaoke: câu đang hát ở giữa màn hình giờ **màu vàng** như logo (trước là chữ trắng).
 - **Bản 2.38.4:** màn hình chờ nét hơn (ảnh bìa lớn nhất), sửa chiếc lá trên logo có lúc hiện to, bỏ báo lỗi webapis.js. Bản Samsung đổi mã gói thành **TongTaiTV2** (`config.xml`).
+- **Bản 2.41.0:** **Màu riêng cho từng hồ sơ** (chọn ở màn hình Ai đang xem → giữ OK trên hồ sơ → 🎨 Màu riêng) · **↗ Chia sẻ** trong Tóm tắt: gửi link YouTube gốc + câu giới thiệu (TV hiện mã QR).
+- **Bản 2.40.0:** **Chế độ xe hơi** (tự bật trên xe Tesla: nút to, 🎧 Chỉ nghe tiếng) · **Phim tương tự** trong Tóm tắt (không tốn đơn vị YouTube) · **Tải / Mở file sao lưu** (Cài đặt, điện thoại & máy tính) · Remote **nhớ nhiều TV**, đổi 1 chạm · **🔔 Theo dõi tập mới** ở trang phim bộ (cần bật thông báo trên điện thoại). Cần deploy lại máy chủ quản trị.
+- **Bản 2.39.7:** màn hình cảm ứng lớn (xe Tesla, máy tính bảng xoay ngang): vuốt ở danh sách nào thì cuộn danh sách đó, vuốt dài đi nhiều phim.
+- **Bản 2.39.6:** tên phim lớn ở đầu Trang chủ giãn dòng, dấu tiếng Việt (Ô, ộ, ị…) không còn chồng.
+- **Bản 2.39.5:** trang Nhạc kiểu karaoke: chữ **NHẠC DẠO** không còn chồng lên phần giới thiệu bài hát.
+- **Bản 2.39.4:** **Nhạc nền Trang chủ mặc định Tắt** (TV và điện thoại); muốn nghe thì Cài đặt → Nhạc nền Trang chủ → Bật.
+- **Bản 2.39.3:** sửa chiếc lá trang trí hiện rất to che logo trên TV (hình trang trí luôn có cỡ sẵn).
 - **Bản 2.39.2:** điện thoại: nút **ⓘ** ở góc ô phim mở bảng **Tóm tắt** trượt lên (Xem phim · ＋ Danh sách · 📺 Lên TV · ✕ Xóa khỏi hàng); giữ lâu vẫn xem trước 20 giây.
 - **Bản 2.39.1:** hiệu ứng rơi Ít 2 · Vừa 4 · Nhiều 6 hình; **Nhạc nền Trang chủ** bật/tắt trong Cài đặt; **mã remote TV giữ cố định** (TV Samsung cài lại app vẫn giữ mã; mã giữ 1 năm). TV đã lỡ đổi mã: Cài đặt → Kết nối → **Mã remote của TV này** → nhập mã cũ. Cần deploy lại máy chủ quản trị.
 - **Bản 2.39.0:** phím màu (đỏ Yêu thích · xanh lá Remote · vàng Bốc thăm · xanh dương Tìm kiếm), giữ OK trên ô phim = **Tóm tắt**, ◀ 2 lần = xem lại có phụ đề tạm, giữ ◀/▶ = dải ảnh tua nhanh, màn hình **Tập tiếp** lớn (đếm 10 giây). Remote điện thoại: nút 🎤 nói tên phim, ô dán link **Mở trên TV / Xem sau**, Android Chia sẻ → Remote TV. Hàng **Xem sau** trên Trang chủ TV. Cần deploy lại máy chủ quản trị.

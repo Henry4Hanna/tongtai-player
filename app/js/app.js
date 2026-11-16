@@ -197,7 +197,24 @@
       if (w.Player.isOpen() || w.UI.isMobile()) return;
       var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 40) return;
-      if (Math.abs(dx) > Math.abs(dy)) w.Nav.move(dx < 0 ? 'right' : 'left'); else w.Nav.move(dy < 0 ? 'down' : 'up');
+      // 2.39.7: màn hình cảm ứng lớn (xe Tesla, máy tính bảng ngang): vuốt ở vùng nào thì cuộn vùng đó,
+      // vuốt dài thì đi nhiều bước (trước đây chỉ đi 1 bước từ ô đang chọn, có khi là bàn phím chữ)
+      var hz = Math.abs(dx) > Math.abs(dy), dist = hz ? Math.abs(dx) : Math.abs(dy);
+      var start = d.elementFromPoint(tx, ty), box = start && start.closest ? start.closest('.spane, .track, .scroller, .view') : null;
+      var cur = w.Nav.cur;
+      if (box && !(cur && box.contains(cur))) {
+        var best = null, bd = 1e9;
+        [].forEach.call(box.querySelectorAll('.f'), function (f) {
+          var r = f.getBoundingClientRect(); if (!r.width || !r.height) return;
+          var cx = Math.max(r.left, Math.min(tx, r.right)), cy = Math.max(r.top, Math.min(ty, r.bottom));
+          var dd = Math.abs(cx - tx) + Math.abs(cy - ty);
+          if (dd < bd) { bd = dd; best = f; }
+        });
+        if (best) w.Nav.focus(best);
+      }
+      var steps = Math.max(1, Math.min(6, Math.round(dist / 160)));
+      var dir = hz ? (dx < 0 ? 'right' : 'left') : (dy < 0 ? 'down' : 'up');
+      for (var i = 0; i < steps; i++) w.Nav.move(dir);
     }, { passive: true });
     // Điện thoại: đầu trang kiểu app phim (logo giữa, nút nhanh, menu ☰ và 🔍)
     var ICON = {
@@ -363,6 +380,8 @@
   function afterBoot() {
     if (w.Season) setTimeout(w.Season.greetOnce, 600);
     setTimeout(colorHint, 2500);
+    setTimeout(function () { if (w.Screens.carMaybe) w.Screens.carMaybe(); }, 300);   // 2.40: màn hình xe Tesla
+    setTimeout(function () { if (w.Screens.fileBkNag) w.Screens.fileBkNag(); }, 20000);   // 2.40
     if (w.__sendItem) {   // vừa quét mã "Gửi sang điện thoại"
       var it = w.__sendItem; w.__sendItem = null;
       if (w.Screens.paintWho) w.Screens.paintWho();

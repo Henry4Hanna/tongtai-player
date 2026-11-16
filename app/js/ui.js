@@ -123,6 +123,8 @@
     // 2.39: giữ OK = Tóm tắt phim (có nút Xem thử = xem trước trong ảnh như trước)
     var canPv = !(item.kind === 'anime' && (item.eps || 0) > 1) && item.id && String(item.id).indexOf('demo') !== 0 && item.kind !== 'ep';
     function pv() { if (w.Player && w.Player.preview) w.Player.preview(c, t, item); }
+    // 2.40: phim bộ đang theo dõi có thêm tập
+    if (item.kind === 'anime' && w.Screens && w.Screens.folNew && w.Screens.folNew(item)) t.appendChild(el('div', 'badge newep', '🔔 Tập mới'));
     // 2.39.2: điện thoại: nút ⓘ ở góc ảnh mở bảng Tóm tắt (giữ lâu vẫn xem trước như cũ)
     if (isMobile() && item.id && String(item.id).indexOf('demo') !== 0) {
       var ib = el('div', 'cinfo', 'i');
@@ -328,6 +330,7 @@
       Nav.cur = e;
       e.classList.add('focus');
       if (!noReveal) reveal(e);
+      if (e._focus) { try { e._focus(); } catch (x) { /* bỏ qua */ } }   // 2.41: ô tự xử lý khi được chọn (ví dụ xem trước màu)
     },
 
     focusFirst: function (rootIndex) {

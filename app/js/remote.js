@@ -156,6 +156,50 @@
   function base() { return w.Tele && w.Tele.base ? w.Tele.base() : ''; }
   function get(p) { return fetch(base() + p).then(function (r) { return r.json().then(function (j) { if (!r.ok && !j.error) j.error = r.status; return j; }); }); }
   function pair() { return w.Store.keep('rcpair') || null; }
+  // 2.40: điện thoại nhớ nhiều TV, đổi bằng 1 chạm
+  function tvs() { var l = w.Store.keep('rctvs'); l = Array.isArray(l) ? l : []; var p = pair(); if (p && !l.some(function (x) { return x.room === p.room; })) { l.unshift({ room: p.room, name: p.name || 'TV' }); w.Store.keep('rctvs', l); } return l; }
+  function saveTv(room, name) { var l = tvs().filter(function (x) { return x.room !== room; }), old = tvs().filter(function (x) { return x.room === room; })[0]; l.unshift({ room: room, name: name || 'TV', label: old && old.label }); w.Store.keep('rctvs', l.slice(0, 8)); }
+  function tvName(t) { return (t && (t.label || t.name)) || 'TV'; }
+  function chooser(back) {
+    var o = overlay('rcsheet');
+    var s = el('rcs', '<div class="rchandle"></div><h3><span class="rcico">' + icon() + '</span>Chọn TV để điều khiển</h3>');
+    var lst = el('rclist rcmulti', ''); s.appendChild(lst);
+    var add = el('rcgo rcadd', '＋ Thêm TV (nhập mã)'); s.appendChild(add);
+    s.appendChild(el('rcp rcfoot', 'Bấm ⋯ để đổi tên hoặc xóa TV khỏi danh sách.'));
+    o.appendChild(s);
+    o.onclick = function (e) { if (e.target === o) { shut(o); if (back) back(); } };
+    add.onclick = function () { shut(o); setTimeout(sheet, 260); };
+    var cur = pair();
+    function paint() {
+      lst.innerHTML = '';
+      tvs().forEach(function (t) {
+        var r = el('rctv rcrow' + (cur && cur.room === t.room ? ' cur' : ''), '<span class="rctvi">📺</span><span class="rctvt"><b>' + esc(tvName(t)) + '</b><small>Đang kiểm tra…</small></span><i class="rcdot"></i><span class="rcmore">⋯</span>');
+        r.onclick = function (e) {
+          if (e.target.className === 'rcmore') return;
+          w.Store.keep('rcpair', { room: t.room, name: t.name }); saveTv(t.room, t.name); shut(o); setTimeout(open, 200);
+        };
+        r.querySelector('.rcmore').onclick = function (e) {
+          e.stopPropagation();
+          var nm = w.prompt('Đổi tên TV (để trống = xóa TV khỏi danh sách):', tvName(t));
+          if (nm === null) return;
+          var l = tvs();
+          if (!String(nm).trim()) { l = l.filter(function (x) { return x.room !== t.room; }); if (cur && cur.room === t.room) w.Store.keep('rcpair', null); }
+          else l.forEach(function (x) { if (x.room === t.room) x.label = String(nm).trim().slice(0, 30); });
+          w.Store.keep('rctvs', l); paint();
+        };
+        lst.appendChild(r);
+        get('/rc/' + t.room).then(function (j) {
+          var sm = r.querySelector('small'), dot = r.querySelector('.rcdot');
+          if (!j || !j.ok) { sm.textContent = 'Mã ' + t.room + ' không còn dùng'; r.classList.add('gone'); return; }
+          var st = j.st || {}, now = st.t || st.title || '';
+          sm.textContent = j.alive ? 'Đang mở app' + (now ? ' · đang phát “' + String(now).slice(0, 24) + '”' : '') : 'Tắt hoặc chưa mở app';
+          dot.classList.toggle('on', !!j.alive);
+        }, function () { r.querySelector('small').textContent = 'Mất mạng'; });
+      });
+      if (!tvs().length) lst.appendChild(el('rcp', 'Chưa có TV nào. Bấm “Thêm TV” để nhập mã hiện trên TV.'));
+    }
+    paint();
+  }
   function esc(t) { return String(t || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function el(cls, html) { var e = d.createElement('div'); e.className = cls; if (html != null) e.innerHTML = html; return e; }
   // Dòng "Remote TV" trong menu (chỉ điện thoại)
@@ -171,11 +215,11 @@
   function open() {
     if (!base()) { w.UI.toast('Cần bật Máy chủ thống kê (Cài đặt → Kết nối) để dùng Remote TV', 4000); return; }
     var p = pair();
-    if (!p) { sheet(); return; }
+    if (!p) { if (tvs().length) chooser(); else sheet(); return; }
     get('/rc/' + p.room).then(function (j) {
       if (j && j.ok) { remote(p, j); return; }
       w.Store.keep('rcpair', null);
-      w.UI.toast('TV đã đổi mã, nối lại nhé', 3500); sheet();
+      w.UI.toast('TV “' + (p.name || 'TV') + '” đã đổi mã, chọn TV khác hoặc nối lại nhé', 3500); if (tvs().length > 1) chooser(); else sheet();
     }, function () { remote(p, null); });
   }
   function overlay(cls) { var o = el('rcov ' + cls); (d.getElementById('app') || d.body).appendChild(o); setTimeout(function () { o.classList.add('on'); }, 20); return o; }
@@ -192,7 +236,7 @@
     s.appendChild(el('rcp rcfoot', 'Nối 1 lần là app nhớ. TV đổi mã thì app tự hỏi lại.'));
     o.appendChild(s);
     o.onclick = function (e) { if (e.target === o) shut(o); };
-    function done(room, name) { w.Store.keep('rcpair', { room: room, name: name || 'TV' }); shut(o); open(); }
+    function done(room, name) { w.Store.keep('rcpair', { room: room, name: name || 'TV' }); saveTv(room, name); shut(o); open(); }
     go.onclick = function () {
       var c = String(inp.value || '').toUpperCase().replace(/[^A-Z2-9]/g, '');
       if (c.length !== 4) { msg.textContent = 'Mã gồm 4 chữ, ví dụ F9EJ'; return; }
@@ -213,12 +257,14 @@
   }
   function remote(p, j) {
     var o = overlay('rcfull');
-    var hd = el('rch', '<span class="rcico">' + icon() + '</span><span class="rcht"><b>' + esc(p.name || 'TV') + '</b><small class="' + (j && j.alive ? 'on' : '') + '">' + (j && j.alive ? '● Đã nối' : '● TV đang tắt hoặc chưa mở app') + '</small></span><span class="rcchg">Đổi TV</span><span class="rcx">✕</span>');
+    var lab = (tvs().filter(function (x) { return x.room === p.room; })[0] || p);
+    var hd = el('rch', '<span class="rcico">' + icon() + '</span><span class="rcht"><b>' + esc(tvName(lab)) + (tvs().length > 1 ? ' ▾' : '') + '</b><small class="' + (j && j.alive ? 'on' : '') + '">' + (j && j.alive ? '● Đã nối' : '● TV đang tắt hoặc chưa mở app') + '</small></span><span class="rcchg">Đổi TV</span><span class="rcx">✕</span>');
     o.appendChild(hd);
     var f = d.createElement('iframe'); f.className = 'rcframe'; f.src = base() + '/remote/' + p.room + '?app=1'; f.setAttribute('allow', 'clipboard-write; microphone');   // 2.39: nói để tìm phim
     o.appendChild(f);
     hd.querySelector('.rcx').onclick = function () { shut(o); };
-    hd.querySelector('.rcchg').onclick = function () { w.Store.keep('rcpair', null); shut(o); setTimeout(sheet, 260); };
+    hd.querySelector('.rcchg').onclick = function () { shut(o); setTimeout(function () { chooser(); }, 260); };   // 2.40: chọn trong các TV đã nối
+    hd.querySelector('.rcht').onclick = hd.querySelector('.rcchg').onclick;
     var t = setInterval(function () {
       if (!o.parentNode) { clearInterval(t); return; }
       get('/rc/' + p.room).then(function (k) { var sm = hd.querySelector('small'); if (!k || !k.ok) return; sm.className = k.alive ? 'on' : ''; sm.textContent = k.alive ? '● Đã nối' : '● TV đang tắt hoặc chưa mở app'; }).catch(function () {});

@@ -1119,6 +1119,17 @@
       favLabel();
     }, UI.ICON_PLUS);
     btns.appendChild(bPlay); btns.appendChild(bRe); btns.appendChild(bFav);
+    if (canFollow(item)) {   // 2.40
+      folSeen(item);
+      var bBell = UI.button('', 'bell', function () {
+        var on = toggleFol(item);
+        bellLabel();
+        UI.toast(on ? '🔔 Đang theo dõi “' + item.title + '”. Có tập mới, điện thoại đã bật thông báo sẽ được báo' : 'Đã bỏ theo dõi tập mới');
+      });
+      var bellLabel = function () { var on = isFol(item.id); bBell.setLabel(on ? '🔔 Đang theo dõi' : '🔔 Theo dõi tập mới'); bBell.classList.toggle('on', on); };
+      bellLabel();
+      btns.appendChild(bBell);
+    }
     if (msgTargets().length) btns.appendChild(UI.button('✉ Gửi cho…', '', function () { push(MsgTo(item)); }));
     if (item.chId) {
       var bCh = UI.button('', 'favch', function () {
@@ -1624,7 +1635,8 @@
     sec('Nhạc nền Trang chủ');
     var MOPTS = [{ v: 'songsx', t: 'Nhạc của tôi (trộn bài, mặc định)', on: true }, { v: 'songs', t: 'Nhạc của tôi (lần lượt)', on: true }, { v: 'auto', t: 'Hòa tấu (lần lượt 5 bài)', on: true }, { v: 'off', t: 'Tắt' }].concat(
       (w.Music ? w.Music.tracks() : []).map(function (n, i) { return { v: i, t: (i + 1) + '. ' + n, on: true }; }));
-    opt('HOME_MUSIC', 'Nhạc nền Trang chủ', 'Bật: mở Trang chủ là phát nhạc nhỏ (bài theo mục Nhạc nền bên dưới). Tắt: Trang chủ im lặng, trang Nhạc vẫn nghe bình thường', [{ v: true, t: 'Bật', on: true }, { v: false, t: 'Tắt' }]);   // 2.39.1
+    if (!w.tizen && !w.AndroidApp) opt('CAR_MODE', 'Chế độ xe hơi', 'Màn hình lớn nút to cho xe (Tesla): Tiếp tục xem, Chỉ nghe tiếng, Nhạc, Bốc thăm. Tự động: tự bật khi mở trên xe Tesla', [{ v: 'auto', t: 'Tự động', on: true }, { v: 'on', t: 'Luôn bật' }, { v: 'off', t: 'Tắt' }], function () { if (C.CAR_MODE !== 'off') { try { sessionStorage.removeItem('carExit'); } catch (e) { /* bỏ qua */ } } });   // 2.40
+    opt('HOME_MUSIC', 'Nhạc nền Trang chủ', 'Mặc định Tắt. Bật: mở Trang chủ là phát nhạc nhỏ (bài theo mục Nhạc nền bên dưới). Tắt: Trang chủ im lặng, trang Nhạc vẫn nghe bình thường', [{ v: true, t: 'Bật' }, { v: false, t: 'Tắt', on: true }]);   // 2.39.1 · 2.39.4: mặc định Tắt
     opt('MUSIC', 'Nhạc nền', 'Nhạc của tôi (bài hát trong thư mục music/) hoặc 5 bản hòa tấu. Chỉ phát ở Trang chủ, tự dừng khi xem phim, quay lại phát tiếp. Mỗi lần OK đổi một kiểu', MOPTS);
     opt('MUSIC_VIEW', 'Kiểu trang Nhạc', 'Kiểu A: ảnh + lời + bài tiếp theo. Kiểu B: ảnh phủ toàn màn hình, lời to kiểu karaoke. Đổi nhanh bằng nút trên trang Nhạc', [{ v: 'split', t: 'Kiểu A: chia đôi', on: true }, { v: 'karaoke', t: 'Kiểu B: toàn màn hình', on: true }]);
     row('Chọn bài (Nhạc của tôi)', 'Danh sách bài hát của bạn. OK để nghe bài đó ngay', function () {
@@ -1748,6 +1760,13 @@
       });
     });
 
+    if (!w.tizen && !w.AndroidApp && w.Sync && w.Sync.exportCode) {   // 2.40: sao lưu ra file (điện thoại, máy tính, xe)
+      sec('Sao lưu ra file');
+      row('💾 Tải file sao lưu', 'Một file nhỏ gồm mọi hồ sơ, hình, lịch sử, danh sách, cài đặt. Lưu vào máy, iCloud hay Google Drive tùy bạn', function () {
+        var at = +(Store.keep('fileBkAt') || 0); return { t: at ? 'Lần trước: ' + new Date(at).toLocaleDateString('vi-VN') : 'Tải về' };
+      }, function (paint) { fileBackup(); paint(); });
+      row('📂 Mở file sao lưu', 'Chọn file đã tải. Gộp với dữ liệu trên máy này, không xóa gì', function () { return { t: 'Chọn file…' }; }, function () { fileRestore(); });
+    }
     sec('Sao lưu bằng mã (không cần đăng nhập)');
     row('Xuất mã sao lưu', 'Mọi hồ sơ, hình, mã PIN, lịch sử, danh sách, cài đặt. Lưu mã này trước khi cài lại app hoặc đổi máy', function () { return { t: 'Mở' }; }, function () { push(Backup('out')); });
     row('Nhập mã sao lưu', 'Dán mã đã xuất từ máy khác (gộp với dữ liệu trên máy này)', function () { return { t: 'Mở' }; }, function () { push(Backup('in')); });
@@ -2034,10 +2053,23 @@
     var b1 = UI.button(item.kind === 'anime' && item.eps > 1 ? 'Xem cả bộ' : 'Xem phim', 'gold', function () { back(); setTimeout(function () { onPlay(item); }, 60); }, UI.ICON_PLAY);
     bx.appendChild(b1);
     if (onPreview) bx.appendChild(UI.button('Xem thử', '', function () { back(); setTimeout(onPreview, 250); }));
+    if (shareInfo(item)) bx.appendChild(UI.button('↗ Chia sẻ', '', function () { shareFilm(item); }));   // 2.41
     bx.appendChild(UI.button('Để sau', '', function () { back(); }));
     tx.appendChild(bx);
     box.appendChild(tx);
     v.appendChild(box);
+    // 2.40: hàng Phim tương tự
+    var sim = el('div', 'sumsim2');
+    v.appendChild(sim);
+    if (Api.similar) Api.similar(item, 6).then(function (l) {
+      if (!l.length || !d.body.contains(v)) return;
+      sim.appendChild(el('div', 'sumsimh', 'Phim tương tự'));
+      var tr = el('div', 'sumsimr');
+      l.forEach(function (f) {
+        tr.appendChild(UI.card(f, { sub: f.ch || '', onSelect: function (x) { back(); setTimeout(function () { if (x.kind === 'anime') openItem(x); else playFilm(x); }, 80); } }));
+      });
+      sim.appendChild(tr);
+    });
     return { name: 'summary', el: v, focus: b1 };
   }
 
@@ -2065,8 +2097,24 @@
     var r2 = el('div', 'sumbt');
     if (w.RemoteTV && Store.keep('rcpair') && item.kind !== 'anime' && /^[\w-]{11}$/.test(item.id || ''))
       r2.appendChild(btn('', '📺 Lên TV', function () { close(); w.RemoteTV.send({ id: item.id, t: item.title, img: item.thumb, ch: item.ch }); }));
+    if (shareInfo(item)) r2.appendChild(btn('', '↗ Chia sẻ', function () { shareFilm(item); }));   // 2.41
     if (card && card._del) r2.appendChild(btn('', '✕ Xóa khỏi hàng', function () { close(); card._del(); }));
     if (r2.children.length) sh.appendChild(r2);
+    // 2.40: Phim tương tự
+    var simw = el('div', 'sumsimw'); sh.appendChild(simw);
+    if (Api.similar) Api.similar(item, 6).then(function (l) {
+      if (!l.length) return;
+      simw.appendChild(el('div', 'sumsimh', 'Phim tương tự'));
+      var tr = el('div', 'sumsimr');
+      l.forEach(function (f) {
+        var c = el('div', 'sumsc');
+        var im = el('div', 'sumsci'); im.style.backgroundImage = 'url("' + (f.thumb || f.hero || '') + '")';
+        c.appendChild(im); c.appendChild(el('div', 'sumsct', f.title || ''));
+        c.onclick = function (e) { e.stopPropagation(); SummarySheet(f, null, null); };
+        tr.appendChild(c);
+      });
+      simw.appendChild(tr);
+    });
     o.appendChild(sh);
     o.onclick = function (e) { if (e.target === o) close(); };
     var y0 = 0, dy = 0, drag = false;
@@ -2809,6 +2857,7 @@
       first = item('🔒 Đổi mã PIN', 'gold', function () { unlockProfile(p, 'đổi mã PIN', function () { setTimeout(function () { setProfilePinFlow(p, function () { setTimeout(reWho, 30); }); }, 30); }); });
       item('🔓 Bỏ mã PIN', '', function () { unlockProfile(p, 'bỏ mã PIN', function () { Store.setProfilePin(p.id, null); UI.toast('Đã bỏ mã PIN của ' + p.name); setTimeout(reWho, 30); }); });
     }
+    if (!pinOnly) item('🎨 Màu riêng', '', function () { push(AccentPick(p)); });   // 2.41
     if (!pinOnly) item('🐾 Đổi hình', '', function () {
       push(AvatarPick(p.name, p.av != null ? p.av : freeAvatar(), function (av) { Store.setAvatar(p.id, av); paintWho(); UI.toast('Đã đổi hình cho ' + p.name); setTimeout(reWho, 30); }));
     });
@@ -2834,6 +2883,35 @@
     Store.profiles().forEach(function (x) { if (x.av != null) used[x.av] = 1; });
     for (var i = 0; i < (w.Avatars ? w.Avatars.count : 1); i++) if (!used[i]) return i;
     return 0;
+  }
+
+  /* 2.41: màu nhấn riêng của hồ sơ */
+  var ACCENTS = [['#E8B04B', 'Vàng'], ['#E86A9A', 'Hồng'], ['#4FA3F7', 'Xanh dương'], ['#3DBE6B', 'Xanh lá'], ['#A57CF2', 'Tím'], ['#F07A3A', 'Cam'], ['#2EC4B6', 'Xanh ngọc'], ['#E5484D', 'Đỏ']];
+  function AccentPick(p) {
+    var v = UI.view();
+    v.classList.add('who', 'accpick');
+    v.appendChild(el('div', 'whot small', 'Màu của “' + p.name + '”'));
+    v.appendChild(el('div', 'whos', 'Đổi màu nút chọn, viền ô phim, thanh tiến độ và chữ nổi bật. Đổi hồ sơ là đổi màu.'));
+    var cur = Store.accentOf(p.id) || ACCENTS[0][0], g = el('div', 'accgrid'), mine = null;
+    var prev = el('div', 'accprev');
+    function paintPrev(c) { prev.innerHTML = '<div class="accpb" style="background:' + c + '">▶ Xem ngay</div><div class="accpbar"><i style="background:' + c + '"></i></div>'; }
+    ACCENTS.forEach(function (a) {
+      var t = el('div', 'acct f' + (a[0] === cur ? ' cur' : ''));
+      var dot = el('div', 'accdot'); dot.style.background = a[0];
+      t.appendChild(dot); t.appendChild(el('div', 'accn', a[1]));
+      t._ok = function () { Store.setAccent(p.id, a[0] === ACCENTS[0][0] ? '' : a[0]); back(); UI.toast('🎨 Màu của ' + p.name + ': ' + a[1]); setTimeout(reWho, 30); };
+      t.onclick = t._ok;
+      t._focus = function () { paintPrev(a[0]); };
+      t.addEventListener('mouseenter', t._focus);
+      if (a[0] === cur) mine = t;
+      g.appendChild(t);
+    });
+    v.appendChild(g);
+    paintPrev(cur);
+    v.appendChild(prev);
+    var view = { name: 'accpick', el: v };
+    setTimeout(function () { if (mine && current() === view) Nav.focus(mine); }, 0);
+    return view;
   }
 
   /* Chọn 1 trong 25 hình thú kawaii */
@@ -5366,6 +5444,156 @@
     d.addEventListener('visibilitychange', function () { if (!d.hidden) autoRefresh(); });
   }
 
+  /* 2.41: Chia sẻ phim cho người ngoài: link YouTube gốc + một câu giới thiệu (không lộ app) */
+  function shareInfo(it) {
+    if (!it) return null;
+    var id = String(it.id || ''), url = '';
+    if (it.kind === 'anime' && /^(PL|OL|UU)[\w-]{10,}$/.test(id)) url = 'https://www.youtube.com/playlist?list=' + id;
+    else if (/^[\w-]{11}$/.test(id)) url = 'https://youtu.be/' + id;
+    else if (it.kind === 'anime' && it.firstId && /^[\w-]{11}$/.test(it.firstId)) url = 'https://youtu.be/' + it.firstId;
+    if (!url) return null;
+    var extra = it.kind === 'anime' ? (it.eps > 1 ? it.eps + ' tập' : '') : (it.dur ? UI.fmtLong(it.dur) : '');
+    return { url: url, title: it.title || 'Phim', text: 'Phim hay nè: ' + (it.title || '') + (extra ? ' (' + extra + ')' : '') };
+  }
+  function shareFilm(it) {
+    var s = shareInfo(it);
+    if (!s) { UI.toast('Phim này chưa chia sẻ được'); return; }
+    if (w.tizen || w.AndroidApp) { push(ShareQR(it, s)); return; }   // TV: mã QR để điện thoại gửi tiếp
+    if (navigator.share) {
+      navigator.share({ title: s.title, text: s.text, url: s.url }).catch(function () { /* người dùng đóng bảng chia sẻ */ });
+      return;
+    }
+    var all = s.text + '\n' + s.url;
+    var ok = function () { UI.toast('📋 Đã chép câu giới thiệu và link, dán vào Messenger hay Zalo là được', 4500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(all).then(ok, function () { push(ShareQR(it, s)); });
+    else push(ShareQR(it, s));
+  }
+  function ShareQR(it, s) {
+    var v = UI.view();
+    v.classList.add('glogin');
+    var box = el('div', 'gbox shbox');
+    box.appendChild(el('div', 'gt', '↗ Chia sẻ phim'));
+    box.appendChild(el('div', 'gs', 'Quét mã bằng điện thoại, mở link rồi bấm Chia sẻ trong YouTube để gửi qua Messenger, Zalo…'));
+    var qr = el('div', 'shqr'); qr.innerHTML = (w.QR && w.QR.svg(s.url, 320)) || ''; box.appendChild(qr);
+    box.appendChild(el('div', 'shtx', s.text));
+    box.appendChild(el('div', 'shurl', s.url));
+    var bx = el('div', 'btns'); var b = UI.button('Xong', 'gold', function () { back(); }); bx.appendChild(b); box.appendChild(bx);
+    v.appendChild(box);
+    return { name: 'shareqr', el: v, focus: b };
+  }
+
+  /* 2.40: Chế độ xe hơi (màn hình Tesla): nút to, ít lựa chọn */
+  function carOn() {
+    if (w.tizen || w.AndroidApp) return false;
+    var m = C.CAR_MODE || 'auto';
+    if (m === 'off') return false;
+    if (m === 'on') return true;
+    return /Tesla\//i.test(navigator.userAgent || '') || /[?&]car=1/.test(location.search || '');
+  }
+  function Car() {
+    var v = UI.view();
+    v.classList.add('carv');
+    var hd = el('div', 'carhd');
+    hd.appendChild(el('span', 'carpill', '🚗 Chế độ xe'));
+    hd.appendChild(el('span', 'carhint', 'Nút to cho màn hình xe · Thoát ở ô cuối'));
+    v.appendChild(hd);
+    var rec = Store.recent().filter(function (r) { return !Settings.hides(r.item) && canResume(progressOf(r.vid)); })[0];
+    var top = el('div', 'cartop');
+    var card = el('div', 'carcard f');
+    if (rec) {
+      var p = progressOf(rec.vid);
+      card.style.backgroundImage = 'url("' + (rec.item.hero || rec.item.thumb || '') + '")';
+      card.innerHTML = '<div class="carcl"><div class="carck">TIẾP TỤC XEM' + (rec.item.kind === 'anime' && rec.ep ? ' · TẬP ' + rec.ep : '') + '</div><div class="carct"></div><div class="carbar"><i style="width:' + Math.round(p.p / p.d * 100) + '%"></i></div></div>';
+      card.querySelector('.carct').textContent = rec.item.title || '';
+    } else card.innerHTML = '<div class="carcl"><div class="carck">CHƯA CÓ PHIM XEM DỞ</div><div class="carct">Bấm Bốc thăm để chọn phim</div></div>';
+    function playRec(audio) {
+      if (!rec) { Dice(); return; }
+      if (rec.item.kind === 'anime') openItem(rec.item); else playFilm(rec.item);
+      if (audio) setTimeout(function () { if (Player.audioOnly) Player.audioOnly(true); }, 400);
+    }
+    card._ok = function () { playRec(false); }; card.onclick = card._ok;
+    var side = el('div', 'carside');
+    var b1 = el('div', 'carbtn gold f', '▶ Xem tiếp'); b1._ok = function () { playRec(false); }; b1.onclick = b1._ok;
+    var b2 = el('div', 'carbtn f', '🎧 Chỉ nghe tiếng'); b2._ok = function () { playRec(true); }; b2.onclick = b2._ok;
+    side.appendChild(b1); side.appendChild(b2);
+    top.appendChild(card); top.appendChild(side); v.appendChild(top);
+    var row = el('div', 'carrow');
+    [['🎵 Nhạc', function () { goTab('music'); }], ['🎲 Bốc thăm', function () { Dice(); }], ['📋 Lịch sử & Danh sách', function () { goTab('history'); }],
+     ['⚙ Thoát chế độ xe', function () { try { sessionStorage.setItem('carExit', '1'); } catch (e) { /* bỏ qua */ } back(); UI.toast('Đã thoát chế độ xe (mở lại app sẽ vào lại). Tắt hẳn: Cài đặt → Chế độ xe hơi'); }]]
+      .forEach(function (x, i) { var b = el('div', 'cartile f' + (i === 3 ? ' dim' : ''), x[0]); b._ok = x[1]; b.onclick = x[1]; row.appendChild(b); });
+    v.appendChild(row);
+    return { name: 'car', el: v, focus: b1 };
+  }
+  function carMaybe() {
+    if (!carOn()) return;
+    try { if (sessionStorage.getItem('carExit')) return; } catch (e) { /* bỏ qua */ }
+    var c = current(); if (c && c.name === 'car') return;
+    push(Car());
+  }
+
+  /* 2.40: sao lưu ra file */
+  function fileBackup() {
+    try {
+      var body = JSON.stringify({ app: 'TongTaiTV', v: 1, at: new Date().toISOString(), ver: C.VERSION, code: w.Sync.exportCode() });
+      var nd = new Date(), name = 'TongTaiTV-saoluu-' + nd.getFullYear() + '-' + ('0' + (nd.getMonth() + 1)).slice(-2) + '-' + ('0' + nd.getDate()).slice(-2) + '.json';
+      var blob = new Blob([body], { type: 'application/json' }), url = URL.createObjectURL(blob);
+      var a = d.createElement('a'); a.href = url; a.download = name; d.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); if (a.parentNode) a.parentNode.removeChild(a); }, 1500);
+      Store.keep('fileBkAt', Date.now());
+      UI.toast('💾 Đã tải ' + name + ' (' + Math.max(1, Math.round(body.length / 1024)) + ' KB)', 5000);
+    } catch (e) { UI.toast('Không tạo được file sao lưu'); }
+  }
+  function fileRestore() {
+    var inp = d.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json,text/plain';
+    inp.style.position = 'fixed'; inp.style.left = '-9999px'; d.body.appendChild(inp);
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0]; if (inp.parentNode) inp.parentNode.removeChild(inp);
+      if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        try {
+          var txt = String(rd.result || ''), code = txt.trim();
+          if (code.charAt(0) === '{') { var j = JSON.parse(code); code = j.code || ''; }
+          var r = w.Sync.importCode(code);
+          UI.toast('📂 Đã gộp file sao lưu: ' + r.films + ' phim, ' + r.favs + ' trong danh sách', 5000);
+        } catch (e) { UI.toast('File này không phải file sao lưu của Tổng Tài TV'); }
+      };
+      rd.readAsText(f);
+    };
+    inp.click();
+  }
+  function fileBkNag() {   // nhắc mỗi 30 ngày (không nhắc trên TV)
+    if (w.tizen || w.AndroidApp || !w.Sync || !w.Sync.exportCode) return;
+    var at = +(Store.keep('fileBkAt') || 0), first = +(Store.keep('fileBkFirst') || 0), now = Date.now(), day = new Date().toDateString();
+    if (!first) { Store.keep('fileBkFirst', now); return; }
+    if (now - Math.max(at, first) < 30 * 864e5 || Store.keep('fileBkNag') === day || Store.recent().length < 3) return;
+    Store.keep('fileBkNag', day);
+    UI.toast('💾 Đã hơn 30 ngày chưa tải file sao lưu: Cài đặt → Sao lưu ra file', 6000);
+  }
+
+  /* 2.40: 🔔 theo dõi phim bộ: có tập mới thì máy chủ báo lên điện thoại; TV/điện thoại hiện nhãn "Tập mới" trên ô phim */
+  function folKey() { return 'follow@' + (Store.profile() || 'guest'); }
+  function folList() { var l = Store.keep(folKey()); return Array.isArray(l) ? l : []; }
+  function canFollow(it) { return it && it.kind === 'anime' && /^(PL|OL)[\w-]{10,}$/.test(it.id || ''); }
+  function isFol(id) { return folList().some(function (x) { return x.pl === id; }); }
+  function toggleFol(it) {
+    var on = isFol(it.id), l = folList().filter(function (x) { return x.pl !== it.id; });
+    if (!on) l.unshift({ pl: it.id, t: it.title, img: it.thumb || '', c: it.chId || '', eps: it.eps || 0, at: Date.now() });
+    Store.keep(folKey(), l.slice(0, 30));
+    if (w.Tele && w.Tele.folSync) w.Tele.folSync(true);
+    return !on;
+  }
+  function folSeen(it) {   // mở trang phim bộ = đã thấy số tập hiện tại
+    var l = folList(), ch = false;
+    l.forEach(function (x) { if (x.pl === it.id && (it.eps || 0) > (x.eps || 0)) { x.eps = it.eps; ch = true; } });
+    if (ch) Store.keep(folKey(), l);
+  }
+  function folNew(it) {
+    if (!it || it.kind !== 'anime') return false;
+    var f = folList().filter(function (x) { return x.pl === it.id; })[0];
+    return !!(f && (it.eps || 0) > (f.eps || 0));
+  }
+
   /* 2.39: "Xem sau" gửi từ điện thoại (Remote / Chia sẻ trên Android). Lưu riêng từng hồ sơ trên TV này */
   function laterKey() { return 'later@' + (Store.profile() || 'guest'); }
   function laterList() { var l = Store.keep(laterKey()); return Array.isArray(l) ? l : []; }
@@ -5394,7 +5622,8 @@
   }
   w.Screens = {
     dice: Dice,
-    addLater: addLater, laterList: laterList,
+    addLater: addLater, laterList: laterList, share: shareFilm, fileBkNag: fileBkNag, carMaybe: carMaybe, carOn: carOn,
+    folNew: folNew, isFol: isFol,
     sheet: SummarySheet,
     summary: function (it, onPlay, onPreview) { push(Summary(it, onPlay || function (x) { if (x.kind === 'anime') openItem(x); else playFilm(x); }, onPreview)); },
     openFromPhone: openFromPhone,

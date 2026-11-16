@@ -5,7 +5,8 @@
   var d = document;
 
   /* ---------- Hình vẽ SVG (nhẹ, không cần tải ảnh) ---------- */
-  function S(inner, vb) { return '<svg viewBox="' + (vb || '0 0 24 24') + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
+  // 2.39.3: ghi sẵn cỡ 24×24: chỗ nào CSS chưa đặt cỡ thì hình không phình thành 300×150 (TV vẽ chiếc lá to che logo)
+  function S(inner, vb) { return '<svg class="sshape" width="24" height="24" viewBox="' + (vb || '0 0 24 24') + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }
   var SH = {
     snow: function () { return S('<g stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9 3.6l3 2.2 3-2.2M9 20.4l3-2.2 3 2.2M3.4 10.6l3.3-1.2-.5-3.6M20.6 13.4l-3.3 1.2.5 3.6M3.4 13.4l3.3 1.2-.5 3.6M20.6 10.6l-3.3-1.2.5-3.6"/></g>'); },
     flower: function (c, m) {

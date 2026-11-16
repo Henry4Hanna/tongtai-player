@@ -815,6 +815,35 @@
     while (to < s.length && to > b && s.charAt(to) !== ' ') to--;
     return (from > 0 ? '…' : '') + s.slice(from, a) + '\u0001' + s.slice(a, b) + '\u0002' + s.slice(b, to).replace(/\s+$/, '') + (to < s.length ? '…' : '');
   }
+  /* 2.40: Phim tương tự: trong phim đã tải (không tốn đơn vị YouTube), cùng thể loại + trùng chữ trong tên/mô tả */
+  var SIM_STOP = { tap: 1, phim: 1, full: 1, bo: 1, hd: 1, vietsub: 1, thuyet: 1, minh: 1, review: 1, cua: 1, va: 1, la: 1, cho: 1, mot: 1, nguoi: 1, khi: 1, bi: 1, duoc: 1, voi: 1, trong: 1, nay: 1, roi: 1, ai: 1, ngo: 1, video: 1, kenh: 1, dang: 1, ky: 1, nhung: 1, cac: 1, cung: 1, khong: 1, co: 1, den: 1, tu: 1, ra: 1, len: 1, ve: 1, di: 1 };
+  function simWords(s) { var o = {}; fold(s).split(' ').forEach(function (x) { if (x.length > 1 && !SIM_STOP[x] && !/^\d+$/.test(x)) o[x] = 1; }); return o; }
+  function similar(it, n) {
+    var safe = function (p) { return p.catch(function () { return []; }); };
+    return Promise.all([safe(mergeChannels('drama')), safe(mergeChannels('movie')), safe(mergeChannels('anime'))]).then(function (r) {
+      var cats = catsOf(it), tw = simWords(it.title), dw = simWords((it.desc || '').slice(0, 280));
+      var me = epInfo(it.title || ''), myKey = me && me.key && me.key.length >= 4 ? me.key : '';
+      var seen = {}, out = [], fams = {};
+      r.forEach(function (l) { l.forEach(function (f) {
+        if (!f || seen[f.id] || f.id === it.id) return; seen[f.id] = 1;
+        var e = epInfo(f.title || ''), k = e && e.key && e.key.length >= 4 ? e.key : '';
+        if (myKey && k === myKey) return;   // cùng bộ
+        if (k) { if (fams[k]) return; fams[k] = 1; }   // mỗi bộ chỉ 1 ô
+        var pr = w.Store.getProgress ? w.Store.getProgress(f.id) : null;
+        if (pr && pr.d && pr.p / pr.d > 0.92) return;   // đã xem hết
+        var sc = 0, fc = catsOf(f);
+        cats.forEach(function (c) { if (fc.indexOf(c) >= 0) sc += 3; });
+        var fw = simWords(f.title + ' ' + (f.desc || '').slice(0, 280));
+        for (var x in tw) if (fw[x]) sc += 2;
+        for (var y in dw) if (fw[y] && !tw[y]) sc += 0.5;
+        if (f.ch && f.ch === it.ch) sc += 1;
+        if (sc >= 4) out.push({ f: f, s: sc });
+      }); });
+      out = notBlocked(out.map(function (x) { x.f._sim = x.s; return x.f; }));
+      out.sort(function (a, b) { return b._sim - a._sim; });
+      return out.slice(0, n || 8);
+    });
+  }
   function sceneSearch(text) {
     var q = fold(text);
     if (!q) return Promise.resolve([]);
@@ -1038,7 +1067,7 @@
   }
   function fP(fn) { return function () { return fn.apply(null, arguments).then(fl); }; }
 
-  w.Api = { dice: dice, parseYt: parseYt, fromLink: fromLink, sceneSearch: sceneSearch, nameSearchOn: nameSearchOn, ytSearchOk: ytSearchOk, searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
+  w.Api = { similar: similar, dice: dice, parseYt: parseYt, fromLink: fromLink, sceneSearch: sceneSearch, nameSearchOn: nameSearchOn, ytSearchOk: ytSearchOk, searchLocked: searchLocked, refreshShared: function () { sharedP = null; return sharedChannels(); },
     updateUrls: updateUrls,
     details: function (ids) { return videoDetails(ids); },
     comments: comments, hasKey: hasKey, films: fP(films), anime: fP(anime), animeAll: fP(animeAll), episodes: fP(episodes),

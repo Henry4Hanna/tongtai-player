@@ -88,7 +88,7 @@
       units = { search: 0, other: 0 }; queries = []; rates = []; plays = [];
     }
     activeMs = 0; lastBeat = now;
-    favSync();
+    favSync(); folSync();
     send(false, !d.hidden);   // 2.36: hỏi máy chủ mỗi phút (phim gửi từ điện thoại)
   }
   // 2.36: báo máy chủ kênh yêu thích của hồ sơ (để báo phim mới lên điện thoại). Gửi khi đổi, hoặc mỗi ngày một lần
@@ -100,6 +100,19 @@
       var sig = JSON.stringify(l), k = 'favsent', m = w.Store.keep(k) || {}, day = new Date().toDateString();
       if (m[p] && m[p].s === sig && m[p].d === day) return;
       event('fav', { ch: l });
+      m[p] = { s: sig, d: day }; w.Store.keep(k, m);
+    } catch (e) { /* bỏ qua */ }
+  }
+  // 2.40: phim bộ đang theo dõi (🔔): máy chủ báo tập mới lên điện thoại
+  function folSync(force) {
+    try {
+      if (!w.Store || tg()) return;
+      var p = prof().p; if (!p || p === 'guest') return;
+      var raw = w.Store.keep('follow@' + p), l = (Array.isArray(raw) ? raw : []).map(function (x) { return { pl: x.pl, t: String(x.t || '').slice(0, 80), c: x.c || '' }; });
+      var sig = JSON.stringify(l), k = 'folsent', m = w.Store.keep(k) || {}, day = new Date().toDateString();
+      if (!force && m[p] && m[p].s === sig && m[p].d === day) return;
+      if (force && m[p] && m[p].s === sig) return;
+      event('fol', { s: l });
       m[p] = { s: sig, d: day }; w.Store.keep(k, m);
     } catch (e) { /* bỏ qua */ }
   }
@@ -194,6 +207,7 @@
     id: devId,
     sha256: sha256, adminEmail: adminEmail, adminPage: adminPage
   };
+  T.folSync = folSync;
   w.Tele = T;
 
   function start() {

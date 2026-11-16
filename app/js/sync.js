@@ -417,6 +417,7 @@
     return out;
   }
   function apply(m) {
+    setTimeout(function () { if (w.Store && w.Store.applyAccent) w.Store.applyAccent(); }, 0);   // 2.41: màu hồ sơ có thể vừa đổi trên máy khác
     var A = w.Store.applyRaw, R = w.Store.raw;
     var changed = false;
     // giữ lại API key / PLAYER_HOST của máy này

@@ -214,7 +214,7 @@ html.mobile, html.mobile body { overflow: hidden; height: 100%; }
 .mobile #player.mini #yt-host { position: relative; width: 200px !important; height: 112px !important; pointer-events: none; }
 .mobile #player.mini #pl-ui, .mobile #player.mini #pl-msg, .mobile #player.mini #pl-min, .mobile #player.mini #pl-sleepbadge, .mobile #player.mini #pl-still { display: none !important; }
 .mobile #player.mini #pl-minibar { display: block; background: #151922; color: #F4F1EC; }
-#pl-minibar .mpb { height: 3px; background: #2a3042; } #pl-minibar .mpb i { display: block; height: 100%; width: 0; background: #E8B04B; }
+#pl-minibar .mpb { height: 3px; background: #2a3042; } #pl-minibar .mpb i { display: block; height: 100%; width: 0; background: var(--acc, #E8B04B); }
 #pl-minibar .mrow { display: flex; align-items: center; gap: 6px; padding: 6px 8px; }
 #pl-minibar b { flex: 1; min-width: 0; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #pl-minibar span { width: 28px; height: 28px; border-radius: 50%; background: #232838; display: flex; align-items: center; justify-content: center; font-size: 12px; flex: none; cursor: pointer; }

@@ -27,7 +27,7 @@
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
     AUTO_NEXT: C.AUTO_NEXT !== false, PREVIEW_SECS: C.PREVIEW_SECS == null ? 20 : C.PREVIEW_SECS, STILL_HOURS: C.STILL_HOURS == null ? 2 : C.STILL_HOURS, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
-    GUEST_MODE: C.GUEST_MODE !== false, DATA_SAVER: C.DATA_SAVER || 'auto', DATA_Q: C.DATA_Q || 'large', MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, HOME_MUSIC: C.HOME_MUSIC !== false, AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
+    GUEST_MODE: C.GUEST_MODE !== false, DATA_SAVER: C.DATA_SAVER || 'auto', DATA_Q: C.DATA_Q || 'large', MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, HOME_MUSIC: C.HOME_MUSIC === true, CAR_MODE: C.CAR_MODE || 'auto',   /* 2.39.4: mặc định TẮT */ AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
 
   // Danh sách kênh gốc trong config.js

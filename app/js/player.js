@@ -390,6 +390,7 @@
 
   function play(i) {
     hideUp(); tmpCC = null; if (strip) { strip = null; paintStrip(); }
+    if (audOn) setTimeout(function () { if (audOn) audioOnly(true); }, 60);   // 2.40: đổi tập vẫn giữ Chỉ nghe tiếng
     q.index = i;
     var it = cur();
     clearTimeout(errT);
@@ -565,6 +566,28 @@
     showUi();
   }
 
+  /* 2.40: Chỉ nghe tiếng (chế độ xe): che hình, nút lớn */
+  var audOn = false;
+  function audioOnly(on) {
+    audOn = !!on;
+    var b = $('pl-aud');
+    if (!audOn) { if (b) b.parentNode.removeChild(b); return; }
+    if (!b) { b = d.createElement('div'); b.id = 'pl-aud'; $('player').appendChild(b); }
+    var it = cur() || {};
+    b.innerHTML = '<div class="pla-k">🎧 CHỈ NGHE TIẾNG</div><div class="pla-t"></div><div class="pla-s"></div>' +
+      '<div class="pla-b"><div class="pla-x" data-a="rw">⏪ 10</div><div class="pla-x big" data-a="pp">⏯</div><div class="pla-x" data-a="ff">10 ⏩</div></div>' +
+      '<div class="pla-row"><div class="pla-y" data-a="show">Hiện hình</div><div class="pla-y" data-a="close">✕ Đóng</div></div>';
+    b.querySelector('.pla-t').textContent = (q && q.heading) || it.title || '';
+    b.querySelector('.pla-s').textContent = it.ep ? 'Tập ' + it.ep : (it.ch || '');
+    b.onclick = function (e) {
+      e.stopPropagation();
+      var a = e.target && e.target.getAttribute ? e.target.getAttribute('data-a') : '';
+      if (a === 'pp') toggle();
+      else if (a === 'rw' || a === 'ff') { try { yt.seekTo(Math.max(0, curT() + (a === 'ff' ? 10 : -10)), true); } catch (x) { /* bỏ qua */ } }
+      else if (a === 'show') audioOnly(false);
+      else if (a === 'close') close();
+    };
+  }
   function curT() { try { return yt.getCurrentTime() || 0; } catch (x) { return 0; } }
   function tempCC(origin) {
     if (ccOn() || !yt || !yt.loadModule) { w.UI.toast('⟲ Xem lại 10 giây'); return; }
@@ -965,7 +988,7 @@
   function close() {
     if (!isOpen) return;
     if (mini) setMini(false);
-    flushWatch(); watchAt = 0; tmpCC = null; if (strip) { strip = null; paintStrip(); }
+    flushWatch(); watchAt = 0; tmpCC = null; if (audOn) audioOnly(false); if (strip) { strip = null; paintStrip(); }
     hideUp(); hideSend();
     sleepHold = false; clearTimeout(sleepCloseT); volBack(); var sbg = $('pl-sleepbadge'); if (sbg) sbg.className = 'hidden';
     saveNow();
@@ -1337,6 +1360,7 @@
   })();
 
   w.Player = {
+    audioOnly: audioOnly,
     isMini: function () { return mini; }, setMini: setMini, miniClick: miniClick,
     inMenu: function () { return mode === 'menu' || !!up || sleepHold; },
     cycleSleep: function () { cycleSleep(); if (isOpen && mode === 'btn') renderBtns(); }, sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },

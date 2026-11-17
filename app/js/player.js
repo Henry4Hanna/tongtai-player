@@ -969,21 +969,36 @@
       var t = e.touches[0]; if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
       if (Math.abs(dx) + Math.abs(dy) > 10) moved = true;
+      // 2.45.8: vuốt ngang trên phim = tua (trái: lùi, phải: tới). Cả màn hình ngang = 3 phút
+      if (!mini && mode !== 'menu' && !audOn && !(e.target.closest && e.target.closest('.pl-track, #pl-btns, #pl-strip, #pl-next')) && (scrub || (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.5))) {
+        if (!scrub) { scrub = true; try { scrubBase = yt.getCurrentTime() || 0; scrubDu = yt.getDuration() || 0; } catch (x) { scrubBase = 0; } }
+        scrubSec = Math.round(dx / (w.innerWidth || 400) * 180);
+        var to = Math.max(0, scrubBase + scrubSec); if (scrubDu) to = Math.min(scrubDu - 1, to);
+        var o = $('pl-swipe'); if (!o) { o = d.createElement('div'); o.id = 'pl-swipe'; $('player').appendChild(o); }
+        o.innerHTML = '<b>' + (scrubSec >= 0 ? '⏩ Tới ' : '⏪ Lùi ') + Math.abs(scrubSec) + ' giây</b><span>' + w.UI.fmtDur(to) + (scrubDu ? ' / ' + w.UI.fmtDur(scrubDu) : '') + '</span>';
+        o.style.display = 'flex';
+        e.preventDefault(); return;
+      }
       if (dragging && moved) { var p = $('player'); p.style.right = p.style.bottom = 'auto'; p.style.left = (ox + dx) + 'px'; p.style.top = (oy + dy) + 'px'; e.preventDefault(); }
     }, { passive: false });
     d.addEventListener('touchend', function (e) {
       if (!isOpen || !mob()) return;
       var t = e.changedTouches[0]; if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
+      if (scrub) {   // 2.45.8: thả tay: tua tới chỗ đã chọn
+        scrub = false; var o = $('pl-swipe'); if (o) o.style.display = 'none';
+        try { var to = Math.max(0, scrubBase + scrubSec); if (scrubDu) to = Math.min(scrubDu - 1, to); if (scrubSec) yt.seekTo(to, true); } catch (x) { /* bỏ qua */ }
+        swipeAt = Date.now(); showUi(); return;
+      }
       if (dragging && moved) {
         miniCorner = { x: t.clientX < w.innerWidth / 2 ? 'l' : 'r', y: t.clientY < w.innerHeight / 2 ? 't' : 'b' };
         placeMini(); miniDragAt = Date.now(); dragging = false; return;
       }
       dragging = false;
-      if (!mini && mode !== 'menu' && dy > 110 && Math.abs(dx) < 70 && sy < w.innerHeight * 0.7) setMini(true);   // vuốt xuống
+      if (!mini && mode !== 'menu' && !d.documentElement.classList.contains('elder') && dy > 110 && Math.abs(dx) < 70 && sy < w.innerHeight * 0.7) setMini(true);   // vuốt xuống
     }, { passive: true });
   })();
-  var miniDragAt = 0;
+  var miniDragAt = 0, scrub = false, scrubBase = 0, scrubDu = 0, scrubSec = 0, swipeAt = 0;
   // bấm trong khung nhỏ
   function miniClick(t) {
     if (Date.now() - miniDragAt < 400) return;
@@ -1368,7 +1383,7 @@
 
   w.Player = {
     audioOnly: audioOnly,
-    isMini: function () { return mini; }, setMini: setMini, miniClick: miniClick,
+    isMini: function () { return mini; }, swipedAt: function () { return swipeAt; }, setMini: setMini, miniClick: miniClick,
     inMenu: function () { return mode === 'menu' || !!up || sleepHold; },
     cycleSleep: function () { cycleSleep(); if (isOpen && mode === 'btn') renderBtns(); }, setSleep: function (v) { setSleep(v); volBack(); paintSleepBadge(); }, sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },
     upClick: function (a) { if (up) upAct(a); },

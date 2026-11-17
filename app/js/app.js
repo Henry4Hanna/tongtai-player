@@ -163,6 +163,7 @@
         var pb = t.closest && t.closest('.plb');
         if (pb && pb._idx !== undefined) { w.Player.clickBtn(pb._idx); return; }
         if (t.closest && t.closest('#pl-close')) { w.Player.close(); return; }
+        if (w.Player.swipedAt && Date.now() - w.Player.swipedAt() < 500) return;   // 2.45.8: vừa vuốt tua
         w.Player.key(13);   // bấm vào video: tạm dừng / phát
         return;
       }
@@ -246,12 +247,7 @@
     mh.appendChild(quick);
     var bar = d.createElement('div');
     bar.className = 'mbar';
-    bar.innerHTML = '<div class="mbtn mmenu"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div>' +
-      '<div class="mtitle"></div>' +
-      '<div class="mbtn mwho"></div>' +
-      '<div class="mbtn mrc" title="Remote TV"><span class="mrcb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="2.5" width="9" height="19" rx="4.5"/><circle cx="12" cy="10" r="2.3"/><path d="M10.2 15.8h.01M13.8 15.8h.01M12 5.6h.01"/></svg></span></div>' +
-      '<div class="mbtn mdice" title="Bốc thăm phim">🎲</div>' +
-      '<div class="mbtn msearch"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>';
+    bar.innerHTML = '<div class="mside mleft">' + '<div class="mbtn mmenu"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div>' + '<div class="mbtn mwho"></div>' + '<div class="mbtn mrc" title="Remote TV"><span class="mrcb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="2.5" width="9" height="19" rx="4.5"/><circle cx="12" cy="10" r="2.3"/><path d="M10.2 15.8h.01M13.8 15.8h.01M12 5.6h.01"/></svg></span></div>' + '</div>' + '<div class="mtitle"></div>' + '<div class="mside mright">' + '<div class="mbtn mdice" title="Bốc thăm phim">🎲</div>' + '<div class="mbtn msearch"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>' + '</div>';   // 2.45.9: hồ sơ, remote bên trái; tên trang ở giữa
     mh.appendChild(bar);
     d.getElementById('topbar').appendChild(mh);
     if (w.Screens && w.Screens.paintWho) setTimeout(function () { w.Screens.paintWho(); }, 0);
@@ -310,7 +306,9 @@
     function bkGo(e) {
       if (e) { e.stopPropagation(); if (e.type === 'touchend') e.preventDefault(); }
       if (Date.now() - bkT < 600) return; bkT = Date.now();   // chạm trên iPhone: touchend + click chỉ tính 1 lần
-      if (w.Player.isOpen() && !(w.Player.isMini && w.Player.isMini())) w.Player.close(); else w.Screens.back();
+      var mi = w.Player.isOpen() && w.Player.isMini && w.Player.isMini();
+      // 2.45.7: đang phát phim (kể cả khung nhỏ mà không còn trang để lùi, hoặc chế độ ông bà): Quay lại = tắt phim
+      if (w.Player.isOpen() && (!mi || d.documentElement.classList.contains('elder') || w.Screens.depth() <= 1)) w.Player.close(); else w.Screens.back();
     }
     bk.onclick = bkGo;
     bk.addEventListener('touchend', bkGo, { passive: false });

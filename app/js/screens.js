@@ -85,7 +85,7 @@
     goTab('home');
     var b = d.querySelector('.hero .btn');
     Nav.focus(b || S.tabEls.home, true);
-    UI.toast('Trang chủ');
+    if (!UI.isMobile()) UI.toast('Trang chủ');   // 2.45.9: điện thoại: không hiện chữ Trang chủ đen
   }
 
   function back() {
@@ -811,7 +811,7 @@
      Bật riêng cho từng hồ sơ (Cài đặt → Hồ sơ người xem). Trang đầu: phim đang xem dở + nút Xem tiếp + 8 nút lớn.
      Thoát: giữ OK (điện thoại: chạm giữ) trên hình hồ sơ, nhập mã PIN người lớn. */
   function elderOn() { return Settings.get('ELDER') === true; }
-  function elderMark() { d.documentElement.classList.toggle('elder', elderOn()); var ef = Settings.get('ELDER_FONT') || 'lg'; d.documentElement.classList.toggle('ef-md', elderOn() && ef === 'md'); d.documentElement.classList.toggle('ef-xl', elderOn() && ef === 'xl'); if (!elderOn() || UI.isMobile()) { ['eldtop', 'eldrc'].forEach(function (id) { var x = d.getElementById(id); if (x) x.parentNode.removeChild(x); }); } }
+  function elderMark() { d.documentElement.classList.toggle('elder', elderOn()); var ef = Settings.get('ELDER_FONT') || 'md'; d.documentElement.classList.toggle('ef-md', elderOn() && ef === 'md'); d.documentElement.classList.toggle('ef-xl', elderOn() && ef === 'xl'); if (!elderOn() || UI.isMobile()) { ['eldtop', 'eldrc'].forEach(function (id) { var x = d.getElementById(id); if (x) x.parentNode.removeChild(x); }); } }
   function elderMenu() {
     withPin('thoát chế độ ông bà', function () {
       setTimeout(function () {
@@ -878,7 +878,9 @@
     // hàng trên: Hẹn giờ · người xem
     var tr = el('div', 'emtop2');
     var sl = el('div', 'emchip f', '🌙 Hẹn giờ'); sl._ok = function () { eSleepFilm(); };
-    tr.appendChild(sl); eWho(tr); v.appendChild(tr);
+    var sr = el('div', 'emchip f', '🔍 Tìm kiếm'); sr._ok = function () { push(Search()); };   // 2.45.7
+    var lg = el('div', 'emchips'); lg.appendChild(sl); lg.appendChild(sr);
+    tr.appendChild(lg); eWho(tr); v.appendChild(tr);
     // ảnh phim rộng
     var hero = el('div', 'emhero f'); v.appendChild(hero);
     var layers = [el('div', 'emhl'), el('div', 'emhl')]; layers.forEach(function (x) { hero.appendChild(x); });
@@ -1252,7 +1254,7 @@
     var x;
     x = cyc('THEME', [{ v: 'time', t: 'Theo giờ' }, { v: 'light', t: 'Sáng' }, { v: 'dark', t: 'Tối' }], function () { paintTheme(); });
     tile('☀️', 'Màn hình', 'Sáng · Tối · Theo giờ', x[0], x[1]);
-    x = cyc('ELDER_FONT', [{ v: 'lg', t: 'To' }, { v: 'xl', t: 'Rất to' }, { v: 'md', t: 'Vừa' }], function () { elderMark(); });
+    x = cyc('ELDER_FONT', [{ v: 'md', t: 'Vừa' }, { v: 'lg', t: 'To' }, { v: 'xl', t: 'Rất to' }], function () { elderMark(); });
     tile('🔠', 'Cỡ chữ', 'Chữ trong app', x[0], x[1]);
     tile('💬', 'Phụ đề khi xem', 'Chữ tiếng Việt dưới phim', function () { var on = !!Store.pref('cc', true); return { t: on ? 'Bật' : 'Tắt', on: on }; }, function (p) { Store.setPref('cc', !Store.pref('cc', true)); p(); });
     x = cyc('AUTO_NEXT', [{ v: true, t: 'Bật' }, { v: false, t: 'Tắt', on: false }]);

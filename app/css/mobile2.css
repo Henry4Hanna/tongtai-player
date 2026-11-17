@@ -262,3 +262,8 @@ html.mobile[style*="--acc"] .dinfo .btns .btn.gold { background: var(--acc); col
 html.mobile[style*="--acc"] .rt { background: none; color: var(--acc); -webkit-text-fill-color: var(--acc); }
 html.mobile[style*="--acc"] .rowhead::after { background: var(--acc); }
 html.mobile[style*="--acc"] .mtitle { color: var(--acc); }
+/* 2.45.9: thanh dưới logo: ☰ + hồ sơ + remote bên trái, tên trang giữa, xí ngầu + tìm bên phải */
+.mbar .mside { flex: 1 1 0; display: flex; align-items: center; min-width: 0; }
+.mbar .mright { justify-content: flex-end; }
+.mbar .mtitle { flex: 0 1 auto; max-width: 34%; }
+.mbar .mleft .mwho { margin-left: 4px; }

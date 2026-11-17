@@ -1831,7 +1831,7 @@ html.light .lkk { color: #8A5A0E; }
 .cinfo { display: none; }
 .mobile .cinfo { display: flex; position: absolute; right: 6px; top: 6px; z-index: 5; width: 26px; height: 26px; border-radius: 50%; background: rgba(11,13,18,.78); border: 1.5px solid rgba(255,255,255,.55); color: #fff; align-items: center; justify-content: center; font: italic 700 14px/1 Georgia, 'Times New Roman', serif; cursor: pointer; }
 .mobile .cinfo:after { content: ''; position: absolute; left: -9px; top: -9px; right: -9px; bottom: -9px; }   /* vùng chạm rộng hơn nút */
-.mobile .thumb:has(.cdel) .cinfo { right: 46px; }
+/* 2.45.9: bỏ dời nút ⓘ (dấu ✕ chỉ hiện khi giữ lâu, lúc đó ⓘ đã ẩn) */
 .mobile .pvcard .cinfo, .mobile .card.showdel .cinfo { display: none; }
 .sumov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 9000; background: rgba(0,0,0,0); transition: background .25s; }
 .sumov.on { background: rgba(0,0,0,.55); }
@@ -2301,3 +2301,38 @@ html.mobile.ef-xl .emg2 .emgt { font-size: 18.5px; } html.mobile.ef-md .emg2 .em
   html.mobile .eldm .emgrid2 { margin-top: 0; align-content: start; gap: 8px; }
   html.mobile .eldm .emg2 { height: 46px; border-radius: 12px; } html.mobile .eldm .emgrid2 { gap: 6px; } html.mobile .eldm .emg2i { font-size: 22px; } html.mobile .eldm .emg2 .emgt { font-size: 15px; }
 }
+/* ===== 2.45.7 ===== */
+.emchips { display: flex; gap: 8px; }
+html.elder #pl-min { display: none !important; }
+/* khi xem phim trên điện thoại (ông bà): chữ vừa phải, không che phim */
+html.elder.mobile #pl-ui #pl-title { font-size: 20px; line-height: 1.25; }
+html.elder.mobile #pl-ui #pl-cur, html.elder.mobile #pl-ui #pl-dur { font-size: 16px; font-weight: 800; min-width: 0; }
+html.elder.mobile #pl-ui .pl-track { height: 8px; }
+html.elder.mobile.ef-xl #pl-ui #pl-title { font-size: 23px; } html.elder.mobile.ef-xl #pl-ui #pl-cur, html.elder.mobile.ef-xl #pl-ui #pl-dur { font-size: 18px; }
+/* Nghe nhạc ông bà, điện thoại xoay ngang: ảnh trái, lời phải */
+@media (orientation: landscape) {
+  html.mobile .emus .emtop { flex-direction: row; align-items: center; gap: 18px; }
+  html.mobile .emus .emart { width: 44%; height: auto; padding-bottom: 0; aspect-ratio: 16 / 9; flex: none; }
+  html.mobile .emus .eminfo { text-align: left; }
+  html.mobile .emus .emt { font-size: 21px; } html.mobile .emus .eml0 { font-size: 14px; margin-top: 6px; } html.mobile .emus .eml1 { font-size: 19px; } html.mobile .emus .eml2 { font-size: 15px; }
+  html.mobile .emus .emprog { margin-top: 8px; }
+  html.mobile .emus .emctl { flex-wrap: nowrap; margin-top: 10px; gap: 8px; }
+  html.mobile .emus .emb, html.mobile .emus .emctl .emb:nth-child(4), html.mobile .emus .emctl .emb:nth-child(5) { flex: 1 1 0; height: 50px; flex-direction: row; font-size: 18px; gap: 6px; border-radius: 14px; }
+  html.mobile .emus .emb span { font-size: 13px; }
+}
+/* 2.45.8: vuốt ngang để tua */
+#pl-swipe { display: none; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 40; flex-direction: column; align-items: center; gap: 4px; padding: 14px 26px; border-radius: 18px; background: rgba(0,0,0,.78); color: #fff; pointer-events: none; }
+#pl-swipe b { font-size: 22px; color: #F6CF7A; white-space: nowrap; } #pl-swipe span { font-size: 16px; font-weight: 700; }
+/* 2.45.9: ô phim hẹp (Lịch sử, Danh sách): nhãn không đè nút ⓘ */
+.mobile .thumb.hasinfo .badge.multi { display: none; }
+.mobile .ctl { flex-wrap: wrap; row-gap: 4px; }
+.mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: 62px; }
+/* 2.46: điện thoại: nhãn ★ AI ở góc dưới phải ảnh (Đang hot vẫn để cạnh thời lượng) */
+.aib { display: none; }
+.mobile .aib { display: block; position: absolute; right: 6px; bottom: 8px; z-index: 4; background: linear-gradient(135deg, #F6CF7A, #E8B04B); color: #1a1206; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 8px; line-height: 1.4; }
+.mobile .thumb.hasinfo .ctl .badge.tag { display: none; }
+.mobile .row-hot .thumb.hasinfo .ctl .badge.tag { display: block; } .mobile .row-hot .aib { display: none; }
+.mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: 38px; }
+.mobile .row-hot .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: auto; }
+.mobile .card.hasai .csub { padding-right: 52px; box-sizing: border-box; }
+.mobile .row-hot .card.hasai .csub { padding-right: 0; }

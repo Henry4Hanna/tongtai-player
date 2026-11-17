@@ -75,9 +75,9 @@
     }
     if (cur && cur.onKeyHook && cur.onKeyHook(k)) { if (e.preventDefault) e.preventDefault(); return; }   // màn hình tự xử lý phím (ví dụ đang di chuyển một hàng)
     switch (k) {
-      case 37: w.Nav.move('left'); break;
+      case 37: if (w.Nav.cur && w.Nav.cur._seek) { w.Nav.cur._seek(-1); break; } w.Nav.move('left'); break;
       case 38: w.Nav.move('up'); break;
-      case 39: w.Nav.move('right'); break;
+      case 39: if (w.Nav.cur && w.Nav.cur._seek) { w.Nav.cur._seek(1); break; } w.Nav.move('right'); break;
       case 40: w.Nav.move('down'); break;
       case 13: {
         var f0 = w.Nav.cur;

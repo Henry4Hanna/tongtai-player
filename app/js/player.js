@@ -1324,6 +1324,7 @@
         if (mode === 'btn') { mode = 'seek'; renderBtns(); }
         return true;
       case 37: case 39:
+        if (mode === 'btn' && !ui) { mode = 'seek'; btnIdx = -1; renderBtns(); }   // 2.47.1: nút đang ẩn: ◀ ▶ là tua ngay (không phải đi qua các nút)
         if (mode === 'btn') {
           btnIdx = Math.max(0, Math.min(btns.length - 1, btnIdx + (k === 39 ? 1 : -1)));
           renderBtns(); showUi();

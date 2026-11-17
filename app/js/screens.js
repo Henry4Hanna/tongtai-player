@@ -1129,6 +1129,7 @@
         t._ok = function () { push(ElderList('🎭 ' + c.name, 'Phim thể loại ' + c.name, Api.catFilms(c).then(function (l) { return l.map(function (f) { return { it: f }; }); }), false)); };
         g.appendChild(t);
       });
+      ecatPhotos(g);
     }
     function paneMusic() {
       pane.appendChild(eCrumb('› Nghe nhạc · Nhạc của tôi'));
@@ -1433,6 +1434,22 @@
     }).catch(function (e) { g.innerHTML = ''; g.appendChild(el('div', 'emsg', Api.explain(e))); });
     return view;
   }
+  // 2.47.1: ông bà: mỗi ô thể loại có ảnh phim thật của thể loại đó
+  function ecatPhotos(g) {
+    var cats = C.CATEGORIES.filter(function (x) { return x.kind === 'film'; });
+    Api.followedFilms().catch(function () { return []; }).then(function (films) {
+      var used = {};
+      films = films.slice().sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+      [].forEach.call(g.children, function (t, i) {
+        var c = cats[i]; if (!c) return;
+        var f = films.filter(function (x) { return !used[x.id] && Api.catsOf(x)[0] === c.name; })[0] || films.filter(function (x) { return !used[x.id] && Api.catsOf(x).indexOf(c.name) >= 0; })[0];
+        if (!f || !(f.hero || f.thumb)) return;
+        used[f.id] = 1;
+        t.style.background = 'linear-gradient(to top, rgba(8,10,16,.9), rgba(8,10,16,.15) 65%), url("' + (f.hero || f.thumb) + '") center / cover no-repeat';
+        t.classList.add('ephoto');
+      });
+    });
+  }
   function ElderCats() {
     var v = UI.view(); v.classList.add('elderv', 'scroller');
     eWho(v);
@@ -1449,6 +1466,7 @@
      
       g.appendChild(t); if (!first) first = t;
     });
+    ecatPhotos(g);
     v.appendChild(eHint('<span><i>OK</i> Mở thể loại</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span><i>↩</i> Về trang đầu</span>'));
     setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
     return { name: 'eldcats', el: v, focus: first };
@@ -5252,7 +5270,16 @@
       if (prevFocus && d.body.contains(prevFocus)) Nav.focus(prevFocus);
     }
     o.onclick = function (e) { if (e.target === o) close(); };
-    if (sc) sc.onKeyHook = function (k) { if (k === 10009 || k === 27 || k === 8) { close(); return true; } return false; };
+    if (sc) sc.onKeyHook = function (k) {
+      if (k === 10009 || k === 27 || k === 8) { close(); return true; }
+      // 2.47.1: mũi tên chỉ đi giữa các nút của Bốc thăm, không lạc ra phim phía sau
+      if (k === 37 || k === 39 || k === 38 || k === 40) {
+        var bs = [].slice.call(o.querySelectorAll('.btn')), i = bs.indexOf(Nav.cur);
+        if (bs.length && (k === 37 || k === 39)) Nav.focus(bs[i < 0 ? 0 : Math.max(0, Math.min(bs.length - 1, i + (k === 39 ? 1 : -1)))]);
+        return true;
+      }
+      return false;
+    };
     function spin() {
       res.innerHTML = '<div class="dk">🎲 ĐANG BỐC THĂM…</div>';
       Api.dice(diceAvoid).then(function (r) {
@@ -5273,9 +5300,10 @@
           res.innerHTML = '<div class="dk">🎲 BỐC THĂM' + (who ? ' CHO ' + escR(who).toUpperCase() : '') + '</div><h3>' + escR(f.title) + '</h3><p>' + why + (f.dur ? ' · ' + UI.fmtLong(f.dur) : '') + (f.ch ? ' · ' + escR(f.ch) : '') + '</p>';
           var bt = el('div', 'dbtns');
           var b1 = UI.button('Xem ngay', 'gold', function () { close(); playFilm(f); }, UI.ICON_PLAY);
-          var b2 = UI.button('🎲 Quay lại', '', function () { reel.classList.remove('hit'); spin(); });
+          var b2 = UI.button('🎲 Bốc lại', '', function () { reel.classList.remove('hit'); spin(); });   // 2.47.1: trước ghi "Quay lại" dễ nhầm là thoát
           var b3 = UI.button('Chi tiết', '', function () { close(); openItem(f); });
-          bt.appendChild(b1); bt.appendChild(b2); bt.appendChild(b3); res.appendChild(bt);
+          var b4 = UI.button('✕ Đóng', '', function () { close(); });
+          bt.appendChild(b1); bt.appendChild(b2); bt.appendChild(b3); bt.appendChild(b4); res.appendChild(bt);
           if (!mob) Nav.focus(b1);
         }, 2000);
       });

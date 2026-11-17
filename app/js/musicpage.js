@@ -50,6 +50,21 @@
       st = null; setTimeout(hide, 250);
     }
     root.addEventListener('touchend', end); root.addEventListener('touchcancel', end);
+    // 2.47.1: TV: chọn thanh thời gian bằng ▲ ▼, rồi ◀ ▶ để tua (giữ phím: tua nhanh 30 giây)
+    var kAt = 0, kN = 0, kT = 0;
+    (bars || []).forEach(function (b) {
+      if (!b || (w.UI && w.UI.isMobile && w.UI.isMobile())) return;
+      b.classList.add('f', 'seekbar');
+      b._ok = function () { S.toggle(); };
+      b._seek = function (dir) {
+        var du = S.duration(); if (!du) return;
+        var now = Date.now(); kN = now - kAt < 600 ? kN + 1 : 1; kAt = now;
+        var to = Math.max(0, Math.min(du - 1, S.time() + dir * (kN > 4 ? 30 : 10)));
+        S.seek(to);
+        show((dir > 0 ? '+' : '−') + (kN > 4 ? '30' : '10') + ' giây', 'tới ' + fmt(to) + ' / ' + fmt(du));
+        clearTimeout(kT); kT = setTimeout(hide, 900);
+      };
+    });
     (bars || []).forEach(function (b) {   // chạm vào thanh thời gian: nhảy tới chỗ đó
       if (!b || b.onclick) return;
       b.onclick = function (e) { var r = b.getBoundingClientRect(), du = S.duration(); if (du) S.seek((e.clientX - r.left) / r.width * du); };

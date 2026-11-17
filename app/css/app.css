@@ -2335,3 +2335,11 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
   .mobile #webback.inplayer { right: calc(10px + env(safe-area-inset-right)); }
   .mobile #pl-min { right: calc(94px + env(safe-area-inset-right)); }
 }
+/* 2.46.3: nhãn thể loại (Hoạt hình…) nằm ngay dưới nút ⓘ, ngang hàng với nhãn MỚI bên trái */
+.mobile .thumb.hasinfo .badge.cat, .mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { right: 6px; top: 34px; }
+.mobile .thumb.hasinfo .badge.new { top: 34px; }
+.mobile .row-hot .thumb.hasinfo .badge.cat { top: auto; bottom: 6px; }
+/* 2.46.4: iPhone xoay ngang: khung YouTube nằm trong vùng an toàn (không chạm tai thỏ) -> phim nằm giữa, không bị đẩy lệch/cắt */
+@media (orientation: landscape) {
+  html.mobile #player:not(.mini) #yt-host { left: env(safe-area-inset-left) !important; right: auto !important; width: calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right)) !important; }
+}

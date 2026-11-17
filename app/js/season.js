@@ -140,12 +140,18 @@
     html.classList.add('season-' + th.id);
     html.style.setProperty('--season', th.accent);
     var app = d.getElementById('app'), bar = d.getElementById('topbar');
-    // hình nhỏ trên logo
+    // 2.41.1: hình trang trí gắn ngay góc ô logo (không còn nằm lơ lửng bên trái)
     if (th.badge) [].slice.call(d.querySelectorAll('#topbar > .brand, #mhead .mlogo')).forEach(function (brand) {
-      var b = d.createElement('div'); b.className = 'sbadge'; b.innerHTML = shape(th.badge);
-      var bz = isMobile() ? 22 : 34; b.style.width = b.style.height = bz + 'px'; b.style.overflow = 'hidden';   // 2.38.4: ghi cứng cỡ, TV có lúc vẽ to tướng che logo
+      var ic = brand.querySelector('.blogo');
+      if (!ic) {
+        var sv = null; for (var j = 0; j < brand.children.length; j++) if (brand.children[j].tagName.toLowerCase() === 'svg') { sv = brand.children[j]; break; }
+        if (!sv) return;
+        ic = d.createElement('span'); ic.className = 'blogo'; brand.insertBefore(ic, sv); ic.appendChild(sv);
+      }
+      var b = d.createElement('div'); b.className = 'sbadge sb-' + th.badge[0]; b.innerHTML = shape(th.badge);
+      var bz = isMobile() ? 18 : 28; b.style.width = b.style.height = bz + 'px';
       var bs = b.querySelector('svg'); if (bs) { bs.setAttribute('width', bz); bs.setAttribute('height', bz); }
-      brand.appendChild(b);
+      ic.appendChild(b);
     });
     // dây đèn dưới thanh trên cùng
     if (bar && th.garland) {
@@ -167,7 +173,8 @@
       for (var k = 0; k < cnt; k++) {
         var sz = Math.round((isMobile() ? 14 : 26) + Math.random() * (isMobile() ? 12 : 26));
         var dur = (11 + Math.random() * 10).toFixed(1), del = (-Math.random() * 20).toFixed(1);
-        out += '<div class="sp" style="left:' + (Math.random() * 98).toFixed(1) + '%;width:' + sz + 'px;height:' + sz + 'px;animation-duration:' + dur + 's;animation-delay:' + del + 's">' +
+        var lx = ((k + 0.15 + Math.random() * 0.7) / cnt * 94 + 1).toFixed(1);   // 2.41.4: chia đều chiều ngang (trái, giữa, phải), không dồn một bên
+        out += '<div class="sp" style="left:' + lx + '%;width:' + sz + 'px;height:' + sz + 'px;animation-duration:' + dur + 's;animation-delay:' + del + 's">' +
           '<div class="spi" style="animation-duration:' + (2.6 + Math.random() * 2.5).toFixed(1) + 's;animation-delay:' + del + 's">' + shape(th.fx[k % th.fx.length]) + '</div></div>';
       }
       o.innerHTML = out; app.appendChild(o);

@@ -70,6 +70,7 @@
       }
       yt.loadModule('captions');
       try { yt.setOption('captions', 'reload', true); } catch (x) { /* bỏ qua */ }
+      if (d.documentElement.classList.contains('elder')) { try { yt.setOption('captions', 'fontSize', 3); } catch (x) { /* bỏ qua */ } }   // 2.43: chữ phụ đề to nhất
       var pick = pickTrack(yt.getOption('captions', 'tracklist'));
       if (pick && !pick.translate) {
         yt.setOption('captions', 'track', { languageCode: pick.track.languageCode });
@@ -350,6 +351,11 @@
     btns.push({ id: 'sleep', wide: true, label: sleepLabel(), on: sleep.mode !== 'off', svg: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/>' });
     var nowQ = qNow();
     btns.push({ id: 'quality', wide: !w.UI.isMobile(), label: w.UI.isMobile() ? 'Chất lượng' : 'Chất lượng: ' + (qPref() === 'auto' && nowQ ? 'Tự động (' + nowQ + ')' : qLabel(qPref())), svg: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>' });
+    if (d.documentElement.classList.contains('elder')) {   // 2.43: chế độ ông bà: ít nút, chữ rõ
+      var EL = { prev: 'Tập trước', back: 'Lùi 10 giây', play: playing ? 'Dừng' : 'Phát', fwd: 'Tới 10 giây', next: 'Tập sau', cc: ccOn() ? 'Phụ đề: Bật' : 'Phụ đề: Tắt', sleep: sleepLabel().replace('Hẹn giờ: Tắt', 'Hẹn giờ tắt') };
+      btns = btns.filter(function (b) { return EL[b.id]; });
+      btns.forEach(function (b) { b.label = EL[b.id]; b.wide = true; });
+    }
     var pi = 0;
     btns.forEach(function (b, i) { if (b.id === 'play') pi = i; });
     if (btnIdx >= btns.length || btnIdx < 0) btnIdx = pi;
@@ -534,8 +540,9 @@
     var pct = Math.min(100, c / du * 100);
     $('pl-fill').style.width = pct + '%';
     $('pl-knob').style.left = pct + '%';
-    $('pl-cur').textContent = w.UI.fmtDur(c);
-    $('pl-dur').textContent = w.UI.fmtDur(du);
+    var eld = d.documentElement.classList.contains('elder');   // 2.43: chế độ ông bà: ghi rõ "Còn 18 phút"
+    $('pl-cur').textContent = eld ? Math.floor(c / 60) + ' phút' : w.UI.fmtDur(c);
+    $('pl-dur').textContent = eld ? 'Còn ' + w.UI.fmtLong(du - c) : w.UI.fmtDur(du);
     var now = Date.now();
     if (playing && c > 3 && now - lastSave > 5000) {
       lastSave = now;
@@ -1363,7 +1370,7 @@
     audioOnly: audioOnly,
     isMini: function () { return mini; }, setMini: setMini, miniClick: miniClick,
     inMenu: function () { return mode === 'menu' || !!up || sleepHold; },
-    cycleSleep: function () { cycleSleep(); if (isOpen && mode === 'btn') renderBtns(); }, sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },
+    cycleSleep: function () { cycleSleep(); if (isOpen && mode === 'btn') renderBtns(); }, setSleep: function (v) { setSleep(v); volBack(); paintSleepBadge(); }, sleepInfo: function () { return sleepLabel(); }, _sleepIn: function (ms) { sleep.mode = 't'; sleep.at = Date.now() + ms; },
     upClick: function (a) { if (up) upAct(a); },
     sendClose: function () { if (sendOn) hideSend(); },
     sleepEnd: function () { if (sleep.mode !== 'end') { setSleep('end'); if (isOpen && mode === 'btn') renderBtns(); } },

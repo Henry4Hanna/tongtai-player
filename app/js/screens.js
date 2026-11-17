@@ -41,6 +41,8 @@
     if (Nav.cur) Nav.cur.classList.remove('focus');
     Nav.cur = null;
     setActiveTab(id);
+    elderMark();   // 2.43
+    if (id === 'home' && elderOn()) { mount(ElderHome()); return; }
     var b = { home: Home, chans: Chans, cats: Cats, music: function () { return w.MusicPage.open(); }, search: function () { return Search(); }, history: History, guide: Guide, info: Info, settings: SettingsScreen }[id];
     mount(b());
   }
@@ -805,6 +807,581 @@
     return { name: 'catlist', el: v };
   }
 
+  /* ---------- 2.43: Chế độ ông bà: chữ to, nút lớn, ít bấm ----------
+     Bật riêng cho từng hồ sơ (Cài đặt → Hồ sơ người xem). Trang đầu: phim đang xem dở + nút Xem tiếp + 8 nút lớn.
+     Thoát: giữ OK (điện thoại: chạm giữ) trên hình hồ sơ, nhập mã PIN người lớn. */
+  function elderOn() { return Settings.get('ELDER') === true; }
+  function elderMark() { d.documentElement.classList.toggle('elder', elderOn()); var ef = Settings.get('ELDER_FONT') || 'lg'; d.documentElement.classList.toggle('ef-md', elderOn() && ef === 'md'); d.documentElement.classList.toggle('ef-xl', elderOn() && ef === 'xl'); if (!elderOn() || UI.isMobile()) { ['eldtop', 'eldrc'].forEach(function (id) { var x = d.getElementById(id); if (x) x.parentNode.removeChild(x); }); } }
+  function elderMenu() {
+    withPin('thoát chế độ ông bà', function () {
+      setTimeout(function () {
+        var v = UI.view(); v.classList.add('glogin');
+        var box = el('div', 'gbox eldmenu');
+        box.appendChild(el('div', 'gt', '👵 Chế độ ông bà · ' + Store.profileName()));
+        var b1 = UI.button('Đổi hồ sơ người xem', 'gold', function () { back(); setTimeout(function () { push(Who()); }, 30); });
+        var b2 = UI.button('Tắt chế độ ông bà cho ' + Store.profileName(), '', function () { Settings.set('ELDER', false); elderMark(); UI.toast('Đã tắt chế độ ông bà'); goTab('home'); });
+        var b3 = UI.button('Mở Cài đặt', '', function () { goTab('settings'); });
+        var col = el('div', 'sleepopts'); col.appendChild(b1); col.appendChild(b2); col.appendChild(b3); box.appendChild(col);
+        v.appendChild(box);
+        push({ name: 'eldmenu', el: v, focus: b1 });
+        setTimeout(function () { Nav.focus(b1, true); }, 0);
+      }, 30);
+    });
+  }
+  function eHint(html) { var h = el('div', 'ehint tonly'); h.innerHTML = html; return h; }
+  // nút / ô bấm của chế độ ông bà (giữ lâu: tùy chọn)
+  function eBtn(cls, html, fn) {
+    var b = el('div', cls + ' f'); b.innerHTML = html;
+    b._ok = fn; b.addEventListener('click', function () { if (UI.isMobile()) fn(); });
+    return b;
+  }
+  function eWho(v) {   // hình + tên người xem (điện thoại; TV dùng ô hồ sơ góc trên)
+    var me = profileOf(Store.profile()) || { id: 'guest', name: 'Guest' };
+    var c = el('div', 'ewho monly');
+    c.appendChild(avatar(me, 'xs')); c.appendChild(el('span', '', me.name));
+    var t = 0;
+    c.addEventListener('touchstart', function () { t = setTimeout(function () { t = 0; elderMenu(); }, 2000); }, { passive: true });
+    c.addEventListener('touchend', function () { if (t) { clearTimeout(t); t = 0; UI.toast('Giữ 2 giây để đổi hồ sơ hoặc thoát chế độ ông bà'); } });
+    c.addEventListener('mousedown', function () { t = setTimeout(function () { t = 0; elderMenu(); }, 2000); });
+    c.addEventListener('mouseup', function () { if (t) { clearTimeout(t); t = 0; } });
+    v.appendChild(c);
+  }
+  var EBTNS = [
+    { k: 'like', i: '💛', t: 'Ông bà thích', s: 'Trẻ em · Sinh đôi · Làng quê…' },
+    { k: 'new', i: '🆕', t: 'Phim mới', s: 'Mới ra mấy ngày nay' },
+    { k: 'hot', i: '🔥', t: 'Phim hot', s: 'Nhiều người xem' },
+    { k: 'top', i: '🏆', t: 'Top 10', s: 'Hay nhất tuần' },
+    { k: 'cats', i: '🎭', t: 'Thể loại', s: 'Tổng tài, Báo thù…' },
+    { k: 'movie', i: '🎬', t: 'Phim lẻ', s: 'Phim điện ảnh' },
+    { k: 'anime', i: '🐼', t: 'Hoạt hình', s: '2D · 3D · AI' },
+    { k: 'music', i: '🎵', t: 'Nghe nhạc', s: 'Nhạc của tôi' },
+    { k: 'hist', i: '🕘', t: 'Lịch sử', s: 'Phim đã xem' }
+  ];
+  function ElderHome() {
+    if (!UI.isMobile()) return ElderHomeTV();   // 2.44
+    lastLoad = Date.now();
+    var v = UI.view(); v.classList.add('elderv', 'eldhome', 'scroller');
+    eWho(v);
+    var me = profileOf(Store.profile()) || { name: 'Guest' };
+    var hero = el('div', 'ehero'); v.appendChild(hero);
+    var go = null;
+    var r = Store.recent().filter(function (x) { return x.item && !Settings.hides(x.item); }).filter(function (x) { return canResume(progressOf(x.vid)); })[0];
+    var bg = el('div', 'ehbg'); hero.appendChild(bg); hero.appendChild(el('div', 'ehshade'));
+    var tx = el('div', 'ehtx'); hero.appendChild(tx);
+    if (r) {
+      var p = progressOf(r.vid), it = r.item;
+      bg.appendChild(UI.thumb(it, true));
+      tx.appendChild(el('div', 'ehl', me.name.toUpperCase() + ' ĐANG XEM DỞ'));
+      tx.appendChild(el('div', 'eht', it.title));
+      tx.appendChild(el('div', 'ehs', (it.kind === 'anime' && r.ep ? 'Tập ' + r.ep + ' · ' : '') + 'Còn ' + UI.fmtLong(p.d - p.p)));
+      go = eBtn('ego', '▶ Xem tiếp', function () { if (it.kind === 'anime') openItem(it); else playFilm(it); });
+    } else {
+      tx.appendChild(el('div', 'ehl', 'CHÀO ' + me.name.toUpperCase()));
+      tx.appendChild(el('div', 'eht', 'Hôm nay xem phim gì?'));
+      tx.appendChild(el('div', 'ehs', 'Bấm Chọn giùm để app chọn một phim hay'));
+      go = eBtn('ego', '🎲 Chọn giùm', function () { Dice(); });
+      Api.followedFilms().then(function (all) { var f = unseen(all)[0]; if (f && !bg.firstChild) bg.appendChild(UI.thumb(f, true)); }).catch(function () {});
+    }
+    if (UI.isMobile()) { var gr = el('div', 'egorow'); gr.appendChild(go); gr.appendChild(eBtn('ego ego2', '🌙 Hẹn giờ', function () { eSleepFilm(); })); v.appendChild(gr); } else tx.appendChild(go);   // điện thoại: nút Xem tiếp to, dưới ảnh · 2.44: Hẹn giờ tắt
+    var g = el('div', 'ebtns');
+    EBTNS.forEach(function (b) {
+      g.appendChild(eBtn('eb', '<div class="ebi">' + b.i + '</div><div class="ebx"><div class="ebt">' + b.t + '</div><div class="ebs">' + b.s + '</div></div>', function () { elderGo(b.k); }));
+    });
+    g.appendChild(eBtn('eb', '<div class="ebi">⚙️</div><div class="ebx"><div class="ebt">Cài đặt</div><div class="ebs">Chữ, màn hình, thống kê</div></div>', function () { elderGo('set'); }));   // 2.45
+    v.appendChild(g);
+    v.appendChild(eHint('<span><i>OK</i> Xem</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span>Giữ OK trên hình hồ sơ (góc trên) để đổi người hoặc thoát</span>'));
+    setTimeout(function () { if (current() && current().el === v) Nav.focus(go, true); }, 0);
+    return { name: 'home', el: v, focus: go, refresh: function () { setTimeout(function () { if (S.stack.length === 1 && current() && current().el === v && elderOn()) goTab('home'); }, 0); } };
+  }
+  /* 2.44: TV: trang chính ông bà kiểu mới: mục lục 1/4 bên trái, nội dung mục bên phải */
+  var EMENU = [{ k: 'home', i: '🏠', t: 'Trang chính', s: 'Xem tiếp phim' }].concat(EBTNS);
+  function eSleepFilm() {
+    var v = UI.view(); v.classList.add('glogin');
+    var box = el('div', 'gbox sleepbox eldsleep');
+    box.appendChild(el('div', 'gt', '🌙 Hẹn giờ tắt phim'));
+    box.appendChild(el('div', 'gnote', 'Hết giờ: tiếng nhỏ dần rồi dừng phim.'));
+    var col = el('div', 'sleepopts'), first = null;
+    [['off', 'Tắt hẹn giờ'], [15, '15 phút'], [30, '30 phút'], [60, '1 giờ'], ['end', 'Hết phim này']].forEach(function (o) {
+      var b = UI.button(o[1], o[0] === 30 ? 'on' : '', function () {
+        if (Player.setSleep) Player.setSleep(o[0]);
+        UI.toast(o[0] === 'off' ? 'Đã tắt hẹn giờ' : o[0] === 'end' ? '🌙 Tắt khi hết phim này' : '🌙 Tắt phim sau ' + o[1]);
+        back();
+      });
+      if (o[0] === 30) first = b;
+      col.appendChild(b);
+    });
+    box.appendChild(col); v.appendChild(box);
+    push({ name: 'fsleep', el: v, focus: first });
+    setTimeout(function () { Nav.focus(first, true); }, 0);
+  }
+  function eCrumb(sub) {
+    var c = el('div', 'ecrumb');
+    c.appendChild(el('span', 'ecr1', '🏠 Trang chính'));
+    c.appendChild(el('span', 'ecr2', sub));
+    var th = w.Season && w.Season.current ? w.Season.current() : null;
+    if (th && th.greet) { var g = el('span', 'egreet'); g.innerHTML = (w.Season.icon ? '<i>' + w.Season.icon(th) + '</i>' : '') + '<b></b>'; g.querySelector('b').textContent = th.greet; c.appendChild(g); }
+    return c;
+  }
+  function eFilmCard(it, x) {
+    x = x || {};
+    var c = el('div', 'ecard f');
+    var th = UI.thumb(it); th.classList.add('eth'); c.appendChild(th);
+    if (x.rank) th.appendChild(el('div', 'erk', String(x.rank)));
+    if (x.isNew) th.appendChild(el('div', 'enew', 'MỚI'));
+    if (it.kind === 'anime' && it.eps > 1 && !x.hist) th.appendChild(el('div', 'eeps', it.eps + ' tập'));
+    var s = x.sub;
+    if (s == null) s = it.kind === 'anime' ? (it.eps ? it.eps + ' tập' : 'Hoạt hình') : it.dur ? UI.fmtLong(it.dur) : '';
+    if (x.pr) { var pb = el('div', 'epb'), pf = el('i'); pf.style.width = Math.round(Math.min(1, x.pr) * 100) + '%'; pb.appendChild(pf); th.appendChild(pb); }
+    c.appendChild(el('div', 'ect', it.title));
+    if (s) c.appendChild(el('div', 'ecs', s));
+    c._item = it;
+    c._ok = function () {
+      if (Player.previewOn && Player.previewOn(c)) { Player.previewOpen(); return; }   // đang xem thử: xem tiếp từ chỗ đó
+      if (it.kind === 'anime') openItem(it); else playFilm(it);
+    };
+    eHold(c, th, it);
+    return c;
+  }
+  // 2.45.1: giữ lâu ảnh phim = xem thử trong ảnh (bật / tắt trong Cài đặt ông bà)
+  function eHold(c, th, it) {
+    if (!it.id || String(it.id).indexOf('demo') === 0 || (it.kind === 'anime' && (it.eps || 0) > 1)) return;
+    c._hold = function () { if (!Settings.get('PREVIEW_SECS')) return; if (Player.preview) Player.preview(c, th, it); };
+  }
+  function elderSrc(k) {   // danh sách phim của từng mục: [{ it, rank, isNew, sub, pr }]
+    if (k === 'hist') return Promise.resolve(Store.recent().filter(function (x) { return x.item; }).map(function (x) {
+      var p = progressOf(x.vid || x.item.id), it = x.item;
+      return { it: it, hist: true, pr: p && p.d ? p.p / p.d : 0, sub: (it.kind === 'anime' && x.ep ? 'Tập ' + x.ep + ' · ' : '') + (p && canResume(p) ? 'Còn ' + UI.fmtLong(p.d - p.p) : Store.isWatched(x.vid || it.id) ? '✓ Đã xem hết' : 'Đã xem') };
+    }));
+    if (k === 'movie') return Api.movieFilms().then(function (l) { return l.map(function (f) { return { it: f }; }); });
+    if (k === 'anime') return Api.animeAll().then(function (l) { return l.map(function (f) { return { it: f }; }); });
+    return Api.followedFilms().then(function (all) {
+      var list = unseen(all);
+      if (k === 'new') return list.slice(0, 40).map(function (f) { return { it: f, isNew: Date.now() - new Date(f.pub || 0).getTime() < 864e5 }; });
+      var since = Date.now() - (k === 'top' ? 7 : 30) * 864e5;
+      var l = (k === 'hot' ? list : all).filter(function (f) { return new Date(f.pub || 0).getTime() > since; });
+      if (k === 'hot' && l.length < 10) l = list.slice();
+      l.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+      return l.slice(0, k === 'top' ? 10 : 40).map(function (f, i) { return { it: f, rank: k === 'top' || k === 'hot' ? i + 1 : 0 }; });
+    });
+  }
+  function ElderHomeTV() {
+    lastLoad = Date.now();
+    var v = UI.view(); v.classList.add('elderv', 'eldtv');
+    v.classList.remove('scroller');
+    var me = profileOf(Store.profile()) || { name: 'Guest' };
+    var menu = el('div', 'emenu'), pane = el('div', 'epane scroller');
+    v.appendChild(menu); v.appendChild(pane);
+    var view = { name: 'home', el: v }, curK = 'home', items = {}, cleanup = null, paneT = 0;
+    EMENU.forEach(function (b) {
+      var e = el('div', 'emi f');
+      e.innerHTML = '<div class="emic">' + b.i + '</div><div class="emtx"><div class="emt"></div><div class="ems"></div></div>';
+      e.querySelector('.emt').textContent = b.t; e.querySelector('.ems').textContent = b.s;
+      e._focus = function () { if (curK === b.k) return; clearTimeout(paneT); paneT = setTimeout(function () { show(b.k); }, 220); };
+      e._ok = function () {
+        if (b.k === 'cats' && curK !== 'cats') show('cats');
+        if (curK !== b.k) show(b.k);
+        var f = pane.querySelector('.f'); if (f) Nav.focus(f, true);
+        else if (b.k === 'home') { var g0 = pane.querySelector('.ego'); if (g0) Nav.focus(g0, true); }
+      };
+      items[b.k] = e; menu.appendChild(e);
+    });
+    function mark() { Object.keys(items).forEach(function (k) { items[k].classList.toggle('cur', k === curK); }); }
+    function show(k) {
+      clearTimeout(paneT);
+      if (cleanup) { try { cleanup(); } catch (e) { /* bỏ qua */ } cleanup = null; }
+      curK = k; mark(); pane.innerHTML = ''; pane.scrollTop = 0;
+      view.elderMusic = false;
+      if (k === 'home') return paneHome();
+      if (k === 'music') return paneMusic();
+      if (k === 'cats') return paneCats();
+      if (k === 'like') { pane.appendChild(eCrumb('› Ông bà thích')); return likeBody(pane, 3); }
+      paneList(k);
+    }
+    function paneHome() {
+      pane.appendChild(eCrumb('· ' + me.name));
+      var hero = el('div', 'ehero ehero2'); pane.appendChild(hero);
+      var bg = el('div', 'ehbg'); hero.appendChild(bg); hero.appendChild(el('div', 'ehshade'));
+      var tx = el('div', 'ehtx'); hero.appendChild(tx);
+      var r = Store.recent().filter(function (x) { return x.item && !Settings.hides(x.item); }).filter(function (x) { return canResume(progressOf(x.vid)); })[0];
+      var go;
+      if (r) {
+        var p = progressOf(r.vid), it = r.item;
+        bg.appendChild(UI.thumb(it, true));
+        tx.appendChild(el('div', 'ehl', me.name.toUpperCase() + ' ĐANG XEM DỞ'));
+        tx.appendChild(el('div', 'eht', it.title));
+        tx.appendChild(el('div', 'ehs', (it.kind === 'anime' && r.ep ? 'Tập ' + r.ep + ' · ' : '') + 'Còn ' + UI.fmtLong(p.d - p.p)));
+        go = eBtn('ego', '▶ Xem tiếp', function () { if (it.kind === 'anime') openItem(it); else playFilm(it); });
+      } else {
+        tx.appendChild(el('div', 'ehl', 'CHÀO ' + me.name.toUpperCase()));
+        tx.appendChild(el('div', 'eht', 'Hôm nay xem phim gì?'));
+        tx.appendChild(el('div', 'ehs', 'Bấm Chọn giùm để app chọn một phim hay'));
+        go = eBtn('ego', '🎲 Chọn giùm', function () { Dice(); });
+        Api.followedFilms().then(function (all) { var f = unseen(all)[0]; if (f && !bg.firstChild) bg.appendChild(UI.thumb(f, true)); }).catch(function () {});
+      }
+      var row = el('div', 'egorow'); row.appendChild(go);
+      var sl = eBtn('ego ego2', '🌙 ' + (Player.sleepInfo ? Player.sleepInfo().replace('Hẹn giờ: ', 'Hẹn giờ tắt: ').replace('Hẹn giờ tắt: Tắt', 'Hẹn giờ tắt') : 'Hẹn giờ tắt'), function () { eSleepFilm(); });
+      row.appendChild(sl); tx.appendChild(row);
+      var q = el('div', 'equote');
+      q.appendChild(el('div', 'eqk', '👑 CÂU NÓI CỦA TỔNG TÀI'));
+      var qt = '';
+      try { if (w.Quotes) qt = w.Quotes.get(Math.floor(Math.random() * w.Quotes.count)).text; } catch (e) { /* bỏ qua */ }
+      q.appendChild(el('div', 'eqt', qt ? '“' + qt + '”' : ''));
+      pane.appendChild(q);
+      view.goBtn = go;
+    }
+    function paneList(k) {
+      var b = EBTNS.filter(function (x) { return x.k === k; })[0] || { i: '', t: '' };
+      pane.appendChild(eCrumb('› ' + b.t));
+      var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', b.i + ' ' + b.t)); h.appendChild(el('div', 'epts', b.s)); pane.appendChild(h);
+      var g = el('div', 'egrid eg3'); pane.appendChild(g);
+      g.appendChild(el('div', 'emsg', 'Đang tải phim…'));
+      var mine = k;
+      elderSrc(k).then(function (list) {
+        if (curK !== mine) return;
+        g.innerHTML = '';
+        list = list.filter(function (x) { return x.it && !Settings.hides(x.it); });
+        if (!list.length) { g.appendChild(el('div', 'emsg', k === 'hist' ? 'Chưa xem phim nào.' : 'Chưa có phim. Lát nữa quay lại nhé.')); return; }
+        list.forEach(function (x) { g.appendChild(eFilmCard(x.it, x)); });
+      }).catch(function (e) { if (curK === mine) { g.innerHTML = ''; g.appendChild(el('div', 'emsg', Api.explain(e))); } });
+    }
+    function paneCats() {
+      pane.appendChild(eCrumb('› Thể loại'));
+      var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '🎭 Thể loại')); h.appendChild(el('div', 'epts', 'Chọn loại phim muốn xem')); pane.appendChild(h);
+      var g = el('div', 'egrid eg3 ecats'); pane.appendChild(g);
+      var COL = ['#3a1c4a,#c2456b', '#0f2a43,#2f7fb8', '#3b2a14,#d9973c', '#1b3a2f,#4fae8a', '#2a2145,#7a6ad8', '#4a1c1c,#e0653d'];
+      C.CATEGORIES.filter(function (c) { return c.kind === 'film'; }).forEach(function (c, i) {
+        var t = el('div', 'ecat f');
+        t.style.background = 'linear-gradient(135deg,' + COL[i % COL.length] + ')';
+        var ic = el('div', 'ecic'); if (w.CAT_ICONS) ic.innerHTML = w.CAT_ICONS(c.id); t.appendChild(ic);
+        t.appendChild(el('div', 'ecn', c.name));
+        t._ok = function () { push(ElderList('🎭 ' + c.name, 'Phim thể loại ' + c.name, Api.catFilms(c).then(function (l) { return l.map(function (f) { return { it: f }; }); }), false)); };
+        g.appendChild(t);
+      });
+    }
+    function paneMusic() {
+      pane.appendChild(eCrumb('› Nghe nhạc · Nhạc của tôi'));
+      view.elderMusic = true;
+      if (w.MusicPage && w.MusicPage.elderPane) cleanup = w.MusicPage.elderPane(pane, view);
+    }
+    view.onBeforeBack = function () {
+      var inPane = Nav.cur && pane.contains(Nav.cur);
+      if (inPane && curK !== 'home') { Nav.focus(items[curK], true); return false; }
+      if (curK !== 'home') { show('home'); Nav.focus(view.goBtn || items.home, true); return false; }
+      if (!inPane && view.goBtn) { Nav.focus(view.goBtn, true); return false; }
+      return true;
+    };
+    view.onLeave = function () { if (cleanup) try { cleanup(); } catch (e) { /* bỏ qua */ } };
+    view.refresh = function () {   // xem phim xong quay về: cập nhật phim đang xem dở, đổi câu nói
+      setTimeout(function () { if (current() === view && curK === 'home') { var f = Nav.cur; show('home'); if (!f || !d.body.contains(f)) Nav.focus(view.goBtn, true); } }, 0);
+    };
+    show('home');
+    v.appendChild(eHint('<span><i>OK</i> Chọn</span><span><i>◀</i> Mục lục</span><span><i>▲ ▼</i> Đổi mục</span><span><i>↩</i> Về Trang chính</span><span>Giữ OK trên tên người xem để đổi người</span>'));
+    setTimeout(function () { if (current() === view) Nav.focus(view.goBtn, true); }, 0);
+    elderTop(true);
+    return view;
+  }
+  // thanh trên cùng (TV): ô tên người xem + ô Tìm kiếm, viền bằng nhau
+  function elderTop(on) {
+    var bar = d.getElementById('topbar'); if (!bar) return;
+    var x = d.getElementById('eldtop');
+    var orc = d.getElementById('eldrc'); if (orc) orc.parentNode.removeChild(orc);
+    if (!on || !elderOn() || UI.isMobile()) { if (x) x.parentNode.removeChild(x); return; }
+    if (x) x.parentNode.removeChild(x);
+    x = el('div', 'eldtop'); x.id = 'eldtop';
+    var me = profileOf(Store.profile()) || { id: 'guest', name: 'Guest' };
+    var who = el('div', 'echip f'); who.appendChild(avatar(me, 'xs')); who.appendChild(el('span', '', me.name));
+    who._ok = function () { UI.toast('Giữ OK 2 giây trên tên để đổi người xem hoặc thoát chế độ ông bà', 4000); };
+    who._hold = function () { elderMenu(); };
+    var sr = el('div', 'echip esrch f', '🔍 Tìm kiếm');
+    sr._ok = function () { push(Search()); };
+    var se = el('div', 'echip esrch f', '⚙ Cài đặt');   // 2.45
+    se._ok = function () { push(ElderSettings()); };
+    x.appendChild(who); x.appendChild(sr); x.appendChild(se);
+    var brand = bar.querySelector('.brand'); if (brand && brand.nextSibling) bar.insertBefore(x, brand.nextSibling); else bar.appendChild(x);
+    // 2.45.2: nút Remote ngay cạnh nút Sáng/Tối, viền bằng các ô kia
+    var rc = el('div', 'echip erc f'); rc.id = 'eldrc';
+    rc.innerHTML = '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="5"/><circle cx="12" cy="10" r="2.6"/><path d="M10 16h.01M14 16h.01M12 5.4h.01"/></svg><span>Remote</span>';
+    rc._ok = function () { if (w.Remote && w.Remote.show) w.Remote.show(); };
+    var tb = d.getElementById('thbtn'); if (tb) bar.insertBefore(rc, tb); else bar.appendChild(rc);
+  }
+
+  /* ---------- 2.45: Ông bà thích (trẻ em, hài, ông bà, gia đình) · Cài đặt đơn giản · Thống kê ---------- */
+  function catKw(id) { var c = C.CATEGORIES.filter(function (x) { return x.id === id; })[0]; return c && c.kw; }
+  var ELIKE = [
+    { k: 'twin', i: '👯', t: 'Sinh đôi', rx: [catKw('sinhdoi') || /sinh đôi|song sinh|long phụng/i] },
+    { k: 'kids', i: '👶', t: 'Trẻ em', rx: [/em bé|bé con|bé trai|bé gái|thiên tài nhí|nhí|cục cưng|bảo bối|trẻ con|con nít/i, catKw('treem')] },
+    { k: 'fun', i: '😄', t: 'Hài', rx: [/hài|hài hước|cười|vui nhộn|lầy lội|bựa|vụng về|tấu hài|bá đạo|hai huoc/i] },
+    { k: 'old', i: '👵', t: 'Ông bà', rx: [/ông nội|bà nội|ông ngoại|bà ngoại|ông bà|cụ ông|cụ bà|bà cụ|ông cụ|ông lão|bà lão|người già|tuổi già|về hưu|ong ba/i] },
+    { k: 'vil', i: '🌾', t: 'Làng quê', rx: [catKw('langque') || /làng quê|nông thôn|về quê/i, /quê nhà|miền quê|làng chài|ruộng|đồng quê|cô gái quê|gái quê/i] },
+    { k: 'fam', i: '👨‍👩‍👧', t: 'Gia đình', rx: [catKw('giadinh') || /gia đình/i] }
+  ];
+  function likeOn() { var l = Settings.get('ELDER_LIKE'); return Array.isArray(l) && l.length ? l : ELIKE.map(function (e) { return e.k; }); }
+  function likeOf(it) {   // loại "ông bà thích" của một phim (loại đầu tiên khớp), hoặc null
+    var t = (it.title || '') + ' ' + String(it.desc || '').slice(0, 300), on = likeOn();
+    for (var i = 0; i < ELIKE.length; i++) {
+      if (on.indexOf(ELIKE[i].k) < 0) continue;
+      if (ELIKE[i].rx.some(function (r) { return r && r.test(t); })) return ELIKE[i];
+    }
+    return null;
+  }
+  function likeSrc() {
+    return Promise.all([Api.followedFilms().catch(function () { return []; }), Api.movieFilms().catch(function () { return []; })]).then(function (r) {
+      var seen = {}, out = [];
+      unseen(r[0].concat(r[1])).forEach(function (f) { var tk = f && String(f.title || '').toLowerCase(); if (!f || seen[f.id] || seen[tk]) return; seen[f.id] = 1; seen[tk] = 1; var L = likeOf(f); if (L) out.push({ it: f, like: L }); });
+      out.sort(function (a, b) { return String(b.it.pub || '').localeCompare(String(a.it.pub || '')); });
+      return out.slice(0, 60);
+    });
+  }
+  // tab lọc + lưới phim (dùng chung TV và điện thoại)
+  function likeBody(host, cols) {
+    var me = profileOf(Store.profile()) || { name: 'Guest' };
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '💛 Ông bà thích')); h.appendChild(el('div', 'epts', 'Chọn sẵn cho ' + me.name)); host.appendChild(h);
+    var tabs = el('div', 'etabs'); host.appendChild(tabs);
+    var g = el('div', 'egrid' + (cols === 3 ? ' eg3' : '')); host.appendChild(g);
+    g.appendChild(el('div', 'emsg', 'Đang tìm phim…'));
+    var all = [], cur = 'all', tEls = {};
+    function paint() {
+      Object.keys(tEls).forEach(function (k) { tEls[k].classList.toggle('on', k === cur); });
+      g.innerHTML = '';
+      var l = all.filter(function (x) { return cur === 'all' || x.like.k === cur; });
+      if (!l.length) { g.appendChild(el('div', 'emsg', all.length ? 'Loại này chưa có phim. Chọn loại khác nhé.' : 'Chưa tìm thấy phim hợp. Lát nữa quay lại nhé.')); return; }
+      l.forEach(function (x) { var c = eFilmCard(x.it, {}); var th = c.querySelector('.eth'); if (th) th.appendChild(el('div', 'etag', x.like.t)); if (UI.isMobile()) c.addEventListener('click', function () { c._ok(); }); g.appendChild(c); });
+    }
+    [{ k: 'all', i: '', t: 'Tất cả' }].concat(ELIKE.filter(function (x) { return likeOn().indexOf(x.k) >= 0; })).forEach(function (x) {
+      var b = el('div', 'etab f', (x.i ? x.i + ' ' : '') + x.t);
+      b._ok = function () { cur = x.k; paint(); }; b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+      tEls[x.k] = b; tabs.appendChild(b);
+    });
+    likeSrc().then(function (l) { all = l; if (d.body.contains(host)) paint(); }).catch(function (e) { g.innerHTML = ''; g.appendChild(el('div', 'emsg', Api.explain(e))); });
+  }
+  function ElderLike() {   // điện thoại: trang riêng
+    var v = UI.view(); v.classList.add('elderv', 'scroller');
+    eWho(v); likeBody(v, 2);
+    return { name: 'eldlike', el: v };
+  }
+
+  // Cài đặt đơn giản cho ông bà
+  function ElderSettings() {
+    var v = UI.view(); v.classList.add('elderv', 'scroller', 'eldset');
+    eWho(v);
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '⚙ Cài đặt')); h.appendChild(el('div', 'epts', 'Những thứ hay dùng · bấm OK để đổi')); v.appendChild(h);
+    var g = el('div', 'esgrid'); v.appendChild(g);
+    var first = null;
+    function tile(ic, t, d0, val, fn) {
+      var r = el('div', 'estile f');
+      r.innerHTML = '<span class="esic">' + ic + '</span><div class="estx"><div class="est"></div><div class="esd"></div></div><span class="esv"></span>';
+      r.querySelector('.est').textContent = t; r.querySelector('.esd').textContent = d0;
+      function paint() { var x = val(); var sv = r.querySelector('.esv'); sv.textContent = x.t; sv.classList.toggle('off', !x.on); if (x.d) r.querySelector('.esd').textContent = x.d; }
+      r._ok = function () { fn(paint); }; r.addEventListener('click', function () { if (UI.isMobile()) r._ok(); });
+      paint(); g.appendChild(r); if (!first) first = r; return r;
+    }
+    function cyc(key, opts, after) {
+      return [function () { var c = Settings.get(key), o = opts.filter(function (x) { return x.v === c; })[0] || opts[0]; return { t: o.t, on: o.on !== false }; },
+        function (paint) { var c = Settings.get(key), i = 0; opts.forEach(function (o, k) { if (o.v === c) i = k; }); Settings.set(key, opts[(i + 1) % opts.length].v); paint(); if (after) after(); }];
+    }
+    var x;
+    x = cyc('THEME', [{ v: 'time', t: 'Theo giờ' }, { v: 'light', t: 'Sáng' }, { v: 'dark', t: 'Tối' }], function () { paintTheme(); });
+    tile('☀️', 'Màn hình', 'Sáng · Tối · Theo giờ', x[0], x[1]);
+    x = cyc('ELDER_FONT', [{ v: 'lg', t: 'To' }, { v: 'xl', t: 'Rất to' }, { v: 'md', t: 'Vừa' }], function () { elderMark(); });
+    tile('🔠', 'Cỡ chữ', 'Chữ trong app', x[0], x[1]);
+    tile('💬', 'Phụ đề khi xem', 'Chữ tiếng Việt dưới phim', function () { var on = !!Store.pref('cc', true); return { t: on ? 'Bật' : 'Tắt', on: on }; }, function (p) { Store.setPref('cc', !Store.pref('cc', true)); p(); });
+    x = cyc('AUTO_NEXT', [{ v: true, t: 'Bật' }, { v: false, t: 'Tắt', on: false }]);
+    tile('⏭', 'Tự phát phim tiếp', 'Hết phim tự sang phim kế', x[0], x[1]);
+    x = cyc('MUSIC_VOL', [{ v: 'low', t: 'Nhỏ' }, { v: 'mid', t: 'Vừa' }, { v: 'high', t: 'To' }]);
+    tile('🔊', 'Âm lượng nhạc', 'Nhạc trong trang Nghe nhạc', x[0], x[1]);
+    x = cyc('SLEEP_AT', [{ v: '', t: 'Tắt', on: false }, { v: '21:00', t: '21:00' }, { v: '22:00', t: '22:00' }, { v: '23:00', t: '23:00' }]);
+    tile('🌙', 'Giờ đi ngủ', 'Tới giờ: tối dần, hết phim thì tắt', x[0], x[1]);
+    x = cyc('SEASON_FX', [{ v: 'low', t: 'Ít' }, { v: 'mid', t: 'Vừa' }, { v: 'high', t: 'Nhiều' }, { v: false, t: 'Tắt', on: false }], function () { if (w.Season) w.Season.apply(true); });
+    tile('🍂', 'Trang trí mùa, lễ', 'Lá rơi, tuyết, hoa…', x[0], x[1]);
+    tile('💛', 'Ông bà thích', 'Trẻ em, Sinh đôi, Hài, Ông bà, Làng quê, Gia đình', function () { return { t: likeOn().length + ' loại', on: true, d: ELIKE.filter(function (e) { return likeOn().indexOf(e.k) >= 0; }).map(function (e) { return e.t; }).join(', ') }; }, function (p) { push(ElderLikeSet(p)); });
+    x = cyc('PREVIEW_SECS', [{ v: 20, t: 'Bật' }, { v: 0, t: 'Tắt', on: false }]);
+    tile('👆', 'Giữ lâu xem thử phim', 'Giữ OK trên ảnh phim: phim chạy thử 20 giây trong ảnh', function () { var on = !!Settings.get('PREVIEW_SECS'); return { t: on ? 'Bật' : 'Tắt', on: on }; }, function (p) { Settings.set('PREVIEW_SECS', Settings.get('PREVIEW_SECS') ? 0 : 20); p(); });
+    tile('📺', 'Giao diện thường', 'Bỏ kiểu ông bà, về Trang chủ bình thường', function () { return { t: 'Đổi', on: false }; }, function () {
+      withPin('về giao diện thường', function () { Settings.set('ELDER', false); elderMark(); UI.toast('Đã về giao diện thường. Bật lại: Cài đặt → Hồ sơ người xem → Chế độ ông bà'); setTimeout(function () { goTab('home'); }, 30); });
+    });
+    var st = statsCalc(7);
+    tile('📊', 'Thống kê xem', '', function () { return { t: 'Xem', on: true, d: 'Tuần này xem ' + fmtMin(st.total) }; }, function () { push(ElderStats(7)); });
+    var top = musicTop(30)[0];
+    tile('🎵', 'Thống kê nghe nhạc', '', function () { return { t: 'Xem', on: true, d: top ? 'Hay nghe: ' + top.title : 'Chưa nghe bài nào' }; }, function () { push(ElderMusicStats()); });
+    var full = el('div', 'esfull f', '🔒 Cài đặt đầy đủ (kênh, mã PIN, đồng bộ…): cần mã PIN người lớn');
+    full._ok = function () { withPin('mở Cài đặt đầy đủ', function () { setTimeout(function () { goTab('settings'); }, 30); }); };
+    full.addEventListener('click', function () { if (UI.isMobile()) full._ok(); });
+    v.appendChild(full);
+    v.appendChild(eHint('<span><i>OK</i> Đổi</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span><i>↩</i> Về Trang chính</span>'));
+    setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
+    return { name: 'eldset', el: v, focus: first, refresh: function () { [].forEach.call(g.children, function () {}); } };
+  }
+  function ElderLikeSet(paintBack) {
+    var v = UI.view(); v.classList.add('elderv', 'scroller', 'eldset');
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '💛 Ông bà thích')); h.appendChild(el('div', 'epts', 'Bấm OK để bật / tắt từng loại')); v.appendChild(h);
+    var g = el('div', 'esgrid'); v.appendChild(g); var first = null;
+    ELIKE.forEach(function (e) {
+      var r = el('div', 'estile f');
+      r.innerHTML = '<span class="esic">' + e.i + '</span><div class="estx"><div class="est"></div></div><span class="esv"></span>';
+      r.querySelector('.est').textContent = e.t;
+      function paint() { var on = likeOn().indexOf(e.k) >= 0, sv = r.querySelector('.esv'); sv.textContent = on ? 'Bật' : 'Tắt'; sv.classList.toggle('off', !on); }
+      r._ok = function () {
+        var l = likeOn().slice(), i = l.indexOf(e.k);
+        if (i >= 0) { if (l.length === 1) { UI.toast('Giữ ít nhất 1 loại'); return; } l.splice(i, 1); } else l.push(e.k);
+        Settings.set('ELDER_LIKE', ELIKE.map(function (q) { return q.k; }).filter(function (k) { return l.indexOf(k) >= 0; })); paint(); if (paintBack) paintBack();
+      };
+      r.addEventListener('click', function () { if (UI.isMobile()) r._ok(); });
+      paint(); g.appendChild(r); if (!first) first = r;
+    });
+    setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
+    return { name: 'eldlikeset', el: v, focus: first };
+  }
+  function musicTop(days) {   // [{ title, n }] bài nghe nhiều nhất trong n ngày
+    var st = Store.stats(), cnt = {}, from = Store.dayKey(Date.now() - (days - 1) * 864e5);
+    Object.keys(st).forEach(function (k) { if (k < from) return; var m = st[k] && st[k].m; if (m) Object.keys(m).forEach(function (f) { cnt[f] = (cnt[f] || 0) + m[f]; }); });
+    var songs = w.Music && w.Music.S ? w.Music.S.all() : [], byFile = {};
+    songs.forEach(function (s) { byFile[s.file] = s.title; });
+    return Object.keys(cnt).map(function (f) { return { title: byFile[f] || String(f).replace(/\.\w+$/, '').replace(/[-_]/g, ' '), n: cnt[f] }; }).sort(function (a, b) { return b.n - a.n; });
+  }
+  function ElderStats(period) {
+    var v = UI.view(); v.classList.add('elderv', 'scroller', 'eldstats');
+    eWho(v);
+    var me = profileOf(Store.profile()) || { name: 'Guest' }, R = statsCalc(period);
+    var h = el('div', 'ept estah'); h.appendChild(el('div', 'eptt', '📊 Thống kê xem · ' + me.name));
+    var seg = el('div', 'esseg'), segOn = null;
+    [7, 30, 90].forEach(function (n) {
+      var b = el('div', 'essb f' + (n === period ? ' on' : ''), n + ' ngày');
+      b._ok = function () { if (n !== period) { back(); push(ElderStats(n)); } };
+      b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+      if (n === period) segOn = b; seg.appendChild(b);
+    });
+    h.appendChild(seg); v.appendChild(h);
+    var plays = 0, from = Store.dayKey(Date.now() - (period - 1) * 864e5), st = Store.stats();
+    Object.keys(st).forEach(function (k) { if (k >= from && st[k] && st[k].m) Object.keys(st[k].m).forEach(function (f) { plays += st[k].m[f]; }); });
+    var k4 = el('div', 'esk4');
+    var dl = R.prevTotal ? (R.total >= R.prevTotal ? '▲ nhiều hơn ' : '▼ ít hơn ') + fmtMin(Math.abs(R.total - R.prevTotal)) + ' so với ' + period + ' ngày trước' : '';
+    [['Tổng ' + period + ' ngày', fmtMin(R.total), dl, 1], ['Mỗi ngày', fmtMin(R.avg), 'trung bình'], ['Phim xem hết', R.seen + ' phim', 'trong ' + period + ' ngày'], ['Nghe nhạc', plays + ' lượt', 'trong ' + period + ' ngày']].forEach(function (x) {
+      var c = el('div', 'eskp'); c.appendChild(el('div', 'eska', x[0])); c.appendChild(el('div', 'eskb', x[1])); c.appendChild(el('div', 'eskc' + (x[3] && R.prevTotal ? (R.total >= R.prevTotal ? ' up' : ' down') : ''), x[2])); k4.appendChild(c);
+    });
+    v.appendChild(k4);
+    var row = el('div', 'esrow');
+    var ch = el('div', 'eschart'); ch.appendChild(el('div', 'esct', period > 30 ? 'Thời gian xem mỗi tuần' : 'Thời gian xem mỗi ngày'));
+    var bk = R.bk, mx = Math.max(60, bk.reduce(function (m, b) { return Math.max(m, b.s); }, 0));
+    var bars = el('div', 'esbars' + (bk.length > 14 ? ' dense' : '')), lab = el('div', 'eslab' + (bk.length > 14 ? ' dense' : ''));
+    var every = bk.length <= 7 ? 1 : bk.length <= 14 ? 2 : 5;
+    bk.forEach(function (b, i) {
+      var c = el('div', 'esbar' + (b.today ? ' t' : '')); c.style.height = (b.s > 0 ? Math.max(2, b.s / mx * 100) : 0) + '%';
+      if (b.s >= 60 && (b.s === mx || b.today) && bk.length <= 14) c.appendChild(el('span', '', fmtHM(b.s)));
+      bars.appendChild(c);
+      lab.appendChild(el('span', '', every === 1 || b.today || (bk.length - 1 - i) % every === 0 ? (b.today ? (period > 30 ? 'Tuần này' : 'Hôm nay') : period > 30 ? b.l2 : bk.length > 7 ? b.date : DOW[b.dow]) : ''));
+    });
+    ch.appendChild(bars); ch.appendChild(lab); row.appendChild(ch);
+    var side = el('div', 'esside'); side.appendChild(el('div', 'esct', (me.name || '') + ' hay xem'));
+    var byL = {}, since = Date.now() - period * 864e5;
+    Store.recent().forEach(function (r) { var p = progressOf(r.vid), it = r.item; if (!it || !p || (r.t || 0) < since) return; var L = likeOf(it); var k = L ? L.k : 'other'; byL[k] = (byL[k] || 0) + (p.p || 0); });
+    var lines = ELIKE.filter(function (e) { return byL[e.k]; }).map(function (e) { return [e.i + ' ' + e.t, fmtHM(byL[e.k])]; });
+    if (byL.other) lines.push(['🎬 Phim khác', fmtHM(byL.other)]);
+    var mt = musicTop(period)[0]; if (mt) lines.push(['🎵 Bài hay nghe', mt.title]);
+    if (R.hasH && R.pv > 0) lines.push(['🕗 Hay xem lúc', UI.hr(R.peak) + ' – ' + UI.hr(R.peak + 2)]);
+    if (!lines.length) lines.push(['Chưa có dữ liệu', 'Xem phim rồi quay lại nhé']);
+    lines.forEach(function (l) { var r = el('div', 'esli'); r.appendChild(el('span', '', l[0])); r.appendChild(el('b', '', l[1])); side.appendChild(r); });
+    row.appendChild(side); v.appendChild(row);
+    v.appendChild(eHint('<span><i>◀ ▶</i> 7 · 30 · 90 ngày</span><span><i>↩</i> Về Cài đặt</span>'));
+    setTimeout(function () { if (segOn) Nav.focus(segOn, true); }, 0);
+    return { name: 'eldstats', el: v, focus: segOn };
+  }
+  function ElderMusicStats() {
+    var v = UI.view(); v.classList.add('elderv', 'scroller', 'eldset');
+    eWho(v);
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '🎵 Thống kê nghe nhạc')); h.appendChild(el('div', 'epts', '30 ngày qua · bài nghe nhiều nhất')); v.appendChild(h);
+    var l = musicTop(30), box = el('div', 'emslist'), first = null;
+    if (!l.length) box.appendChild(el('div', 'emsg', 'Chưa nghe bài nào trong 30 ngày qua.'));
+    var mx = l.length ? l[0].n : 1;
+    l.slice(0, 8).forEach(function (x, i) {
+      var r = el('div', 'emsrow f');
+      r.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t"></span><span class="bar"><i style="width:' + Math.max(4, x.n / mx * 100) + '%"></i></span><span class="c">' + x.n + ' lần</span>';
+      r.querySelector('.t').textContent = x.title; r._ok = function () {};
+      box.appendChild(r); if (!first) first = r;
+    });
+    v.appendChild(box);
+    v.appendChild(eHint('<span><i>↩</i> Về Cài đặt</span>'));
+    return { name: 'eldmstats', el: v, focus: first };
+  }
+
+  function elderGo(k) {
+    if (k === 'like') { push(ElderLike()); return; }
+    if (k === 'set') { push(ElderSettings()); return; }
+    if (k === 'music') { push(w.MusicPage && w.MusicPage.elder ? w.MusicPage.elder() : w.MusicPage.open()); return; }
+    if (k === 'cats') { push(ElderCats()); return; }
+    var T = { new: ['🆕 Phim mới', 'Phim mới ra từ các kênh'], hot: ['🔥 Phim hot', 'Nhiều người xem nhất 30 ngày qua'], top: ['🏆 Top 10 tuần này', 'Xem nhiều nhất 7 ngày qua'],
+      movie: ['🎬 Phim lẻ', 'Phim điện ảnh hay'], anime: ['🐼 Hoạt hình', '2D · 3D · AI'], hist: ['🕘 Lịch sử', 'Phim ' + Store.profileName() + ' đã xem'] }[k];
+    var src;
+    if (k === 'hist') src = Promise.resolve(Store.recent().filter(function (x) { return x.item; }).map(function (x) { return { it: x.item, vid: x.vid, ep: x.ep }; }));
+    else if (k === 'movie') src = Api.movieFilms().then(function (l) { return l.map(function (f) { return { it: f }; }); });
+    else if (k === 'anime') src = Api.animeAll().then(function (l) { return l.map(function (f) { return { it: f }; }); });
+    else src = Api.followedFilms().then(function (all) {
+      var list = unseen(all);
+      if (k === 'new') return list.slice(0, 40).map(function (f) { return { it: f, isNew: Date.now() - new Date(f.pub || 0).getTime() < 864e5 }; });
+      var since = Date.now() - (k === 'top' ? 7 : 30) * 864e5;
+      var l = all.filter(function (f) { return new Date(f.pub || 0).getTime() > since; });
+      if (k === 'hot') { l = list.filter(function (f) { return new Date(f.pub || 0).getTime() > since; }); if (l.length < 10) l = list.slice(); }
+      l.sort(function (a, b) { return (b.views || 0) - (a.views || 0); });
+      return l.slice(0, k === 'top' ? 10 : 40).map(function (f, i) { return { it: f, rank: k === 'top' ? i + 1 : 0 }; });
+    });
+    push(ElderList(T[0], T[1], src, k === 'hist'));
+  }
+  function ElderList(title, sub, src, hist) {
+    var v = UI.view(); v.classList.add('elderv', 'scroller');
+    eWho(v);
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', title)); h.appendChild(el('div', 'epts', sub)); v.appendChild(h);
+    var g = el('div', 'egrid'); v.appendChild(g);
+    g.appendChild(el('div', 'emsg', 'Đang tải phim…'));
+    v.appendChild(eHint('<span><i>OK</i> Xem phim</span><span><i>◀ ▶ ▲ ▼</i> Chọn phim</span><span><i>↩</i> Về trang đầu</span>'));
+    var view = { name: 'eldlist', el: v };
+    src.then(function (list) {
+      g.innerHTML = '';
+      list = list.filter(function (x) { return x.it && !Settings.hides(x.it); });
+      if (!list.length) { g.appendChild(el('div', 'emsg', hist ? 'Chưa xem phim nào.' : 'Chưa có phim. Lát nữa quay lại nhé.')); return; }
+      list.forEach(function (x, i) {
+        var it = x.it, c = el('div', 'ecard f');
+        var th = UI.thumb(it); th.classList.add('eth'); c.appendChild(th);
+        var s = '';
+        if (hist) {
+          var p = progressOf(x.vid || it.id);
+          s = (it.kind === 'anime' && x.ep ? 'Tập ' + x.ep + ' · ' : '') + (p && canResume(p) ? 'Còn ' + UI.fmtLong(p.d - p.p) : Store.isWatched(x.vid || it.id) ? '✓ Đã xem hết' : 'Đã xem');
+          if (p && p.d) { var pb = el('div', 'epb'), pf = el('i'); pf.style.width = Math.round(Math.min(1, p.p / p.d) * 100) + '%'; pb.appendChild(pf); th.appendChild(pb); }
+        } else s = it.kind === 'anime' ? (it.eps ? it.eps + ' tập' : 'Hoạt hình') : it.dur ? UI.fmtLong(it.dur) : '';
+        if (x.rank) th.appendChild(el('div', 'erk', String(x.rank)));
+        if (x.isNew) th.appendChild(el('div', 'enew', 'MỚI'));
+        if (it.kind === 'anime' && it.eps > 1 && !hist) th.appendChild(el('div', 'eeps', it.eps + ' tập'));
+        c.appendChild(el('div', 'ect', it.title));
+        if (s) c.appendChild(el('div', 'ecs', s));
+        c._item = it;
+        c._ok = function () { if (Player.previewOn && Player.previewOn(c)) { Player.previewOpen(); return; } if (it.kind === 'anime') openItem(it); else playFilm(it); };
+        eHold(c, th, it);
+        c.addEventListener('click', function () { if (UI.isMobile()) c._ok(); });
+        g.appendChild(c);
+        if (i === 0 && current() === view) setTimeout(function () { Nav.focus(c, true); }, 0);
+      });
+    }).catch(function (e) { g.innerHTML = ''; g.appendChild(el('div', 'emsg', Api.explain(e))); });
+    return view;
+  }
+  function ElderCats() {
+    var v = UI.view(); v.classList.add('elderv', 'scroller');
+    eWho(v);
+    var h = el('div', 'ept'); h.appendChild(el('div', 'eptt', '🎭 Thể loại')); h.appendChild(el('div', 'epts', 'Chọn loại phim muốn xem')); v.appendChild(h);
+    var g = el('div', 'egrid ecats'); v.appendChild(g);
+    var COL = ['#3a1c4a,#c2456b', '#0f2a43,#2f7fb8', '#3b2a14,#d9973c', '#1b3a2f,#4fae8a', '#2a2145,#7a6ad8', '#4a1c1c,#e0653d'];
+    var first = null;
+    C.CATEGORIES.filter(function (c) { return c.kind === 'film'; }).forEach(function (c, i) {
+      var t = el('div', 'ecat f');
+      t.style.background = 'linear-gradient(135deg,' + COL[i % COL.length] + ')';
+      var ic = el('div', 'ecic'); if (w.CAT_ICONS) ic.innerHTML = w.CAT_ICONS(c.id); t.appendChild(ic);
+      t.appendChild(el('div', 'ecn', c.name));
+      t._ok = function () { push(ElderList('🎭 ' + c.name, 'Phim thể loại ' + c.name, Api.catFilms(c).then(function (l) { return l.map(function (f) { return { it: f }; }); }), false)); };
+      t.addEventListener('click', function () { if (UI.isMobile()) t._ok(); });
+      g.appendChild(t); if (!first) first = t;
+    });
+    v.appendChild(eHint('<span><i>OK</i> Mở thể loại</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span><i>↩</i> Về trang đầu</span>'));
+    setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
+    return { name: 'eldcats', el: v, focus: first };
+  }
+
   /* ---------- Tìm kiếm ---------- */
 
   function SearchLock() {
@@ -1546,6 +2123,21 @@
     row('Đang xem với hồ sơ', 'Mỗi hồ sơ có lịch sử, phim xem dở, danh sách và từ khóa tìm kiếm riêng', function () {
       return { t: Store.profileName() + ' · Đổi', on: true };
     }, function () { push(Who()); });
+    row('👵 Chế độ ông bà', 'Giao diện chữ to, nút lớn cho hồ sơ “' + Store.profileName() + '”: Xem tiếp, Phim mới, Phim hot, Top 10, Thể loại, Phim lẻ, Hoạt hình, Nghe nhạc, Lịch sử. Thoát: giữ OK trên hình hồ sơ, nhập mã PIN', function () {
+      return { t: elderOn() ? 'Bật' : 'Tắt', on: elderOn() };
+    }, function (paint) {
+      var on = !elderOn(); Settings.set('ELDER', on); paint();
+      if (on) { UI.toast('Đã bật chế độ ông bà cho ' + Store.profileName()); setTimeout(function () { goTab('home'); }, 400); }
+      else { elderMark(); UI.toast('Đã tắt chế độ ông bà'); }
+    });
+    row('Mở app vào thẳng hồ sơ', 'Riêng máy này: mở app không hỏi “Ai đang xem?”, vào ngay hồ sơ đã chọn (ví dụ TV của ông bà). Tắt để hỏi như cũ', function () {
+      var id = Store.keep('autoProf'), p = id && (profileOf(id) || (id === 'guest' ? { name: 'Guest' } : null));
+      return { t: p ? p.name : 'Tắt', on: !!p };
+    }, function (paint) {
+      var ids = [''].concat([{ id: 'guest' }].concat(Store.profiles().filter(function (p) { return p.id !== 'guest'; })).map(function (p) { return p.id; }));
+      var cur = Store.keep('autoProf') || '', i = ids.indexOf(cur), nx = ids[(i + 1) % ids.length];
+      Store.keep('autoProf', nx || null); paint();
+    });
     row('Giới hạn giờ xem', 'Số giờ xem mỗi ngày và khung giờ được xem cho từng hồ sơ. Đổi cần mã PIN người lớn', function () {
       var n = Object.keys(limAll()).filter(function (k) { return limOf(k); }).length;
       return { t: n ? n + ' hồ sơ có giới hạn' : 'Chưa đặt', on: !!n };
@@ -1554,8 +2146,8 @@
       return { t: (w.Badges ? w.Badges.count(Store.profile()) : 0) + ' / 12 · Xem', on: true };
     }, function () { push(BadgeShelf()); });
     row('Thi đua tuần trên Trang chủ', 'Bảng xếp hạng huy hiệu cả nhà và một thử thách mỗi tuần. Đổi cần mã PIN người lớn', function () {
-      return { t: Store.pref('raceOff', false) ? 'Tắt' : 'Bật', on: !Store.pref('raceOff', false) };
-    }, function (paint) { withPin('đổi Thi đua tuần', function () { Store.setPref('raceOff', !Store.pref('raceOff', false)); paint(); UI.toast(Store.pref('raceOff', false) ? 'Đã tắt Thi đua tuần' : 'Đã bật Thi đua tuần'); }); });
+      return { t: Store.pref('raceOff', true) ? 'Tắt' : 'Bật', on: !Store.pref('raceOff', true) };
+    }, function (paint) { withPin('đổi Thi đua tuần', function () { Store.setPref('raceOff', !Store.pref('raceOff', true)); paint(); UI.toast(Store.pref('raceOff', true) ? 'Đã tắt Thi đua tuần' : 'Đã bật Thi đua tuần'); }); });
     row('Chế độ khách', 'Hồ sơ Guest thành Khách: không lưu lịch sử, xem dở, tìm kiếm (tự xóa khi tắt app hoặc đổi hồ sơ), không tính vào thống kê, huy hiệu, thi đua. Lọc lứa tuổi và giới hạn giờ vẫn áp dụng. Đổi cần mã PIN người lớn', function () {
       return { t: Settings.get('GUEST_MODE') ? 'Bật' : 'Tắt', on: !!Settings.get('GUEST_MODE') };
     }, function (paint) { withPin('đổi Chế độ khách', function () { var on = !Settings.get('GUEST_MODE'); Settings.set('GUEST_MODE', on); paint(); UI.toast(on ? 'Đã bật Chế độ khách' : 'Đã tắt Chế độ khách: Guest lưu lịch sử như trước'); }); });
@@ -2325,7 +2917,18 @@
     a.style.background = p.id === 'guest' ? '#5A6072' : AV[(p.c || 0) % AV.length];
     return a;
   }
+  // 2.41.3: điện thoại: hình người đang xem (Xem chung: chồng 2–3 hình) nằm cạnh 🎲, cỡ bằng xí ngầu
+  function paintMWho() {
+    var m = d.querySelector('#mhead .mwho'); if (!m) return;
+    var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
+    var tg = Store.together(), ids = tg.length ? tg.slice(0, 3) : [me.id];
+    m.innerHTML = ''; m.className = 'mbtn mwho n' + ids.length;
+    ids.forEach(function (id, i) { var p = profileOf(id) || { id: id, name: 'Guest' }; var a = avatar(p, 'mw'); if (i) a.classList.add('stk'); m.appendChild(a); });
+    m.title = tg.length ? 'Đang xem chung (bấm để đổi)' : 'Đang xem: ' + me.name + ' (bấm để đổi)';
+    if (!m._on) { m._on = 1; m.onclick = function (e) { e.stopPropagation(); push(Who()); }; }
+  }
   function paintWho() {
+    paintMWho();
     var b = d.getElementById('whobtn');
     if (!b) return;
     var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
@@ -2458,6 +3061,7 @@
       t.setAttribute('data-id', p.id);
       t.appendChild(avatar(p));
       t.appendChild(el('div', 'wname', (p.pinH ? '🔒 ' : '') + p.name));
+      if (profElder(p.id)) t.appendChild(el('div', 'wkind', '👵 Kiểu ông bà'));   // 2.45.4
       if (p.id === 'guest' && p.tmp) t.appendChild(el('div', 'wtmp', 'KHÔNG LƯU'));
       t.appendChild(el('div', 'wchk', '✓'));
       if (p.id === Store.profile() && whoMode === 'one') { t.classList.add('cur'); t.appendChild(el('div', 'wcur', Store.together().length ? 'Đang xem chung' : 'Đang xem')); mine = t; }
@@ -2483,9 +3087,15 @@
         // bước 2: chọn hình con thú
         setTimeout(function () {
           push(AvatarPick(name, freeAvatar(), function (av) {
-            var r = Store.addProfile(name, av);
-            if (!r || r === 'exists') { UI.toast('Chưa tạo được hồ sơ'); return; }
-            chooseProfile(r);
+            // 2.45.4: bước 3: chọn kiểu giao diện
+            setTimeout(function () {
+              push(KindPick(name, function (eld) {
+                var r = Store.addProfile(name, av);
+                if (!r || r === 'exists') { UI.toast('Chưa tạo được hồ sơ'); return; }
+                setProfElder(r.id || r, eld);
+                chooseProfile(r);
+              }));
+            }, 30);
           }));
         }, 30);
       }, { space: true, hint: 'Gõ tên (ví dụ: bo, me, be na) rồi chọn Lưu. Bước sau chọn hình con thú. Back để hủy.' }));
@@ -2857,6 +3467,10 @@
       first = item('🔒 Đổi mã PIN', 'gold', function () { unlockProfile(p, 'đổi mã PIN', function () { setTimeout(function () { setProfilePinFlow(p, function () { setTimeout(reWho, 30); }); }, 30); }); });
       item('🔓 Bỏ mã PIN', '', function () { unlockProfile(p, 'bỏ mã PIN', function () { Store.setProfilePin(p.id, null); UI.toast('Đã bỏ mã PIN của ' + p.name); setTimeout(reWho, 30); }); });
     }
+    if (!pinOnly) item(profElder(p.id) ? '📺 Đổi sang kiểu thường' : '👵 Đổi sang kiểu ông bà', '', function () {   // 2.45.4
+      if (profElder(p.id)) withPin('đổi ' + p.name + ' sang kiểu thường', function () { setProfElder(p.id, false); UI.toast(p.name + ': kiểu thường'); setTimeout(reWho, 30); });
+      else { setProfElder(p.id, true); UI.toast(p.name + ': kiểu ông bà'); setTimeout(reWho, 30); }
+    });
     if (!pinOnly) item('🎨 Màu riêng', '', function () { push(AccentPick(p)); });   // 2.41
     if (!pinOnly) item('🐾 Đổi hình', '', function () {
       push(AvatarPick(p.name, p.av != null ? p.av : freeAvatar(), function (av) { Store.setAvatar(p.id, av); paintWho(); UI.toast('Đã đổi hình cho ' + p.name); setTimeout(reWho, 30); }));
@@ -2874,6 +3488,37 @@
     v.appendChild(box);
     var view = { name: 'profmenu', el: v };
     setTimeout(function () { if (current() === view) Nav.focus(first); }, 0);
+    return view;
+  }
+
+  /* 2.45.4: kiểu giao diện của từng hồ sơ (thường / ông bà) */
+  function profElder(id) {
+    var all = Store.pref('psettings', {}) || {}, o = all[id];
+    return !!(o && o.ELDER === true);
+  }
+  function setProfElder(id, on) {
+    if (id === Store.profile()) { Settings.set('ELDER', !!on); elderMark(); return; }
+    var all = Store.pref('psettings', {}) || {};
+    all[id] = all[id] || {}; all[id].ELDER = !!on;
+    Store.setPref('psettings', all);
+  }
+  function KindPick(name, done) {
+    var v = UI.view(); v.classList.add('glogin');
+    var box = el('div', 'gbox kindpick');
+    box.appendChild(el('div', 'gt', 'Chọn kiểu cho ' + name));
+    box.appendChild(el('div', 'gnote', 'Đổi lại được: giữ OK trên hồ sơ ở màn hình Ai đang xem.'));
+    var row = el('div', 'kprow'), first = null;
+    [[false, '📺', 'Kiểu thường', 'Đủ các hàng phim, cài đặt, trò chơi'], [true, '👵', 'Kiểu ông bà', 'Chữ to, nút lớn, ít bấm']].forEach(function (o) {
+      var b = el('div', 'kpbtn f');
+      b.innerHTML = '<div class="kpi">' + o[1] + '</div><div class="kpt"></div><div class="kps"></div>';
+      b.querySelector('.kpt').textContent = o[2]; b.querySelector('.kps').textContent = o[3];
+      b._ok = function () { back(); setTimeout(function () { done(o[0]); }, 30); };
+      b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+      row.appendChild(b); if (!first) first = b;
+    });
+    box.appendChild(row); v.appendChild(box);
+    var view = { name: 'kindpick', el: v, focus: first };
+    setTimeout(function () { if (current() === view) Nav.focus(first, true); }, 0);
     return view;
   }
 
@@ -2961,15 +3606,112 @@
     return out;
   }
   function weekOf(st) { return daysOf(st, 7, 0); }
+  // 2.42: 90 / 180 ngày: biểu đồ gom theo tuần (cột cuối là tuần có hôm nay)
+  function bucketsOf(days, period) {
+    if (period <= 30) return days.map(function (d) { return { s: d.s, ch: d.ch, today: d.today, dow: d.dow, date: d.date, l1: d.today ? 'Hôm nay' : DOW[d.dow], l2: d.date, tip: DOWL[d.dow] + ' ' + d.date + (d.today ? ' (hôm nay)' : '') }; });
+    var out = [];
+    for (var e = days.length; e > 0; e -= 7) {
+      var part = days.slice(Math.max(0, e - 7), e), ch = {};
+      part.forEach(function (d) { Object.keys(d.ch).forEach(function (c) { ch[c] = (ch[c] || 0) + d.ch[c]; }); });
+      var a = part[0], z = part[part.length - 1], cur = e === days.length;
+      out.unshift({ s: sumS(part), ch: ch, today: cur, date: a.date, l1: cur ? 'Tuần này' : 'Tuần', l2: a.date, tip: 'Tuần ' + a.date + ' – ' + z.date + (cur ? ' (tuần này)' : '') });
+    }
+    return out;
+  }
   function sumS(l) { var t = 0; l.forEach(function (d) { t += d.s; }); return t; }
 
+  /* ---------- 2.42: Xuất thống kê ra PDF (trình duyệt: In → Lưu dưới dạng PDF) ---------- */
+  function statsCalc(period) {
+    var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
+    var st = Store.stats(), days = daysOf(st, period), prev = daysOf(st, period, period);
+    var r = { me: me, days: days, bk: bucketsOf(days, period), total: sumS(days), prevTotal: sumS(prev) };
+    var oldK = Object.keys(st).sort()[0]; if (!oldK || oldK > prev[Math.min(6, prev.length - 1)].k) r.prevTotal = 0;
+    r.avg = r.total / period; r.active = days.filter(function (d) { return d.s >= 60; }).length;
+    r.maxD = days.reduce(function (m, d) { return d.s > m.s ? d : m; }, days[0]);
+    var from = Date.now() - period * 86400e3; r.seen = 0;
+    Store.recent().forEach(function (x) { var pr = Store.getProgress(x.vid); if (pr && pr.t > from && Store.isWatched(x.vid)) r.seen++; });
+    r.hrs = []; for (var i = 0; i < 24; i++) r.hrs.push(0);
+    r.hasH = false; days.forEach(function (d) { if (d.h) { r.hasH = true; d.h.forEach(function (x, j) { r.hrs[j] += x; }); } });
+    r.peak = -1; r.pv = 0;
+    for (var j = 0; j < 24; j++) { var two = r.hrs[j] + r.hrs[(j + 1) % 24]; if (two > r.pv) { r.pv = two; r.peak = j; } }
+    r.byDow = [0, 0, 0, 0, 0, 0, 0]; days.forEach(function (d) { r.byDow[d.dow] += d.s; });
+    r.bestDow = r.byDow.indexOf(Math.max.apply(null, r.byDow));
+    r.streak = 0; for (var q = days.length - 1; q >= 0 && days[q].s >= 60; q--) r.streak++;
+    var chs = {}; days.forEach(function (d) { Object.keys(d.ch).forEach(function (c) { chs[c] = (chs[c] || 0) + d.ch[c]; }); });
+    r.topCh = Object.keys(chs).map(function (c) { return { c: c, s: chs[c] }; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 10);
+    r.profs = Store.profiles().map(function (p) { var l = daysOf(Store.stats(p.id), period); return { p: p, t: sumS(l), act: l.filter(function (d) { return d.s >= 60; }).length }; }).sort(function (a, b) { return b.t - a.t; });
+    return r;
+  }
+  function statsPdf(period) {
+    var R = statsCalc(period), wk = period > 30;
+    function E(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function pct(a, b) { if (!b) return ''; var x = Math.round((a - b) / b * 100); return (x >= 0 ? '▲ ' : '▼ ') + Math.abs(x) + '% so với ' + period + ' ngày trước'; }
+    var now = new Date(), two = function (n) { return (n < 10 ? '0' : '') + n; };
+    var made = two(now.getDate()) + '/' + two(now.getMonth() + 1) + '/' + now.getFullYear() + ' lúc ' + two(now.getHours()) + ':' + two(now.getMinutes());
+    // biểu đồ cột (SVG)
+    var bk = R.bk, W = 720, H = 210, L = 46, B = 34, T = 14, pw = W - L - 8, ph = H - B - T;
+    var mx = Math.max(60, bk.reduce(function (m, b) { return Math.max(m, b.s); }, 0)), nice = Math.ceil(mx / 60 / 30) * 30 * 60 || 1800;
+    var bw = pw / bk.length, svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">';
+    [0, 0.5, 1].forEach(function (f) { var y = T + ph * (1 - f); svg += '<line x1="' + L + '" x2="' + (W - 8) + '" y1="' + y + '" y2="' + y + '" stroke="#E4DED2"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" font-size="11" fill="#8A8170" text-anchor="end">' + fmtHM(nice * f) + '</text>'; });
+    var every = period <= 7 ? 1 : period <= 30 ? 5 : period <= 90 ? 3 : 6;
+    bk.forEach(function (b, i) {
+      var h = b.s > 0 ? Math.max(1.5, b.s / nice * ph) : 0, x = L + i * bw + bw * 0.18, y = T + ph - h;
+      svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + Math.min(4, bw * 0.2).toFixed(1) + '" fill="' + (b.today ? '#C98A1E' : '#E8B04B') + '"/>';
+      var show = every === 1 || b.today || (bk.length - 1 - i) % every === 0 && bk.length - 1 - i >= every / 2;
+      if (show) svg += '<text x="' + (L + i * bw + bw / 2).toFixed(1) + '" y="' + (H - 18) + '" font-size="10.5" fill="#5C5446" text-anchor="middle" font-weight="700">' + E(b.l1) + '</text><text x="' + (L + i * bw + bw / 2).toFixed(1) + '" y="' + (H - 5) + '" font-size="10" fill="#8A8170" text-anchor="middle">' + E(b.l2) + '</text>';
+      if (b.s >= 60 && (bk.length <= 31 && (b.today || b.s === mx) || bk.length > 31 && b.s === mx)) svg += '<text x="' + (L + i * bw + bw / 2).toFixed(1) + '" y="' + (y - 4).toFixed(1) + '" font-size="10.5" fill="#1F1A12" text-anchor="middle" font-weight="700">' + fmtHM(b.s) + '</text>';
+    });
+    var avgB = wk ? R.total / bk.length : R.avg;
+    if (avgB > 0) { var ay = T + ph * (1 - Math.min(1, avgB / nice)); svg += '<line x1="' + L + '" x2="' + (W - 8) + '" y1="' + ay.toFixed(1) + '" y2="' + ay.toFixed(1) + '" stroke="#3E9C7A" stroke-dasharray="5 4" stroke-width="1.5"/><text x="' + (L + 4) + '" y="' + (ay - 5).toFixed(1) + '" font-size="11" fill="#2F7E61" text-anchor="start" font-weight="700">TB ' + fmtHM(avgB) + (wk ? '/tuần' : '/ngày') + '</text>'; }
+    svg += '</svg>';
+    // khung giờ (SVG)
+    var hsvg = '';
+    if (R.hasH) {
+      var hm = Math.max.apply(null, R.hrs) || 1; hsvg = '<svg viewBox="0 0 340 120" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">';
+      R.hrs.forEach(function (x, i) { var h = x > 0 ? Math.max(3, x / hm * 90) : 0; hsvg += '<rect x="' + (6 + i * 13.7).toFixed(1) + '" y="' + (96 - h).toFixed(1) + '" width="10" height="' + h.toFixed(1) + '" rx="2" fill="#E8B04B" opacity="' + (x > 0 ? (0.35 + 0.65 * x / hm).toFixed(2) : 0) + '"/>'; });
+      [0, 6, 12, 18, 23].forEach(function (t) { hsvg += '<text x="' + (t ? (11 + t * 13.7).toFixed(1) : 2) + '" y="113" font-size="10" fill="#8A8170" text-anchor="' + (t ? 'middle' : 'start') + '">' + E(UI.hr(t)) + '</text>'; });
+      hsvg += '</svg>';
+    }
+    var notes = [];
+    if (!R.total) notes.push(['Chưa có dữ liệu', 'Trong ' + period + ' ngày qua chưa xem phim trên thiết bị này.']);
+    else {
+      notes.push(['Ngày xem nhiều nhất', DOWL[R.maxD.dow] + ' ' + R.maxD.date + ' · ' + fmtMin(R.maxD.s)]);
+      if (period > 7) notes.push(['Thứ hay xem nhất', DOWL[R.bestDow] + ' · trung bình ' + fmtMin(R.byDow[R.bestDow] / Math.max(1, Math.round(period / 7)))]);
+      if (R.hasH && R.pv > 0) notes.push(['Khung giờ cao điểm', UI.hr(R.peak) + ' – ' + UI.hr(R.peak + 2)]);
+      notes.push(['Chuỗi ngày liên tiếp', R.streak ? R.streak + ' ngày có xem phim' : 'Hôm nay chưa xem']);
+      if (R.prevTotal) notes.push(['So với ' + period + ' ngày trước', (R.total >= R.prevTotal ? 'Nhiều hơn ' : 'Ít hơn ') + fmtMin(Math.abs(R.total - R.prevTotal))]);
+    }
+    var d0 = R.days[0].date, d1 = R.days[R.days.length - 1].date;
+    var logo = '<svg width="34" height="34" viewBox="0 0 48 48"><defs><linearGradient id="prg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FAD680"/><stop offset="1" stop-color="#C48026"/></linearGradient></defs><rect width="48" height="48" rx="11" fill="url(#prg)"/><path d="M13 18v-6l5.5 3L24 8l5.5 7 5.5-3v6z" fill="#221206"/><rect x="13" y="19" width="22" height="2" fill="#221206"/><path d="M18 24v15l13-7.5z" fill="#221206"/></svg>';
+    var h = '<div class="prh">' + logo + '<div><div class="prb">Tổng Tài <b>TV</b></div><div class="prs">Báo cáo thống kê xem · ' + E(R.me.name) + '</div></div><div class="prd">' + period + ' ngày: ' + d0 + ' – ' + d1 + '<br>Tạo ' + made + '</div></div>';
+    h += '<div class="prk">' + [
+      ['Tổng ' + period + ' ngày', fmtMin(R.total), pct(R.total, R.prevTotal)],
+      ['Trung bình mỗi ngày', fmtMin(R.avg), pct(R.avg, R.prevTotal / period)],
+      ['Ngày có xem', R.active + '/' + period + ' ngày', Math.round(R.active / period * 100) + '% số ngày'],
+      ['Phim xem hết', R.seen + ' phim', '']
+    ].map(function (k) { return '<div class="prkc"><div class="prkk">' + E(k[0]) + '</div><div class="prkv">' + E(k[1]) + '</div><div class="prkd">' + E(k[2]) + '</div></div>'; }).join('') + '</div>';
+    h += '<div class="prc"><div class="prt">' + (wk ? 'Thời gian xem mỗi tuần' : 'Thời gian xem mỗi ngày') + '</div>' + svg + '</div>';
+    h += '<div class="pr2"><div class="prc"><div class="prt">Nhận xét</div>' + notes.map(function (n) { return '<div class="prn"><span>' + E(n[0]) + '</span><b>' + E(n[1]) + '</b></div>'; }).join('') + '</div>';
+    h += '<div class="prc"><div class="prt">Khung giờ hay xem</div>' + (hsvg || '<div class="pre">Chưa có dữ liệu.</div>') + '</div></div>';
+    h += '<div class="pr2"><div class="prc"><div class="prt">Kênh xem nhiều nhất</div>' + (R.topCh.length ? '<table>' + R.topCh.map(function (x, i) { return '<tr><td class="n">' + (i + 1) + '</td><td>' + E(x.c) + '</td><td class="r">' + fmtHM(x.s) + '</td><td class="r m">' + Math.round(x.s / (R.total || 1) * 100) + '%</td></tr>'; }).join('') + '</table>' : '<div class="pre">Chưa có dữ liệu.</div>') + '</div>';
+    h += '<div class="prc"><div class="prt">Các hồ sơ trên thiết bị này</div><table>' + R.profs.map(function (x) { return '<tr' + (x.p.id === R.me.id ? ' class="me"' : '') + '><td>' + E(x.p.name) + '</td><td class="r">' + fmtMin(x.t) + '</td><td class="r m">' + x.act + ' ngày có xem</td></tr>'; }).join('') + '</table></div></div>';
+    h += '<div class="prf">Chỉ tính lúc phim đang phát. Thống kê lưu riêng trên từng thiết bị (TV và điện thoại tính riêng), giữ 180 ngày. Tổng Tài TV ' + E(C.VERSION || '') + '</div>';
+    var old = d.getElementById('prbox'); if (old) old.parentNode.removeChild(old);
+    var box = d.createElement('div'); box.id = 'prbox'; box.innerHTML = h; d.body.appendChild(box);
+    d.documentElement.classList.add('printing');
+    var oldT = d.title; d.title = 'TongTaiTV-ThongKe-' + R.me.name + '-' + period + 'ngay';
+    function done() { d.documentElement.classList.remove('printing'); d.title = oldT; if (box.parentNode) box.parentNode.removeChild(box); w.removeEventListener('afterprint', done); }
+    w.addEventListener('afterprint', done);
+    UI.toast('Chọn “Lưu dưới dạng PDF” (iPhone: Chia sẻ → Lưu vào Tệp)', 4000);
+    setTimeout(function () { try { w.print(); } catch (e) { done(); UI.toast('Máy này không in được, mở bằng Safari / Chrome nhé'); } }, 350);
+  }
   function Stats(period) {
     period = period || 7;
     var v = UI.view();
     v.classList.add('scroller');
     v.classList.add('stats');
     var me = Store.profiles().filter(function (x) { return x.id === Store.profile(); })[0] || { id: 'guest', name: 'Guest' };
-    var st = Store.stats(), days = daysOf(st, period), prev = daysOf(st, 7, 7);
+    var st = Store.stats(), days = daysOf(st, period), prev = daysOf(st, period, period);   // 2.42: so với khoảng trước cùng độ dài
     var total = sumS(days), active = days.filter(function (d) { return d.s >= 60; }).length;
     var avg = total / period, maxD = days.reduce(function (m, d) { return d.s > m.s ? d : m; }, days[0]);
     var seen = 0, from = Date.now() - period * 86400e3;
@@ -2983,12 +3725,17 @@
     tt.appendChild(el('div', 'stt2', me.name + ' · ' + days[0].date + ' – ' + days[days.length - 1].date + ' · chỉ tính lúc phim đang phát'));
     top.appendChild(tt);
     var seg = el('div', 'stseg');
-    [7, 30].forEach(function (n) {
+    [7, 30, 90, 180].forEach(function (n) {
       var b = el('div', 'stsegb f' + (n === period ? ' on' : ''), n + ' ngày');
       b._ok = function () { if (n !== period) { back(); push(Stats(n)); } };
       seg.appendChild(b);
     });
     top.appendChild(seg);
+    if (!w.tizen && !w.AndroidApp) {   // 2.42: xuất PDF (trình duyệt: In → Lưu PDF)
+      var pdfb = el('div', 'stpdf f'); pdfb.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3"/></svg><span>Xuất PDF</span>';
+      pdfb._ok = function () { statsPdf(period); };
+      top.appendChild(pdfb);
+    }
     v.appendChild(top);
 
     var wrap = el('div', 'stwrap');
@@ -2996,14 +3743,16 @@
 
     // ----- 4 ô số liệu
     function delta(cur, old) {
-      if (period !== 7 || !old) return null;
+      if (!old) return null;
       var pct = Math.round((cur - old) / old * 100);
-      return { up: pct >= 0, t: (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(pct) + '% so với 7 ngày trước' };
+      return { up: pct >= 0, t: (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(pct) + '% so với ' + period + ' ngày trước' };
     }
     var prevTotal = sumS(prev);
+    var oldK = Object.keys(st).sort()[0];
+    if (!oldK || oldK > prev[Math.min(6, prev.length - 1)].k) prevTotal = 0;   // 2.42: chưa đủ dữ liệu khoảng trước (180 ngày cần 360 ngày) thì không so sánh
     var kpis = [
-      { k: period === 7 ? 'Tổng 7 ngày' : 'Tổng 30 ngày', v: fmtMin(total), d: delta(total, prevTotal), ic: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
-      { k: 'Trung bình mỗi ngày', v: fmtMin(avg), d: delta(avg, prevTotal / 7), ic: '<path d="M4 19h16M7 15l3-4 3 2 4-6"/>' },
+      { k: 'Tổng ' + period + ' ngày', v: fmtMin(total), d: delta(total, prevTotal), ic: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
+      { k: 'Trung bình mỗi ngày', v: fmtMin(avg), d: delta(avg, prevTotal / period), ic: '<path d="M4 19h16M7 15l3-4 3 2 4-6"/>' },
       { k: 'Hôm nay', v: fmtMin(days[days.length - 1].s), sub: 'TB ' + fmtMin(avg) + '/ngày', ic: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>' },
       { k: 'Phim xem hết', v: seen + ' phim', sub: active + '/' + period + ' ngày có xem', ic: '<path d="M5 12.5l4.5 4.5L19 7.5"/>' }
     ];
@@ -3016,7 +3765,7 @@
       t.appendChild(el('div', 'stk', x.k));
       t.appendChild(el('div', 'stv', x.v));
       if (x.d) t.appendChild(el('div', 'stdelta' + (x.d.up ? ' up' : ' down'), x.d.t));
-      else t.appendChild(el('div', 'stdelta', x.sub || (period === 7 ? 'Chưa có dữ liệu tuần trước' : '')));
+      else t.appendChild(el('div', 'stdelta', x.sub || 'Chưa có dữ liệu ' + period + ' ngày trước'));
       kr.appendChild(t);
     });
     wrap.appendChild(kr);
@@ -3025,31 +3774,33 @@
     var row1 = el('div', 'strow');
     var cp = el('div', 'stcard wide rowwrap');
     var ch = el('div', 'stch-h');
-    ch.appendChild(el('div', 'stct', 'Thời gian xem mỗi ngày'));
+    var bk = bucketsOf(days, period), wk = period > 30;
+    var maxB = bk.reduce(function (m, b) { return b.s > m.s ? b : m; }, bk[0]), avgB = wk ? total / bk.length : avg;
+    ch.appendChild(el('div', 'stct', wk ? 'Thời gian xem mỗi tuần' : 'Thời gian xem mỗi ngày'));
     ch.appendChild(el('div', 'stcs', 'Chọn từng cột để xem chi tiết'));
     cp.appendChild(ch);
-    var maxS = Math.max(60, maxD.s), niceMax = Math.ceil(maxS / 60 / 30) * 30 * 60 || 1800;   // làm tròn lên bội số 30 phút
-    var plot = el('div', 'stplot' + (period > 7 ? ' dense' : ''));
+    var maxS = Math.max(60, maxB.s), niceMax = Math.ceil(maxS / 60 / 30) * 30 * 60 || 1800;   // làm tròn lên bội số 30 phút
+    var plot = el('div', 'stplot' + (period > 7 && !wk ? ' dense' : ''));
     [1, 0.5, 0].forEach(function (f) {
       var gl = el('div', 'stgrid'); gl.style.bottom = (f * 100) + '%';
       gl.appendChild(el('span', 'stgl', fmtHM(niceMax * f)));
       plot.appendChild(gl);
     });
-    if (avg > 0) {
-      var al = el('div', 'stavg'); al.style.bottom = Math.min(100, avg / niceMax * 100) + '%';
-      al.appendChild(el('span', 'stavgl', 'TB ' + fmtHM(avg)));
+    if (avgB > 0) {
+      var al = el('div', 'stavg'); al.style.bottom = Math.min(100, avgB / niceMax * 100) + '%';
+      al.appendChild(el('span', 'stavgl', 'TB ' + fmtHM(avgB) + (wk ? '/tuần' : '')));
       plot.appendChild(al);
     }
     var bars = el('div', 'stbars2');
-    days.forEach(function (dd) {
-      var col = el('div', 'stb f' + (dd.today ? ' today' : '') + (dd === maxD && dd.s > 0 ? ' max' : ''));
+    bk.forEach(function (dd) {
+      var col = el('div', 'stb f' + (dd.today ? ' today' : '') + (dd === maxB && dd.s > 0 ? ' max' : ''));
       col._ok = function () {};
       var bar = el('div', 'stbfill');
       bar.style.height = (dd.s > 0 ? Math.max(1.5, dd.s / niceMax * 100) : 0) + '%';
       col.appendChild(bar);
-      if ((dd === maxD || dd.today) && dd.s >= 60) { var lab = el('div', 'stblab', fmtHM(dd.s)); lab.style.bottom = 'calc(' + Math.min(100, dd.s / niceMax * 100) + '% + 6px)'; col.appendChild(lab); }
+      if ((dd === maxB || dd.today) && dd.s >= 60) { var lab = el('div', 'stblab', fmtHM(dd.s)); lab.style.bottom = 'calc(' + Math.min(100, dd.s / niceMax * 100) + '% + 6px)'; col.appendChild(lab); }
       var tip = el('div', 'sttip');
-      tip.appendChild(el('b', '', DOWL[dd.dow] + ' ' + dd.date + (dd.today ? ' (hôm nay)' : '')));
+      tip.appendChild(el('b', '', dd.tip));
       tip.appendChild(el('span', '', dd.s ? fmtMin(dd.s) : 'Không xem'));
       var topc = Object.keys(dd.ch).sort(function (a2, b2) { return dd.ch[b2] - dd.ch[a2]; })[0];
       if (topc) tip.appendChild(el('span', 'm', 'Nhiều nhất: ' + topc));
@@ -3058,11 +3809,12 @@
     });
     plot.appendChild(bars);
     cp.appendChild(plot);
-    var axis = el('div', 'staxis' + (period > 7 ? ' dense' : ''));
-    days.forEach(function (dd, i) {
-      var show = period <= 7 || dd.today || i % 5 === 0;
+    var axis = el('div', 'staxis' + (period > 7 && !wk ? ' dense' : ''));
+    var every = period <= 7 ? 1 : period <= 30 ? 5 : period <= 90 ? 3 : 6;
+    bk.forEach(function (dd, i) {
+      var show = every === 1 || dd.today || (bk.length - 1 - i) % every === 0 && bk.length - 1 - i >= every / 2;
       var a = el('div', 'stax' + (dd.today ? ' today' : ''));
-      if (show) { a.appendChild(el('div', 'stax1', dd.today ? 'Hôm nay' : DOW[dd.dow])); a.appendChild(el('div', 'stax2', dd.date)); }
+      if (show) { a.appendChild(el('div', 'stax1', dd.l1)); a.appendChild(el('div', 'stax2', dd.l2)); }
       axis.appendChild(a);
     });
     cp.appendChild(axis);
@@ -3088,7 +3840,7 @@
       if (hasH && pv > 0) notes.push(['Khung giờ cao điểm', UI.hr(peak) + ' – ' + UI.hr(peak + 2)]);
       notes.push(['Chuỗi ngày liên tiếp', streak ? streak + ' ngày có xem phim' : 'Hôm nay chưa xem']);
       var d7 = delta(total, prevTotal);
-      if (d7) notes.push(['So với 7 ngày trước', (d7.up ? 'Nhiều hơn ' : 'Ít hơn ') + fmtMin(Math.abs(total - prevTotal))]);
+      if (d7) notes.push(['So với ' + period + ' ngày trước', (d7.up ? 'Nhiều hơn ' : 'Ít hơn ') + fmtMin(Math.abs(total - prevTotal))]);
     }
     notes.forEach(function (n) {
       var r = el('div', 'stins');
@@ -3182,7 +3934,7 @@
     }
 
     var foot = el('div', 'stfoot rowwrap');
-    foot.appendChild(el('div', 'stnote', 'Thống kê lưu trên thiết bị này (TV và điện thoại tính riêng), giữ 35 ngày.'));
+    foot.appendChild(el('div', 'stnote', 'Thống kê lưu trên thiết bị này (TV và điện thoại tính riêng), giữ 180 ngày.'));
     foot.appendChild(UI.button('Xóa thống kê của ' + me.name, 'small', function () {
       withPin('xóa thống kê', function () { Store.clearStats(); UI.toast('Đã xóa thống kê'); setTimeout(function () { back(); push(Stats(period)); }, 30); });
     }));
@@ -4656,7 +5408,7 @@
     return { name: 'badges', el: v, focus: first };
   }
   function raceCard() {
-    if (!w.Badges || Store.pref('raceOff', false)) return null;
+    if (!w.Badges || Store.pref('raceOff', true)) return null;
     var ids = Store.profiles().filter(function (p) { return !(p.id === 'guest' && Store.guestMode()); }).map(function (p) { return p.id; });
     var ch = w.Badges.challenge();
     var rows = ids.map(function (id) { return { p: profileOf(id) || { id: id, name: 'Guest' }, n: w.Badges.count(id), nw: w.Badges.newest(id), cn: w.Badges.weekN(id, ch.k) }; });
@@ -5331,6 +6083,7 @@
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="62" r="38" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M100 40v24l16 10" fill="none" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round"/></svg>', t: 'Hẹn giờ tắt và Đã xem', l: ['Đang xem phim: bấm ▲ để hiện nút, chọn “Hẹn giờ”. Mỗi lần OK đổi: 30 phút → 60 phút → 90 phút → Hết phim này → Tắt.', 'Hết giờ, phim tạm dừng và hiện thông báo; bấm OK để xem tiếp. Còn 1 phút app nhắc trước.', 'Phim xem hết có dấu “✓ Đã xem” và không hiện lại ở Phim mới, Đang hot, Đề xuất (tắt trong Cài đặt → Trang chủ).', 'Trang chi tiết phim: nút “Đánh dấu đã xem” / “Đã xem ✓” để tự đánh dấu hoặc bỏ đánh dấu.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><defs><linearGradient id="gsv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A14"/><stop offset="1" stop-color="#0B0B0E"/></linearGradient></defs><rect width="200" height="120" rx="12" fill="url(#gsv)"/><circle cx="60" cy="34" r="12" fill="#E8B04B" opacity=".35"/><circle cx="120" cy="26" r="9" fill="#E8B04B" opacity=".3"/><path d="M0 120V84h18v-14h16v20h14V64h20v56z" fill="#000" opacity=".7"/><rect x="16" y="92" width="26" height="6" rx="2" fill="#E8B04B"/><rect x="16" y="102" width="60" height="7" rx="2" fill="#F4F1EC"/><text x="186" y="104" text-anchor="end" font-size="26" font-weight="300" fill="#F4F1EC" font-family="sans-serif">11:19</text></svg>', t: 'Màn hình chờ', l: ['Để app yên 10 phút: hiện ảnh bìa phim mới chạy chậm, đổi phim mỗi 12 giây, kèm tên phim và đồng hồ lớn, giống Netflix.', 'Bấm phím bất kỳ (hoặc chạm) để quay lại đúng chỗ cũ, phím đó không làm gì khác.', 'Đang chiếu phim thì không hiện. Nhạc nền tạm im. Đồng hồ đổi góc để màn TV không bị in hình.', 'Cài đặt → Giao diện → Màn hình chờ: Tắt / 5 / 10 / 15 / 30 phút, có nút Xem thử.', 'Câu thoại tổng tài: mỗi lần màn hình chờ hiện là một câu mới (500 câu, 5 chủ đề, đi hết mới lặp lại), hiện cùng tên phim. Tắt ở Cài đặt → Câu thoại tổng tài.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="52" r="30" fill="none" stroke="#2A3042" stroke-width="10"/><path d="M100 22a30 30 0 0 1 26 45" fill="none" stroke="#E8B04B" stroke-width="10" stroke-linecap="round"/><text x="100" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#F4F1EC" font-family="sans-serif">1 giờ</text><text x="100" y="106" text-anchor="middle" font-size="13" fill="#9AA0AE" font-family="sans-serif">18:00 – 21:00</text></svg>', t: 'Giới hạn giờ xem', l: ['Cài đặt → Hồ sơ người xem → Giới hạn giờ xem (cần mã PIN người lớn). Chọn hồ sơ, đặt số giờ mỗi ngày, cuối tuần, khung giờ được xem, nhắc trước 5 hoặc 10 phút.', 'Sắp hết giờ: góc màn hình nhắc “còn 5 phút”. Hết giờ: phim dừng, hiện màn hình “Hết giờ xem phim hôm nay”. Vẫn nghe nhạc được.', 'Người lớn bấm “Người lớn: thêm giờ”, nhập mã PIN, cho thêm 15 / 30 / 60 phút.', 'Giới hạn đồng bộ qua Google nên áp dụng trên mọi máy của gia đình. Thời gian xem tính theo thống kê xem của hồ sơ.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="24" y="18" width="152" height="44" rx="8" fill="#E8B04B"/><rect x="24" y="70" width="34" height="32" rx="6" fill="#3A4258"/><rect x="63" y="70" width="34" height="32" rx="6" fill="#3A4258"/><rect x="102" y="70" width="34" height="32" rx="6" fill="#3A4258"/><rect x="141" y="70" width="35" height="32" rx="6" fill="#3A4258"/></svg>', t: 'Chế độ ông bà', l: ['Giao diện chữ to, nút lớn cho người lớn tuổi: phim đang xem dở với nút Xem tiếp, và 8 nút Phim mới · Phim hot · Top 10 · Thể loại · Phim lẻ · Hoạt hình · Nghe nhạc · Lịch sử.', 'Bật riêng cho từng hồ sơ: chọn hồ sơ của ông bà → Cài đặt → Hồ sơ người xem → Chế độ ông bà: Bật.', 'Mở app vào thẳng hồ sơ (Cài đặt → Hồ sơ người xem): riêng từng máy, ví dụ TV của ông bà mở app là vào ngay, không hỏi Ai đang xem.', 'Khi xem phim: thời gian ghi rõ “Còn 18 phút”, chữ phụ đề to. Trang Nghe nhạc: ảnh phim, 3 câu hát chữ to, nút Dừng lớn.', 'Thoát hoặc đổi người: giữ OK trên hình hồ sơ ở góc trên (điện thoại: chạm giữ 2 giây vào tên) rồi nhập mã PIN người lớn.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="82" cy="54" r="22" fill="#DDEBFF"/><circle cx="118" cy="54" r="22" fill="#FFE4EE" stroke="#1D2230" stroke-width="4"/><circle cx="134" cy="36" r="9" fill="#E8B04B"/><path d="M130 36l3 3 6-6" stroke="#1a1206" stroke-width="2.5" fill="none"/><rect x="50" y="88" width="100" height="18" rx="9" fill="#E8B04B"/></svg>', t: 'Xem chung', l: ['Ai đang xem? → chọn “Xem chung” → chọn 2 đến 4 người → “Xem chung: …”.', 'Phim, phim xem dở và thời gian xem được ghi cho tất cả. Hàng Đề xuất gợi ý theo sở thích chung.', 'Có giới hạn giờ xem thì người có giới hạn chặt nhất quyết định.', 'Thôi xem chung: chọn lại một hồ sơ trong Ai đang xem?.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><circle cx="100" cy="56" r="26" fill="#E0314B"/><rect x="93" y="40" width="14" height="24" rx="7" fill="#fff"/><path d="M86 58a14 14 0 0 0 28 0M100 72v8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><text x="100" y="106" text-anchor="middle" font-size="13" fill="#F4F1EC" font-family="sans-serif">“tổng tài giả nghèo”</text></svg>', t: 'Tìm bằng giọng nói', l: ['Trang Tìm kiếm có nút micro đỏ (điện thoại, máy tính, Android TV). Bấm rồi nói tên phim, app tự tìm.', 'Android TV: hộp giọng nói của Google hiện ra. Remote có nút Tìm kiếm thì bấm nút đó cũng được.', 'Lần đầu trình duyệt hỏi quyền dùng micro: chọn Cho phép.', 'TV Samsung không cho app dùng micro nên không có nút này.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="18" y="20" width="80" height="12" rx="6" fill="#E8B04B"/><rect x="18" y="42" width="120" height="14" rx="4" fill="#F4F1EC"/><rect x="18" y="66" width="140" height="8" rx="4" fill="#2A3042"/><rect x="18" y="66" width="100" height="8" rx="4" fill="#E8B04B"/><rect x="18" y="86" width="60" height="20" rx="10" fill="#E8B04B"/><circle cx="170" cy="30" r="12" fill="#E0314B"/><text x="170" y="35" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="sans-serif">3</text></svg>', t: 'Xem tiếp và phim mới của kênh yêu thích', l: ['Phim xem dở gần nhất (trong 4 ngày) lên banner Trang chủ: “còn 12 phút”, nút Xem tiếp hoặc Xem từ đầu.', 'Tab Kênh có chấm đỏ: tổng số phim mới của các kênh yêu thích từ lần bạn mở kênh đó gần nhất.', 'Trong trang Kênh, kênh yêu thích có số đỏ và dòng “3 phim mới”. Mở kênh là số được đặt lại.'] },
@@ -5339,7 +6092,7 @@
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="20" y="22" width="76" height="76" rx="8" fill="#fff"/><rect x="30" y="32" width="20" height="20" fill="#111"/><rect x="66" y="32" width="20" height="20" fill="#111"/><rect x="30" y="68" width="20" height="20" fill="#111"/><rect x="58" y="60" width="10" height="10" fill="#111"/><rect x="128" y="20" width="44" height="80" rx="8" fill="#2A3042" stroke="#E8B04B" stroke-width="3"/></svg>', t: 'Gửi phim sang điện thoại', l: ['Đang xem: bấm ▲ hiện nút → “Gửi sang điện thoại”. Phim tạm dừng, TV hiện mã QR.', 'Quét bằng camera điện thoại: phim mở đúng chỗ đang xem, cùng hồ sơ. Không cần đăng nhập.', 'Điện thoại chưa có hồ sơ đó thì app tự tạo hồ sơ cùng tên và hình.', 'Bên cạnh có mã QR thứ hai: mở phim bằng ứng dụng YouTube, đúng chỗ đang xem (để thích, bình luận, đăng ký kênh).'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#14162a"/><text x="100" y="66" text-anchor="middle" font-size="44" font-family="sans-serif">🌙</text><text x="100" y="102" text-anchor="middle" font-size="14" fill="#DCE3FF" font-family="sans-serif">22:00 · Chúc ngủ ngon</text></svg>', t: 'Chế độ ngủ, sinh nhật, báo cáo tuần', l: ['Chế độ ngủ (Cài đặt → Giao diện): tới giờ, màn hình tối dần, âm lượng nhỏ lại, hết phim không tự phát tiếp; 30 giây sau app tắt (TV) hoặc màn hình tối (trình duyệt). Có nút “Xem thêm 15 phút”.', 'Ngày sinh của hồ sơ (Cài đặt → Hồ sơ người xem): hôm đó app chúc mừng, pháo bông, nhạc sinh nhật và thêm 30 phút xem phim nếu có giới hạn.', 'Hồ sơ xem báo cáo tuần (Cài đặt → Hồ sơ người xem, cần PIN): thứ Hai đến thứ Tư, Trang chủ hiện báo cáo tuần trước của cả nhà.', 'Tổng tài của tuần: ảnh lớn đầu Trang chủ là phim cả nhà xem nhiều nhất 7 ngày qua, kèm một câu thoại. Có tập mới: hàng riêng khi phim bộ đang theo dõi ra tập mới.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 20l40 15v28c0 22-17 35-40 42-23-7-40-20-40-42V35z" fill="#E8B04B"/><path d="M84 62l11 11 22-24" fill="none" stroke="#221206" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Giữ hồ sơ khi cập nhật hay cài lại', l: ['Cập nhật bản mới (cài đè, cùng địa chỉ web): hồ sơ, hình, mã PIN, lịch sử còn nguyên.', 'Cài lại từ đầu, xóa dữ liệu, đổi máy: sao lưu TRƯỚC. Tốt nhất là đăng nhập Google (hoặc GitHub) trong Cài đặt, cài lại xong đăng nhập lại là đủ mọi hồ sơ.', 'Không có tài khoản: Cài đặt → Xuất mã sao lưu, gửi mã cho chính mình; cài lại xong vào Nhập mã sao lưu.', 'Khôi phục chỉ gộp thêm, không xóa gì. API key phải nhập lại trên máy mới.'] },
-      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="80" width="18" height="22" rx="3" fill="#E8B04B"/><rect x="66" y="56" width="18" height="46" rx="3" fill="#E8B04B"/><rect x="92" y="66" width="18" height="36" rx="3" fill="#E8B04B"/><rect x="118" y="34" width="18" height="68" rx="3" fill="#E8B04B"/><rect x="144" y="46" width="18" height="56" rx="3" fill="#4FAE8A"/></svg>', t: 'Thống kê xem', l: ['Lịch sử → nút “Thống kê xem” (hoặc Cài đặt → Hồ sơ người xem → Thống kê xem). Chọn 7 ngày hoặc 30 ngày ở góc phải.', 'Tổng, trung bình, hôm nay, phim xem hết (so với 7 ngày trước); biểu đồ theo ngày có đường trung bình, chọn từng cột để xem chi tiết; nhận xét tự động; khung giờ hay xem; 5 kênh xem nhiều nhất.', 'So sánh thời gian xem của tất cả hồ sơ, tiện theo dõi bé xem bao lâu. Chỉ tính lúc phim đang chạy, mỗi thiết bị tính riêng, giữ 35 ngày. Xóa thống kê cần mã PIN.'] },
+      { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="40" y="80" width="18" height="22" rx="3" fill="#E8B04B"/><rect x="66" y="56" width="18" height="46" rx="3" fill="#E8B04B"/><rect x="92" y="66" width="18" height="36" rx="3" fill="#E8B04B"/><rect x="118" y="34" width="18" height="68" rx="3" fill="#E8B04B"/><rect x="144" y="46" width="18" height="56" rx="3" fill="#4FAE8A"/></svg>', t: 'Thống kê xem', l: ['Lịch sử → nút “Thống kê xem” (hoặc Cài đặt → Hồ sơ người xem → Thống kê xem). Chọn 7 · 30 · 90 · 180 ngày ở góc phải (90 và 180 ngày: biểu đồ theo tuần). Điện thoại / máy tính: nút Xuất PDF để lưu hoặc in.', 'Tổng, trung bình, hôm nay, phim xem hết (so với 7 ngày trước); biểu đồ theo ngày có đường trung bình, chọn từng cột để xem chi tiết; nhận xét tự động; khung giờ hay xem; 5 kênh xem nhiều nhất.', 'So sánh thời gian xem của tất cả hồ sơ, tiện theo dõi bé xem bao lâu. Chỉ tính lúc phim đang chạy, mỗi thiết bị tính riêng, giữ 180 ngày. Xóa thống kê cần mã PIN.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><g fill="#fff"><circle cx="40" cy="30" r="4"/><circle cx="160" cy="24" r="5"/><circle cx="120" cy="90" r="4"/><circle cx="66" cy="96" r="3"/></g><path d="M30 104h140" stroke="#D7262E" stroke-width="2"/><circle cx="50" cy="104" r="5" fill="#F5C542"/><circle cx="80" cy="104" r="5" fill="#2FA84F"/><circle cx="110" cy="104" r="5" fill="#D7262E"/><circle cx="140" cy="104" r="5" fill="#4FA3FF"/><path d="M100 22l26 52H74z" fill="#2FA84F"/><rect x="95" y="74" width="10" height="12" fill="#8A5A33"/><path d="M100 14l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6-4.5-4 6-1z" fill="#F5C542"/></svg>', t: 'Chủ đề theo mùa và ngày lễ', l: ['Cài đặt → Chủ đề theo mùa và ngày lễ → Chủ đề: Tự động (đổi theo ngày), Tắt, hoặc chọn tay một chủ đề.', '17 chủ đề: Tết, Valentine, Năm mới, Giáng sinh, 8/3, 20/10, 1/6, Ngày của Mẹ, Ngày của Cha, Trung thu, Halloween, Lễ Tạ Ơn, Hoa anh đào, Xuân, Hạ, Thu, Đông. Tết và Trung thu tính theo âm lịch.', 'Có tuyết, hoa, lá, trái tim… rơi; dây đèn nhấp nháy; lồng đèn; hình nhỏ trên logo; lời chúc. TV chạy chậm: tắt “Hiệu ứng rơi”.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><path d="M100 18l58 22v28c0 26-24 44-58 52-34-8-58-26-58-52V40z" fill="none" stroke="#E8B04B" stroke-width="6"/><path d="M76 66l16 16 32-32" fill="none" stroke="#4FAE8A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>', t: 'Lọc phim theo lứa tuổi và mã PIN', l: ['Cài đặt → Lọc theo lứa tuổi → “Chỉ hiện phim phù hợp lứa tuổi”: ẩn phim có từ khóa nhạy cảm trong tên hoặc mô tả, ở mọi trang.', '“Từ khóa nhạy cảm”: thêm hoặc xóa từ khóa (gõ không dấu cũng được, “ma tuy” khớp “Ma Túy”).', 'Lọc mặc định TẮT; bật trong Cài đặt khi cần.', 'Mã PIN (mặc định 1234) cần khi: tắt lọc, sửa từ khóa, khôi phục mặc định, xóa thống kê. Trẻ nhỏ không tự tắt được.', 'Đổi mã PIN: Cài đặt → Lọc theo lứa tuổi → Mã PIN. Nhập PIN cũ, rồi PIN mới (4–8 số) hai lần. PIN mới đồng bộ sang các máy đã đăng nhập.', 'Quên PIN: người lớn mở js/config.js, điền PIN_FORCE: ‘1234’, mở lại app một lần, rồi xóa đi.'] },
       { svg: '<svg viewBox="0 0 200 120" width="100%" height="100%"><rect width="200" height="120" rx="12" fill="#1D2230"/><rect x="30" y="50" width="30" height="18" rx="5" fill="#E5484D"/><rect x="66" y="50" width="30" height="18" rx="5" fill="#3DBE6B"/><rect x="102" y="50" width="30" height="18" rx="5" fill="#F2C230"/><rect x="138" y="50" width="30" height="18" rx="5" fill="#3B82F6"/></svg>', t: 'Phím màu & phím tắt khi xem (TV)', l: ['Phím màu (remote Samsung): Đỏ = thêm/bỏ phim đang chọn vào Danh sách · Xanh lá = Remote điện thoại · Vàng = Bốc thăm phim · Xanh dương = Tìm kiếm.', 'Giữ OK trên ô phim: xem Tóm tắt (3 ý từ mô tả YouTube), có nút Xem phim / Xem thử.', 'Đang xem: bấm ◀ 2 lần nhanh = xem lại đoạn vừa qua và bật phụ đề tạm (qua đoạn đó tự tắt). Giữ ◀ hoặc ▶ = dải ảnh mốc 10 phút, ◀ ▶ chọn, OK để tới.', 'Hết tập: màn hình Tập tiếp đếm 10 giây rồi tự phát; “Thôi, để mai” để dừng.', 'Remote điện thoại: giữ nút 🎤 để nói tên phim; ô Dán link YouTube có nút Mở trên TV và Xem sau (Android: Chia sẻ → Remote TV).'] },
@@ -5418,7 +6171,8 @@
     // Ô hồ sơ người xem (góc trên bên phải): bấm để đổi người xem
     var wb = el('div', 'whobtn f');
     wb.id = 'whobtn';
-    wb._ok = function () { push(Who()); };
+    wb._ok = function () { if (elderOn()) { UI.toast('Giữ OK 2 giây trên hình này để đổi người xem hoặc thoát chế độ ông bà', 4000); return; } push(Who()); };
+    wb._hold = function () { if (elderOn()) elderMenu(); else push(Who()); };   // 2.43
     var clk = d.getElementById('clock');
     // Nút Sáng/Tối (TV: tròn, ngay trước ô hồ sơ; điện thoại: góc trên bên phải, ngang logo)
     var tb = el('div', 'thbtn f'); tb.id = 'thbtn';

@@ -127,10 +127,13 @@
     if (item.kind === 'anime' && w.Screens && w.Screens.folNew && w.Screens.folNew(item)) t.appendChild(el('div', 'badge newep', '🔔 Tập mới'));
     // 2.39.2: điện thoại: nút ⓘ ở góc ảnh mở bảng Tóm tắt (giữ lâu vẫn xem trước như cũ)
     if (isMobile() && item.id && String(item.id).indexOf('demo') !== 0) {
-      var ib = el('div', 'cinfo', 'i');
+      var ib = el('div', 'cinfo', 'i'); t.classList.add('hasinfo');   // 2.41.2: chừa chỗ cho ⓘ (không dùng :has, máy cũ chưa hiểu)
       ib.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); if (w.Screens && w.Screens.sheet) w.Screens.sheet(item, o.onSelect, c); });
       ib.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
       t.appendChild(ib);
+      // 2.41.3: thời lượng + nhãn ★ AI / 3D chung một hàng góc trái
+      var bd = t.querySelector('.badge.dur'), bt = t.querySelector('.badge.tag');
+      if (bd && bt) { var tl = el('div', 'ctl'); t.insertBefore(tl, bd); tl.appendChild(bd); tl.appendChild(bt); }
     }
     if (item.id && String(item.id).indexOf('demo') !== 0)
       c._hold = function () {
@@ -365,6 +368,7 @@
         var sc2 = cur.closest('.scroller');
         if (sc2 && !best.closest('.scroller') && sc2.scrollTop > 8) { anim(sc2, 'scrollTop', 0); return; }   // lên đầu trang trước, bấm lần nữa mới lên menu
       }
+      if (best && dir === 'left' && best.closest('.emenu') && !cur.closest('.emenu')) { var mc = d.querySelector('.emenu .emi.cur'); if (mc) best = mc; }   // 2.44: ông bà: ◀ về đúng mục đang mở
       if (best) Nav.focus(best);
     },
 

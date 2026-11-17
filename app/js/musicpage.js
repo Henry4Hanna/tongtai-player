@@ -453,6 +453,213 @@
     return view;
   }
 
+  /* 2.43: Nghe nhạc cho chế độ ông bà: ảnh phim đổi chậm, 3 câu hát chữ to, nút lớn */
+  function ElderMusic() {
+    UI = w.UI;
+    var S = M();
+    var v = el('div', 'view musicv elderv emus');
+    var view = { name: 'music', el: v };
+    var top = el('div', 'emtop');
+    var art = el('div', 'emart'), artA = el('div', 'emimg'), artB = el('div', 'emimg');
+    art.appendChild(artA); art.appendChild(artB);
+    var cap = el('div', 'emcap', ''), dots = el('div', 'emdots');
+    art.appendChild(cap); art.appendChild(dots);
+    top.appendChild(art);
+    var info = el('div', 'eminfo');
+    var kick = el('div', 'emk', ''), ttl = el('div', 'emt', '');
+    var l0 = el('div', 'eml0', ''), l1 = el('div', 'eml1', ''), l2 = el('div', 'eml2', '');
+    var prog = el('div', 'emprog'), tNow = el('span', '', '0:00'), bar = el('div', 'embar'), fill = el('i'), tTot = el('span', '', '0:00');
+    bar.appendChild(fill); prog.appendChild(tNow); prog.appendChild(bar); prog.appendChild(tTot);
+    [kick, ttl, l0, l1, l2, prog].forEach(function (x) { info.appendChild(x); });
+    top.appendChild(info);
+    v.appendChild(top);
+    function btn(cls, html, fn) { var b = el('div', 'emb f ' + cls); b.innerHTML = html; b._ok = fn; b.addEventListener('click', function () { if (w.UI.isMobile()) fn(); }); return b; }
+    var bPrev = btn('', '⏮<span>Bài trước</span>', function () { S.prev(); });
+    var bPlay = btn('on', '⏸<span>Dừng</span>', function () { S.toggle(); setTimeout(paintCtl, 80); });
+    var bNext = btn('', '⏭<span>Bài sau</span>', function () { S.next(); });
+    var bSleep = btn('', '🌙<span>Hẹn tắt</span>', function () { w.Screens.push(SleepSheet()); });
+    var bList = btn('', '☰<span>Danh sách bài</span>', function () { w.Screens.push(SongList()); });
+    var ctr = el('div', 'emctl');
+    [bPrev, bPlay, bNext, bSleep, bList].forEach(function (b) { ctr.appendChild(b); });
+    v.appendChild(ctr);
+    var slp = el('div', 'emsleep', ''); v.appendChild(slp);
+    var hint = el('div', 'ehint tonly'); hint.innerHTML = '<span><i>OK</i> Dừng / Phát</span><span><i>◀ ▶</i> Chọn nút</span><span><i>↩</i> Về trang đầu (nhạc vẫn phát)</span>'; v.appendChild(hint);
+
+    var imgs = images(), layer = 0, list = [], k = 0, lastImg = 0, curIdx = -2, times = [], curLine = -3;
+    function nk(x) { return nk0(x); }
+    function coversOf(i) {
+      var sg = S.song(i); if (!sg) return [];
+      var up = sg.covers || (sg.cover ? [sg.cover] : []);
+      if (up.length) { var u = String(S.url ? S.url(i) : '').replace(/[^\/]*$/, ''); return up.map(function (c) { return { src: u + c, title: '' }; }); }
+      var out = [], seen = {};
+      function add(src, t) { if (!src || seen[src] || out.length >= 10) return; seen[src] = 1; out.push({ src: src, title: t || '' }); }
+      (sg.films || []).forEach(function (id) { add('https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', ''); });
+      var keys = (sg.keys && sg.keys.length ? sg.keys : [sg.title]).map(nk);
+      imgs.filter(function (x) { var t = nk(x.title); return keys.some(function (q) { return q && t.indexOf(q) >= 0; }); }).forEach(function (x) { add(x.src, x.title); });
+      var off = (i * 5) % Math.max(1, imgs.length);
+      imgs.slice(off).concat(imgs.slice(0, off)).forEach(function (x) { add(x.src, x.title); });
+      return out;
+    }
+    function nextImg() {
+      lastImg = Date.now();
+      if (!list.length) { art.classList.add('noimg'); return; }
+      var it = list[k % list.length]; k++;
+      var pre = new Image();
+      pre.onload = pre.onerror = function () {
+        var a = layer ? artB : artA, b = layer ? artA : artB;
+        b.style.backgroundImage = 'url("' + it.src.replace(/"/g, '%22') + '")'; b.classList.add('on'); a.classList.remove('on'); layer = 1 - layer;
+        cap.textContent = it.title ? '📺 ' + it.title : ''; cap.style.display = it.title ? '' : 'none';
+        dots.innerHTML = ''; var n = Math.min(list.length, 6); if (n > 1) for (var q = 0; q < n; q++) dots.appendChild(el('i', q === (k - 1) % n ? 'on' : ''));
+      };
+      pre.src = it.src;
+    }
+    function lineTxt(song, i) { var L = song && song.lyrics && song.lyrics[i]; return L ? L.t : ''; }
+    function renderSong() {
+      var i = S.index(), song = S.song(i); curIdx = i; curLine = -3;
+      if (!song) { ttl.textContent = 'Nhạc của tôi'; kick.textContent = S.all().length ? 'ĐANG CHUẨN BỊ…' : 'CHƯA TẢI ĐƯỢC NHẠC'; l0.textContent = l1.textContent = l2.textContent = ''; return; }
+      times = lineTimes(song);
+      ttl.textContent = song.title;
+      kick.textContent = 'ĐANG PHÁT · BÀI ' + (i + 1) + '/' + S.all().length;
+      list = coversOf(i); k = 0; nextImg();
+    }
+    function paintLine(t) {
+      var song = S.song(); if (!song) return;
+      var n = (song.lyrics || []).length;
+      if (!n) { if (curLine !== -9) { curLine = -9; l0.textContent = ''; l1.textContent = '♪ Bài này chưa có lời'; l2.textContent = ''; } return; }
+      var q = lineAt(times, t);
+      if (q === curLine) return;
+      curLine = q;
+      if (q < 0) { l0.textContent = ''; l1.textContent = '♪ Nhạc dạo…'; l2.textContent = lineTxt(song, 0); return; }
+      l0.textContent = lineTxt(song, q - 1); l1.textContent = lineTxt(song, q); l2.textContent = lineTxt(song, q + 1);
+    }
+    function paintCtl() {
+      var p = S.isPlaying();
+      bPlay.innerHTML = p ? '⏸<span>Dừng</span>' : '▶<span>Phát</span>';
+    }
+    var timer = setInterval(function () {
+      if (!v.parentNode) { clearInterval(timer); return; }
+      if (v.style.display === 'none') return;
+      if (S.index() !== curIdx) renderSong();
+      var t = S.time(), du = S.duration();
+      fill.style.width = du ? (t / du * 100).toFixed(2) + '%' : '0';
+      tNow.textContent = fmt(t); tTot.textContent = fmt(du);
+      paintLine(t); paintCtl();
+      var stx = sleepText(); if (slp.textContent !== stx) slp.textContent = stx;
+      if (Date.now() - lastImg > IMG_MS) nextImg();
+    }, 250);
+    function startIfIdle() {
+      var all = S.all();
+      if (!all.length) { if (w.Music.reloadSongs) w.Music.reloadSongs().then(function () { renderSong(); startIfIdle(); }); return; }
+      if (S.index() < 0) S.play(S.order()[0] || 0);
+    }
+    startIfIdle();
+    view.refresh = function () { imgs = images(); curIdx = -2; };
+    view.onKeyHook = function (kc) {
+      if (kc === 415 || kc === 19 || kc === 10252) { S.toggle(); return true; }
+      if (kc === 417) { S.next(); return true; }
+      if (kc === 412) { S.prev(); return true; }
+      return false;
+    };
+    setTimeout(function () { w.Nav.focus(bPlay); }, 0);
+    renderSong();
+    return view;
+  }
+
+  /* 2.44: mục Nghe nhạc trong trang chính ông bà (TV): bài kế tiếp + ảnh phim ở trên, bài đang phát ở dưới */
+  function ElderPane(host, view) {
+    UI = w.UI;
+    var S = M();
+    var top = el('div', 'emp-top');
+    var nx = el('div', 'emp-next'); nx.appendChild(el('div', 'emp-h', 'Bài kế tiếp'));
+    var nxl = el('div', 'emp-nl'); nx.appendChild(nxl);
+    var art = el('div', 'emp-art'), artA = el('div', 'emimg'), artB = el('div', 'emimg'), cap = el('div', 'emcap', '');
+    art.appendChild(artA); art.appendChild(artB); art.appendChild(cap);
+    top.appendChild(nx); top.appendChild(art); host.appendChild(top);
+    var bot = el('div', 'emp-bot');
+    var hr = el('div', 'emp-hr'), kick = el('span', 'emk', ''), ttl = el('span', 'emt', '');
+    hr.appendChild(kick); hr.appendChild(ttl); bot.appendChild(hr);
+    var l0 = el('div', 'eml0', ''), l1 = el('div', 'eml1', ''), l2 = el('div', 'eml2', '');
+    bot.appendChild(l0); bot.appendChild(l1); bot.appendChild(l2);
+    var prog = el('div', 'emprog'), tNow = el('span', '', '0:00'), bar = el('div', 'embar'), fill = el('i'), tTot = el('span', '', '0:00');
+    bar.appendChild(fill); prog.appendChild(tNow); prog.appendChild(bar); prog.appendChild(tTot); bot.appendChild(prog);
+    var ctl = el('div', 'emp-ctl');
+    function btn(cls, html, fn) { var b = el('div', 'empb f ' + cls); b.innerHTML = html; b._ok = fn; return b; }
+    var bPlay = btn('on', '⏸ Dừng', function () { S.toggle(); setTimeout(paint, 80); });
+    var bSleep = btn('', '🌙 Hẹn tắt', function () { w.Screens.push(SleepSheet()); });
+    var bNext = btn('', '⏭ Bài sau', function () { S.next(); });
+    ctl.appendChild(bPlay); ctl.appendChild(bSleep); ctl.appendChild(bNext); bot.appendChild(ctl);
+    var slp = el('div', 'emsleep', ''); bot.appendChild(slp);
+    host.appendChild(bot);
+
+    var imgs = images(), layer = 0, list = [], k = 0, lastImg = 0, curIdx = -2, times = [], curLine = -3;
+    function coversOf(i) {
+      var sg = S.song(i); if (!sg) return [];
+      var up = sg.covers || (sg.cover ? [sg.cover] : []);
+      if (up.length) { var u = String(S.url ? S.url(i) : '').replace(/[^\/]*$/, ''); return up.map(function (c) { return { src: u + c, title: '' }; }); }
+      var out = [], seen = {};
+      function add(src, t) { if (!src || seen[src] || out.length >= 10) return; seen[src] = 1; out.push({ src: src, title: t || '' }); }
+      (sg.films || []).forEach(function (id) { add('https://i.ytimg.com/vi/' + id + '/hqdefault.jpg', ''); });
+      var keys = (sg.keys && sg.keys.length ? sg.keys : [sg.title]).map(nk0);
+      imgs.filter(function (x) { var t = nk0(x.title); return keys.some(function (q) { return q && t.indexOf(q) >= 0; }); }).forEach(function (x) { add(x.src, x.title); });
+      var off = (i * 5) % Math.max(1, imgs.length);
+      imgs.slice(off).concat(imgs.slice(0, off)).forEach(function (x) { add(x.src, x.title); });
+      return out;
+    }
+    function nextImg() {
+      lastImg = Date.now();
+      if (!list.length) return;
+      var it = list[k % list.length]; k++;
+      var pre = new Image();
+      pre.onload = pre.onerror = function () {
+        var a = layer ? artB : artA, b = layer ? artA : artB;
+        b.style.backgroundImage = 'url("' + it.src.replace(/"/g, '%22') + '")'; b.classList.add('on'); a.classList.remove('on'); layer = 1 - layer;
+        cap.textContent = it.title ? '📺 ' + it.title : ''; cap.style.display = it.title ? '' : 'none';
+      };
+      pre.src = it.src;
+    }
+    function renderNext() {
+      nxl.innerHTML = '';
+      var ord = S.order(), all = S.all(), i = S.index(), p = ord.indexOf(i);
+      for (var q = 1; q <= 3 && q < all.length; q++) {
+        var j = ord[(p + q) % ord.length], s = all[j]; if (!s) continue;
+        var r = el('div', 'emp-so f');
+        r.appendChild(el('span', 'n', String(j + 1))); r.appendChild(el('span', 't', s.title)); r.appendChild(el('span', 'd', fmt(s.dur)));
+        (function (jj) { r._ok = function () { S.play(jj); }; })(j);
+        nxl.appendChild(r);
+      }
+    }
+    function txt(song, i) { var L = song && song.lyrics && song.lyrics[i]; return L ? L.t : ''; }
+    function renderSong() {
+      var i = S.index(), song = S.song(i); curIdx = i; curLine = -3;
+      if (!song) { ttl.textContent = 'Nhạc của tôi'; kick.textContent = S.all().length ? 'ĐANG CHUẨN BỊ…' : 'CHƯA TẢI ĐƯỢC NHẠC'; return; }
+      times = lineTimes(song);
+      ttl.textContent = song.title; kick.textContent = 'ĐANG PHÁT · BÀI ' + (i + 1) + '/' + S.all().length;
+      list = coversOf(i); k = 0; nextImg(); renderNext();
+    }
+    function paint() { var p = S.isPlaying(); bPlay.innerHTML = p ? '⏸ Dừng' : '▶ Phát'; }
+    var timer = setInterval(function () {
+      if (!host.parentNode || !d.body.contains(host) || !view.elderMusic) { clearInterval(timer); return; }
+      if (S.index() !== curIdx) renderSong();
+      var t = S.time(), du = S.duration(), song = S.song();
+      fill.style.width = du ? (t / du * 100).toFixed(2) + '%' : '0';
+      tNow.textContent = fmt(t); tTot.textContent = fmt(du);
+      if (song) {
+        var n = (song.lyrics || []).length;
+        if (!n) { if (curLine !== -9) { curLine = -9; l0.textContent = ''; l1.textContent = '♪ Bài này chưa có lời'; l2.textContent = ''; } }
+        else { var q = lineAt(times, t); if (q !== curLine) { curLine = q; if (q < 0) { l0.textContent = ''; l1.textContent = '♪ Nhạc dạo…'; l2.textContent = txt(song, 0); } else { l0.textContent = txt(song, q - 1); l1.textContent = txt(song, q); l2.textContent = txt(song, q + 1); } } }
+      }
+      paint();
+      var stx = sleepText(); if (slp.textContent !== stx) slp.textContent = stx;
+      if (Date.now() - lastImg > IMG_MS) nextImg();
+    }, 250);
+    var all = S.all();
+    if (!all.length) { if (w.Music.reloadSongs) w.Music.reloadSongs().then(function () { if (view.elderMusic) { if (S.index() < 0) S.play(S.order()[0] || 0); renderSong(); } }); }
+    else if (S.index() < 0) S.play(S.order()[0] || 0);
+    else if (S.paused && S.paused() && !(S.userPaused && S.userPaused())) { try { S.retry(); } catch (e) { /* bỏ qua */ } }
+    renderSong();
+    return function () { clearInterval(timer); view.elderMusic = false; };   // rời mục: nhạc tắt (music.js thấy không còn ở trang nhạc)
+  }
+
   /* Danh sách tất cả bài */
   function SongList() {
     UI = w.UI;
@@ -604,5 +811,5 @@
       tick: tick
     };
   })();
-  w.MusicPage = { open: MusicPage, wake: Wake, list: SongList, sync: LrcSync, times: lineTimes, songOfDay: songOfDay, songForFilm: songForFilm, songImage: songImage, openSong: openSong, sleep: function () { w.Screens.push(SleepSheet()); }, sleepText: sleepText };
+  w.MusicPage = { open: MusicPage, elder: ElderMusic, elderPane: ElderPane, wake: Wake, list: SongList, sync: LrcSync, times: lineTimes, songOfDay: songOfDay, songForFilm: songForFilm, songImage: songImage, openSong: openSong, sleep: function () { w.Screens.push(SleepSheet()); }, sleepText: sleepText };
 })(window, document);

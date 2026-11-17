@@ -248,10 +248,13 @@
     bar.className = 'mbar';
     bar.innerHTML = '<div class="mbtn mmenu"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div>' +
       '<div class="mtitle"></div>' +
+      '<div class="mbtn mwho"></div>' +
+      '<div class="mbtn mrc" title="Remote TV"><span class="mrcb"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="2.5" width="9" height="19" rx="4.5"/><circle cx="12" cy="10" r="2.3"/><path d="M10.2 15.8h.01M13.8 15.8h.01M12 5.6h.01"/></svg></span></div>' +
       '<div class="mbtn mdice" title="Bốc thăm phim">🎲</div>' +
       '<div class="mbtn msearch"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>';
     mh.appendChild(bar);
     d.getElementById('topbar').appendChild(mh);
+    if (w.Screens && w.Screens.paintWho) setTimeout(function () { w.Screens.paintWho(); }, 0);
     // ngăn kéo menu: tất cả các trang
     var dr = d.createElement('div');
     dr.id = 'mdrawer';
@@ -284,6 +287,7 @@
     d.getElementById('app').appendChild(dr);
     bar.querySelector('.mmenu').onclick = function (e) { e.stopPropagation(); fillDrawer(); dr.classList.remove('hidden'); };
     bar.querySelector('.msearch').onclick = function (e) { e.stopPropagation(); w.Screens.goTab('search'); };
+    bar.querySelector('.mrc').onclick = function (e) { e.stopPropagation(); if (w.RemoteTV) w.RemoteTV.open(); };   // 2.41.1: nút Remote TV cạnh xí ngầu
     bar.querySelector('.mdice').onclick = function (e) { e.stopPropagation(); if (w.Screens.dice) w.Screens.dice(); };
     // cuộn xuống: thu gọn đầu trang
     d.addEventListener('scroll', function (e) {
@@ -387,6 +391,15 @@
       if (w.Screens.paintWho) w.Screens.paintWho();
       w.UI.toast('Xem tiếp từ TV · hồ sơ ' + w.Store.profileName());
       w.Player.open({ items: [it], index: 0, heading: it.title, key: 'v:' + it.id, series: it });
+      return;
+    }
+    var ap = w.Store.keep && w.Store.keep('autoProf');   // 2.43: máy này mở thẳng vào một hồ sơ (ví dụ TV của ông bà)
+    if (ap && (ap === 'guest' || w.Store.profiles().some(function (p) { return p.id === ap; }))) {
+      if (w.Store.profile() !== ap) w.Store.setProfile(ap);
+      if (w.Settings && w.Settings.apply) w.Settings.apply();
+      if (w.Screens.paintWho) w.Screens.paintWho();
+      w.Screens.goTab('home');
+      if (w.Screens.afterBoot) w.Screens.afterBoot();
       return;
     }
     if (w.APP_CONFIG.ASK_PROFILE !== false && w.Screens.who && !w.Player.isOpen()) w.Screens.who(true);

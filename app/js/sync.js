@@ -332,12 +332,13 @@
     });
     return o;
   }
-  // Thống kê xem: mỗi ngày lấy bản có nhiều thời gian xem hơn (tránh cộng trùng); giữ 35 ngày gần nhất
+  // Thống kê xem: mỗi ngày lấy bản có nhiều thời gian xem hơn (tránh cộng trùng); giữ 185 ngày gần nhất
   function mergeStats(a, b) {
     var o = {};
     [a || {}, b || {}].forEach(function (m) { Object.keys(m).forEach(function (k) { if (m[k] && (!o[k] || (m[k].s || 0) > (o[k].s || 0))) o[k] = m[k]; }); });
+    if (w.Store && w.Store.trimStats) return w.Store.trimStats(o);   // 2.42: giữ 185 ngày
     var keys = Object.keys(o).sort();
-    keys.slice(0, Math.max(0, keys.length - 35)).forEach(function (k) { delete o[k]; });
+    keys.slice(0, Math.max(0, keys.length - 185)).forEach(function (k) { delete o[k]; });
     return o;
   }
   // 5 từ khóa tìm gần đây: máy này trước, thêm từ máy kia

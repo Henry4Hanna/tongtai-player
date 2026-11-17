@@ -247,7 +247,7 @@
       day.h[hr] = Math.round((day.h[hr] + secs) * 10) / 10;
       st[k] = day;
       var keys = Object.keys(st).sort();
-      keys.slice(0, Math.max(0, keys.length - 35)).forEach(function (x) { delete st[x]; });
+      Store.trimStats(st);   // 2.42: giữ 185 ngày, ngày cũ hơn 35 ngày được thu gọn
       pset('stats', st);
     },
     // lượt nghe bài hát (quá 30 giây) theo ngày: day.m = { 'tên-file.mp3': số lần }
@@ -264,6 +264,21 @@
       return get(id === 'guest' ? 'stats' : 'stats@' + id, {});
     },
     clearStats: function () { pset('stats', {}); },
+    // 2.42: giữ 185 ngày (đủ cho 180 ngày + so sánh). Ngày cũ hơn 35 ngày: chỉ giữ 5 kênh nhiều nhất, số giây làm tròn
+    trimStats: function (st) {
+      var keys = Object.keys(st).sort();
+      keys.slice(0, Math.max(0, keys.length - 185)).forEach(function (x) { delete st[x]; });
+      keys = Object.keys(st).sort();
+      keys.slice(0, Math.max(0, keys.length - 35)).forEach(function (k) {
+        var dd = st[k]; if (!dd || dd.z) return;
+        var ch = dd.ch || {}, top = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; }).slice(0, 5), nc = {};
+        top.forEach(function (c) { nc[c] = Math.round(ch[c]); });
+        dd.ch = nc; dd.s = Math.round(dd.s || 0);
+        if (dd.h) dd.h = dd.h.map(function (x) { return Math.round(x); });
+        dd.z = 1;
+      });
+      return st;
+    },
 
     /* ---------- Kênh yêu thích (riêng từng hồ sơ, lưu trong prefs nên được đồng bộ) ---------- */
     favChs: function () { return ((get('prefs', {}).favch || {})[prof]) || []; },

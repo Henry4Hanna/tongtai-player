@@ -207,6 +207,7 @@
       }
       if (d.getElementById('boot') || (w.Player && w.Player.isOpen()) || d.hidden || (w.Saver && w.Saver.isOn())) return false;
       var c = w.Screens && w.Screens.current && w.Screens.current();
+      if (c && c.name === 'home' && c.elderMusic) return true;   // 2.44: mục Nghe nhạc trong trang chính ông bà
       return !!c && (c.name === 'music' || c.name === 'lrcsync' || c.name === 'songquiz' || c.name === 'sleep' || c.name === 'askfilm');
     } catch (e) { return false; }
   }

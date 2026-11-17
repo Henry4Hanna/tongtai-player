@@ -27,7 +27,7 @@
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
     AUTO_NEXT: C.AUTO_NEXT !== false, PREVIEW_SECS: C.PREVIEW_SECS == null ? 20 : C.PREVIEW_SECS, STILL_HOURS: C.STILL_HOURS == null ? 2 : C.STILL_HOURS, HIDE_WATCHED: C.HIDE_WATCHED !== false, ASK_PROFILE: C.ASK_PROFILE !== false, AUTO_BACKUP: C.AUTO_BACKUP !== false,
-    GUEST_MODE: C.GUEST_MODE !== false, DATA_SAVER: C.DATA_SAVER || 'auto', DATA_Q: C.DATA_Q || 'large', MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, HOME_MUSIC: C.HOME_MUSIC === true, CAR_MODE: C.CAR_MODE || 'auto',   /* 2.39.4: mặc định TẮT */ AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
+    GUEST_MODE: C.GUEST_MODE !== false, DATA_SAVER: C.DATA_SAVER || 'auto', DATA_Q: C.DATA_Q || 'large', MUSIC_WAKE: C.MUSIC_WAKE !== false, MUSIC_BG: C.MUSIC_BG !== false, HOME_MUSIC: C.HOME_MUSIC === true, CAR_MODE: C.CAR_MODE || 'auto', ELDER: C.ELDER === true, ELDER_FONT: 'lg', ELDER_LIKE: ['twin', 'kids', 'fun', 'old', 'vil', 'fam'],   /* 2.39.4: mặc định TẮT */ AGE_FILTER: !!C.AGE_FILTER, AGE_WORDS: (C.AGE_WORDS || []).slice()
   };
 
   // Danh sách kênh gốc trong config.js
@@ -97,7 +97,7 @@
 
   /* Cài đặt RIÊNG từng hồ sơ: giao diện, đồng hồ, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi.
      Các mục còn lại (API key, kênh, cập nhật, sao lưu, mã PIN người lớn…) dùng chung cho cả máy. */
-  var PP = { HOME_ORDER: 1, HOME_MUSIC: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, MUSIC_WAKE: 1, MUSIC_BG: 1, THEME: 1, THEME_HOURS: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, PREVIEW_SECS: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
+  var PP = { ELDER: 1, ELDER_FONT: 1, ELDER_LIKE: 1, HOME_ORDER: 1, HOME_MUSIC: 1, MUSIC_VIEW: 1, MUSIC: 1, MUSIC_VOL: 1, MUSIC_LEVEL: 1, MUSIC_WAKE: 1, MUSIC_BG: 1, THEME: 1, THEME_HOURS: 1, CLOCK_12: 1, SEASON: 1, SEASON_FX: 1, AUTO_NEXT: 1, PREVIEW_SECS: 1, HIDE_WATCHED: 1, AGE_FILTER: 1,
     SHOW_CONT: 1, SHOW_NEWEPS: 1, SHOW_QUIZ: 1, SHOW_FAVCH: 1, SHOW_FRESH: 1, SHOW_HOT: 1, SHOW_MOVIE: 1, SHOW_REC: 1, SHOW_TOP10: 1, SHOW_ANIME: 1 };
   function psaved() { return (w.Store.pref('psettings', {}) || {})[w.Store.profile()] || {}; }
   function get(k) {

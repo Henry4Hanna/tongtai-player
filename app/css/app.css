@@ -2237,3 +2237,24 @@ html.ef-md .ect, html.ef-md .eg3 .ect { font-size: 28px; } html.ef-md .ecs { fon
 .mobile .ebtns .eb:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .emenu { gap: 6px; } .emi { height: 76px; } .emic { font-size: 38px; } .emt { font-size: 28px; } .ems { font-size: 19px; }
 html.ef-xl .emt { font-size: 30px; }
+.eldset .estile { height: 92px; } .eldset .esgrid { gap: 12px 30px; }
+.ecard.pvcard { aspect-ratio: auto; background: none; border-radius: 24px; }
+/* 2.45.2: TV ông bà: Remote + Sáng/Tối cùng kiểu ô, viền bằng nhau */
+.echip.erc { margin-left: auto; padding: 0 28px 0 20px; color: var(--acc, #E8B04B); } .echip.erc span { color: #F4F1EC; }
+html.elder:not(.mobile) #topbar .thbtn { width: auto; height: 76px; box-sizing: border-box; border: 3px solid #3A4258; border-radius: 999px; padding: 0 22px; background: #151922; margin-left: 16px; margin-right: 20px; }
+html.elder:not(.mobile) #topbar .thbtn svg { width: 34px; height: 34px; }
+html.elder:not(.mobile) #topbar .thbtn.focus { outline: 6px solid #FFD75E; outline-offset: 3px; }
+html.light.elder:not(.mobile) #topbar .thbtn { background: #fff; border-color: #D9D2C3; }
+html.light .echip.erc span { color: #1A1D26; }
+.eptt { white-space: nowrap; } .epane .etab { font-size: 26px; padding: 10px 20px; } .epane .etabs { gap: 10px; flex-wrap: nowrap; }
+/* 2.45.4: chọn kiểu hồ sơ */
+.kindpick { max-width: 1100px; }
+.kprow { display: flex; gap: 30px; margin-top: 26px; }
+.kpbtn { flex: 1; border-radius: 26px; background: var(--c-1d2230, #1D2230); padding: 34px 30px; text-align: center; cursor: pointer; color: var(--c-f4f1ec, #F4F1EC); border: 3px solid transparent; }
+.kpbtn.focus { border-color: #FFD75E; outline: 6px solid #FFD75E; outline-offset: 3px; }
+.kpi { font-size: 90px; line-height: 1; } .kpt { font-size: 40px; font-weight: 800; margin-top: 14px; } .kps { font-size: 24px; color: #9aa0ae; margin-top: 8px; }
+html.light .kpbtn { background: #fff; color: #1A1D26; box-shadow: 0 2px 10px rgba(0,0,0,.08); } html.light .kps { color: #6B6455; }
+.wkind { font-size: 20px; font-weight: 700; color: #E8B04B; margin-top: 4px; text-align: center; }
+.mobile .kprow { flex-direction: column; gap: 12px; margin-top: 14px; } .mobile .kpbtn { padding: 18px; border-radius: 18px; }
+.mobile .kpi { font-size: 44px; } .mobile .kpt { font-size: 22px; margin-top: 6px; } .mobile .kps { font-size: 13px; }
+.mobile .wkind { font-size: 11px; }

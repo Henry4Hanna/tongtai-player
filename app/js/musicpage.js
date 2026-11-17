@@ -473,7 +473,7 @@
     [kick, ttl, l0, l1, l2, prog].forEach(function (x) { info.appendChild(x); });
     top.appendChild(info);
     v.appendChild(top);
-    function btn(cls, html, fn) { var b = el('div', 'emb f ' + cls); b.innerHTML = html; b._ok = fn; b.addEventListener('click', function () { if (w.UI.isMobile()) fn(); }); return b; }
+    function btn(cls, html, fn) { var b = el('div', 'emb f ' + cls); b.innerHTML = html; b._ok = fn; return b; }
     var bPrev = btn('', '⏮<span>Bài trước</span>', function () { S.prev(); });
     var bPlay = btn('on', '⏸<span>Dừng</span>', function () { S.toggle(); setTimeout(paintCtl, 80); });
     var bNext = btn('', '⏭<span>Bài sau</span>', function () { S.next(); });

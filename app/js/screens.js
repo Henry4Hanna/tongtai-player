@@ -832,7 +832,7 @@
   // nút / ô bấm của chế độ ông bà (giữ lâu: tùy chọn)
   function eBtn(cls, html, fn) {
     var b = el('div', cls + ' f'); b.innerHTML = html;
-    b._ok = fn; b.addEventListener('click', function () { if (UI.isMobile()) fn(); });
+    b._ok = fn;
     return b;
   }
   function eWho(v) {   // hình + tên người xem (điện thoại; TV dùng ô hồ sơ góc trên)
@@ -857,8 +857,78 @@
     { k: 'music', i: '🎵', t: 'Nghe nhạc', s: 'Nhạc của tôi' },
     { k: 'hist', i: '🕘', t: 'Lịch sử', s: 'Phim đã xem' }
   ];
+  /* 2.45.5: điện thoại: ảnh phim rộng hết màn hình (tự đổi phim, chạm để xem) + mục lục icon nhỏ đồng bộ */
+  var EICON = {
+    like: '<path d="M12 20.5s-7-4.3-9.3-8.4C1 9 2.5 5.4 6.1 5.1c2.1-.2 3.6.9 4.5 2.3h.8c.9-1.4 2.4-2.5 4.5-2.3 3.6.3 5.1 3.9 3.4 7C19 16.2 12 20.5 12 20.5z"/>',
+    new: '<path d="M11 3.5l1.9 5 5.1 1.8-5.1 1.9-1.9 5-1.8-5-5.2-1.9 5.2-1.8z"/><path d="M18.5 14.5l.8 2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>',
+    hot: '<path d="M12 21.5c3.9 0 6.8-2.6 6.8-6.4 0-3.2-2.1-5.4-3.5-7-.3 1.9-1.2 3.1-2.3 3.5.4-3.5-1.4-6.5-3.9-8.6.2 2.9-1.4 4.9-2.7 6.4-1.3 1.5-1.2 3.3-1.2 5.6 0 3.9 2.9 6.5 6.8 6.5z"/>',
+    top: '<path d="M8 4h8v5.5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3.2 4.2M16 6h3a3 3 0 0 1-3.2 4.2M12 13.5V17M8.5 20.5h7M10 17h4v3.5h-4z"/>',
+    cats: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
+    movie: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7.5 5v14M16.5 5v14M3 9.7h4.5M3 14.3h4.5M16.5 9.7H21M16.5 14.3H21"/>',
+    anime: '<circle cx="12" cy="13" r="7.5"/><circle cx="6" cy="5.8" r="2.3"/><circle cx="18" cy="5.8" r="2.3"/><path d="M9.5 12.2h.01M14.5 12.2h.01M9.6 15.6c.7.8 1.5 1.2 2.4 1.2s1.7-.4 2.4-1.2"/>',
+    music: '<path d="M9 18V5.5l10.5-2v12.5"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17" cy="16" r="2.5"/>',
+    hist: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    set: '<path d="M4 6.5h9M17 6.5h3M4 12h3M11 12h9M4 17.5h11M19 17.5h1"/><circle cx="15" cy="6.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17.5" r="2"/>'
+  };
+  function eIcon(k) { return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (EICON[k] || '') + '</svg>'; }
+  function ElderHomeM() {
+    lastLoad = Date.now();
+    var v = UI.view(); v.classList.add('elderv', 'eldhome', 'eldm', 'scroller');
+    var me = profileOf(Store.profile()) || { name: 'Guest' };
+    // hàng trên: Hẹn giờ · người xem
+    var tr = el('div', 'emtop2');
+    var sl = el('div', 'emchip f', '🌙 Hẹn giờ'); sl._ok = function () { eSleepFilm(); };
+    tr.appendChild(sl); eWho(tr); v.appendChild(tr);
+    // ảnh phim rộng
+    var hero = el('div', 'emhero f'); v.appendChild(hero);
+    var layers = [el('div', 'emhl'), el('div', 'emhl')]; layers.forEach(function (x) { hero.appendChild(x); });
+    hero.appendChild(el('div', 'emhshade'));
+    var tx = el('div', 'emhtx'), lb = el('div', 'emhlb'), tt = el('div', 'emhtt'), sb = el('div', 'emhsb');
+    tx.appendChild(lb); tx.appendChild(tt); tx.appendChild(sb); hero.appendChild(tx);
+    var play = el('div', 'emhplay', '▶'); hero.appendChild(play);
+    var dots = el('div', 'emhdots'); hero.appendChild(dots);
+    var slides = [], cur = -1, layer = 0, timer = 0;
+    var r = Store.recent().filter(function (x) { return x.item && !Settings.hides(x.item); }).filter(function (x) { return canResume(progressOf(x.vid)); })[0];
+    if (r) { var p = progressOf(r.vid); slides.push({ it: r.item, lb: me.name.toUpperCase() + ' ĐANG XEM DỞ', sb: (r.item.kind === 'anime' && r.ep ? 'Tập ' + r.ep + ' · ' : '') + 'Còn ' + UI.fmtLong(p.d - p.p) }); }
+    function go(i) {
+      if (!slides.length) return;
+      cur = (i + slides.length) % slides.length;
+      var s = slides[cur], src = s.it.hero || s.it.thumb || '';
+      var a = layers[layer], b = layers[1 - layer];
+      b.style.backgroundImage = 'url("' + String(src).replace(/"/g, '%22') + '")'; b.classList.add('on'); a.classList.remove('on'); layer = 1 - layer;
+      lb.textContent = s.lb; tt.textContent = s.it.title; sb.textContent = s.sb || '';
+      dots.innerHTML = ''; if (slides.length > 1) slides.forEach(function (x, k) { dots.appendChild(el('i', k === cur ? 'on' : '')); });
+    }
+    function auto() { clearInterval(timer); timer = setInterval(function () { if (!d.body.contains(v)) { clearInterval(timer); return; } if (v.style.display !== 'none') go(cur + 1); }, 6000); }
+    hero._ok = function () { var s = slides[cur]; if (!s) { Dice(); return; } if (s.it.kind === 'anime') openItem(s.it); else playFilm(s.it); };
+    var sx = 0, sy = 0;
+    hero.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    hero.addEventListener('touchend', function (e) { var t = e.changedTouches[0], dx = t.clientX - sx; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(t.clientY - sy)) { go(cur + (dx < 0 ? 1 : -1)); auto(); } }, { passive: true });
+    if (slides.length) go(0);
+    else { lb.textContent = 'CHÀO ' + me.name.toUpperCase(); tt.textContent = 'Đang tìm phim hay…'; }
+    Api.followedFilms().then(function (all) {
+      var seen = {}; if (r) seen[r.item.id] = 1;
+      unseen(all).filter(function (f) { return !Settings.hides(f) && !seen[f.id]; }).slice(0, r ? 5 : 6).forEach(function (f) {
+        slides.push({ it: f, lb: Date.now() - new Date(f.pub || 0).getTime() < 3 * 864e5 ? 'PHIM MỚI' : 'GỢI Ý HÔM NAY', sb: f.kind === 'anime' ? (f.eps ? f.eps + ' tập' : '') : f.dur ? UI.fmtLong(f.dur) : '' });
+      });
+      if (cur < 0) go(0); else go(cur);
+      auto();
+    }).catch(function () {});
+    // mục lục icon
+    var g = el('div', 'emgrid2');   // 2.45.6: kiểu ô cũ (icon màu) nhưng nhỏ hơn
+    EBTNS.concat([{ k: 'set', i: '⚙️', t: 'Cài đặt' }]).forEach(function (b) {
+      var c = el('div', 'emg2 f');
+      c.innerHTML = '<div class="emg2i">' + b.i + '</div><div class="emgt"></div>';
+      c.querySelector('.emgt').textContent = b.t;
+      c._ok = function () { elderGo(b.k); };
+      g.appendChild(c);
+    });
+    v.appendChild(g);
+    return { name: 'home', el: v, refresh: function () { setTimeout(function () { if (S.stack.length === 1 && current() && current().el === v && elderOn()) goTab('home'); }, 0); } };
+  }
   function ElderHome() {
     if (!UI.isMobile()) return ElderHomeTV();   // 2.44
+    return ElderHomeM();   // 2.45.5
     lastLoad = Date.now();
     var v = UI.view(); v.classList.add('elderv', 'eldhome', 'scroller');
     eWho(v);
@@ -1145,11 +1215,11 @@
       g.innerHTML = '';
       var l = all.filter(function (x) { return cur === 'all' || x.like.k === cur; });
       if (!l.length) { g.appendChild(el('div', 'emsg', all.length ? 'Loại này chưa có phim. Chọn loại khác nhé.' : 'Chưa tìm thấy phim hợp. Lát nữa quay lại nhé.')); return; }
-      l.forEach(function (x) { var c = eFilmCard(x.it, {}); var th = c.querySelector('.eth'); if (th) th.appendChild(el('div', 'etag', x.like.t)); if (UI.isMobile()) c.addEventListener('click', function () { c._ok(); }); g.appendChild(c); });
+      l.forEach(function (x) { var c = eFilmCard(x.it, {}); var th = c.querySelector('.eth'); if (th) th.appendChild(el('div', 'etag', x.like.t)); g.appendChild(c); });
     }
     [{ k: 'all', i: '', t: 'Tất cả' }].concat(ELIKE.filter(function (x) { return likeOn().indexOf(x.k) >= 0; })).forEach(function (x) {
       var b = el('div', 'etab f', (x.i ? x.i + ' ' : '') + x.t);
-      b._ok = function () { cur = x.k; paint(); }; b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+      b._ok = function () { cur = x.k; paint(); };
       tEls[x.k] = b; tabs.appendChild(b);
     });
     likeSrc().then(function (l) { all = l; if (d.body.contains(host)) paint(); }).catch(function (e) { g.innerHTML = ''; g.appendChild(el('div', 'emsg', Api.explain(e))); });
@@ -1172,7 +1242,7 @@
       r.innerHTML = '<span class="esic">' + ic + '</span><div class="estx"><div class="est"></div><div class="esd"></div></div><span class="esv"></span>';
       r.querySelector('.est').textContent = t; r.querySelector('.esd').textContent = d0;
       function paint() { var x = val(); var sv = r.querySelector('.esv'); sv.textContent = x.t; sv.classList.toggle('off', !x.on); if (x.d) r.querySelector('.esd').textContent = x.d; }
-      r._ok = function () { fn(paint); }; r.addEventListener('click', function () { if (UI.isMobile()) r._ok(); });
+      r._ok = function () { fn(paint); };
       paint(); g.appendChild(r); if (!first) first = r; return r;
     }
     function cyc(key, opts, after) {
@@ -1205,7 +1275,7 @@
     tile('🎵', 'Thống kê nghe nhạc', '', function () { return { t: 'Xem', on: true, d: top ? 'Hay nghe: ' + top.title : 'Chưa nghe bài nào' }; }, function () { push(ElderMusicStats()); });
     var full = el('div', 'esfull f', '🔒 Cài đặt đầy đủ (kênh, mã PIN, đồng bộ…): cần mã PIN người lớn');
     full._ok = function () { withPin('mở Cài đặt đầy đủ', function () { setTimeout(function () { goTab('settings'); }, 30); }); };
-    full.addEventListener('click', function () { if (UI.isMobile()) full._ok(); });
+   
     v.appendChild(full);
     v.appendChild(eHint('<span><i>OK</i> Đổi</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span><i>↩</i> Về Trang chính</span>'));
     setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
@@ -1225,7 +1295,7 @@
         if (i >= 0) { if (l.length === 1) { UI.toast('Giữ ít nhất 1 loại'); return; } l.splice(i, 1); } else l.push(e.k);
         Settings.set('ELDER_LIKE', ELIKE.map(function (q) { return q.k; }).filter(function (k) { return l.indexOf(k) >= 0; })); paint(); if (paintBack) paintBack();
       };
-      r.addEventListener('click', function () { if (UI.isMobile()) r._ok(); });
+     
       paint(); g.appendChild(r); if (!first) first = r;
     });
     setTimeout(function () { if (first) Nav.focus(first, true); }, 0);
@@ -1247,7 +1317,7 @@
     [7, 30, 90].forEach(function (n) {
       var b = el('div', 'essb f' + (n === period ? ' on' : ''), n + ' ngày');
       b._ok = function () { if (n !== period) { back(); push(ElderStats(n)); } };
-      b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+     
       if (n === period) segOn = b; seg.appendChild(b);
     });
     h.appendChild(seg); v.appendChild(h);
@@ -1354,7 +1424,7 @@
         c._item = it;
         c._ok = function () { if (Player.previewOn && Player.previewOn(c)) { Player.previewOpen(); return; } if (it.kind === 'anime') openItem(it); else playFilm(it); };
         eHold(c, th, it);
-        c.addEventListener('click', function () { if (UI.isMobile()) c._ok(); });
+       
         g.appendChild(c);
         if (i === 0 && current() === view) setTimeout(function () { Nav.focus(c, true); }, 0);
       });
@@ -1374,7 +1444,7 @@
       var ic = el('div', 'ecic'); if (w.CAT_ICONS) ic.innerHTML = w.CAT_ICONS(c.id); t.appendChild(ic);
       t.appendChild(el('div', 'ecn', c.name));
       t._ok = function () { push(ElderList('🎭 ' + c.name, 'Phim thể loại ' + c.name, Api.catFilms(c).then(function (l) { return l.map(function (f) { return { it: f }; }); }), false)); };
-      t.addEventListener('click', function () { if (UI.isMobile()) t._ok(); });
+     
       g.appendChild(t); if (!first) first = t;
     });
     v.appendChild(eHint('<span><i>OK</i> Mở thể loại</span><span><i>◀ ▶ ▲ ▼</i> Chọn</span><span><i>↩</i> Về trang đầu</span>'));
@@ -2085,6 +2155,7 @@
     ppInfo.appendChild(avatar(meP, 'pp'));
     ppInfo.appendChild(el('span', '', 'Dòng có hình ' + meP.name + ' là cài đặt RIÊNG của hồ sơ “' + meP.name + '” (giao diện, đồng hồ, nhạc nền, chủ đề, xem phim, các hàng Trang chủ, lọc lứa tuổi). Mỗi người chỉnh theo ý mình; đổi hồ sơ là đổi theo. Các dòng khác dùng chung cho cả máy.'));
     wrap.appendChild(ppInfo);
+    if (!w.tizen && !w.AndroidApp) { sec('🚗 Xe Tesla'); opt('CAR_MODE', 'Chế độ xe Tesla', 'Màn hình lớn nút to cho xe (Tesla): Tiếp tục xem, Chỉ nghe tiếng, Nhạc, Bốc thăm. Tự động: tự bật khi mở trên xe Tesla', [{ v: 'auto', t: 'Tự động (mở trên Tesla là bật)', on: true }, { v: 'on', t: 'Bật' }, { v: 'off', t: 'Tắt' }], function () { if (C.CAR_MODE !== 'off') { try { sessionStorage.removeItem('carExit'); } catch (e) { /* bỏ qua */ } } }); }   // 2.40 · 2.45.6: mục riêng, dễ thấy
     sec('Giao diện');
     var IS_TV0 = !!(w.tizen || w.AndroidApp);
     var dayBar = el('div', 'thday');
@@ -2227,7 +2298,6 @@
     sec('Nhạc nền Trang chủ');
     var MOPTS = [{ v: 'songsx', t: 'Nhạc của tôi (trộn bài, mặc định)', on: true }, { v: 'songs', t: 'Nhạc của tôi (lần lượt)', on: true }, { v: 'auto', t: 'Hòa tấu (lần lượt 5 bài)', on: true }, { v: 'off', t: 'Tắt' }].concat(
       (w.Music ? w.Music.tracks() : []).map(function (n, i) { return { v: i, t: (i + 1) + '. ' + n, on: true }; }));
-    if (!w.tizen && !w.AndroidApp) opt('CAR_MODE', 'Chế độ xe hơi', 'Màn hình lớn nút to cho xe (Tesla): Tiếp tục xem, Chỉ nghe tiếng, Nhạc, Bốc thăm. Tự động: tự bật khi mở trên xe Tesla', [{ v: 'auto', t: 'Tự động', on: true }, { v: 'on', t: 'Luôn bật' }, { v: 'off', t: 'Tắt' }], function () { if (C.CAR_MODE !== 'off') { try { sessionStorage.removeItem('carExit'); } catch (e) { /* bỏ qua */ } } });   // 2.40
     opt('HOME_MUSIC', 'Nhạc nền Trang chủ', 'Mặc định Tắt. Bật: mở Trang chủ là phát nhạc nhỏ (bài theo mục Nhạc nền bên dưới). Tắt: Trang chủ im lặng, trang Nhạc vẫn nghe bình thường', [{ v: true, t: 'Bật' }, { v: false, t: 'Tắt', on: true }]);   // 2.39.1 · 2.39.4: mặc định Tắt
     opt('MUSIC', 'Nhạc nền', 'Nhạc của tôi (bài hát trong thư mục music/) hoặc 5 bản hòa tấu. Chỉ phát ở Trang chủ, tự dừng khi xem phim, quay lại phát tiếp. Mỗi lần OK đổi một kiểu', MOPTS);
     opt('MUSIC_VIEW', 'Kiểu trang Nhạc', 'Kiểu A: ảnh + lời + bài tiếp theo. Kiểu B: ảnh phủ toàn màn hình, lời to kiểu karaoke. Đổi nhanh bằng nút trên trang Nhạc', [{ v: 'split', t: 'Kiểu A: chia đôi', on: true }, { v: 'karaoke', t: 'Kiểu B: toàn màn hình', on: true }]);
@@ -3513,7 +3583,7 @@
       b.innerHTML = '<div class="kpi">' + o[1] + '</div><div class="kpt"></div><div class="kps"></div>';
       b.querySelector('.kpt').textContent = o[2]; b.querySelector('.kps').textContent = o[3];
       b._ok = function () { back(); setTimeout(function () { done(o[0]); }, 30); };
-      b.addEventListener('click', function () { if (UI.isMobile()) b._ok(); });
+     
       row.appendChild(b); if (!first) first = b;
     });
     box.appendChild(row); v.appendChild(box);

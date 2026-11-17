@@ -1853,7 +1853,7 @@ html.light .lkk { color: #8A5A0E; }
 /* 2.41.2: nhãn ★ (AI, Hot…) và nhãn thể loại không bị nút ⓘ đè */
 /* 2.41.3: ⓘ góc trên phải; thời lượng và nhãn ★ AI / 3D chung một hàng bên trái; thể loại cạnh ⓘ */
 .mobile .thumb.hasinfo .badge.cat { right: 6px; top: 38px; }
-.mobile .row-hot .thumb.hasinfo .badge.cat { right: 6px; }
+.mobile .row-hot .thumb.hasinfo .badge.cat { right: 6px; top: auto; bottom: 6px; }
 .ctl { display: none; }
 .mobile .ctl { display: flex; position: absolute; left: 6px; top: 6px; z-index: 4; gap: 4px; align-items: center; max-width: calc(100% - 44px); }
 .mobile .ctl .badge { position: static; margin: 0; flex: none; }
@@ -2214,14 +2214,14 @@ html.light .eskb, html.light .esct, html.light .esli { color: #1A1D26; } html.li
 html.light .esv.off { background: #E9E4DA; color: #3A3F4A; } html.light .esfull { border-color: #D9D2C3; color: #3A3F4A; }
 html.light .emsrow .bar { background: #E9E4DA; }
 /* cỡ chữ */
-html.ef-xl .ect { font-size: 40px; } html.ef-xl .eg3 .ect { font-size: 38px; } html.ef-xl .ecs { font-size: 30px; }
-html.ef-xl .emt { font-size: 33px; } html.ef-xl .eqt { font-size: 48px; } html.ef-xl .eht { font-size: 70px; }
-html.ef-xl .emp-bot .eml1, html.ef-xl .eml1 { font-size: 46px; } html.ef-xl .est { font-size: 38px; } html.ef-xl .esli { font-size: 32px; }
-html.ef-md .ect, html.ef-md .eg3 .ect { font-size: 28px; } html.ef-md .ecs { font-size: 22px; } html.ef-md .eqt { font-size: 36px; } html.ef-md .eht { font-size: 54px; } html.ef-md .est { font-size: 30px; }
+html.ef-xl:not(.mobile) .ect { font-size: 40px; } html.ef-xl:not(.mobile) .eg3 .ect { font-size: 38px; } html.ef-xl:not(.mobile) .ecs { font-size: 30px; }
+html.ef-xl:not(.mobile) .emt { font-size: 33px; } html.ef-xl:not(.mobile) .eqt { font-size: 48px; } html.ef-xl:not(.mobile) .eht { font-size: 70px; }
+html.ef-xl:not(.mobile) .emp-bot .eml1, html.ef-xl:not(.mobile) .eml1 { font-size: 46px; } html.ef-xl:not(.mobile) .est { font-size: 38px; } html.ef-xl:not(.mobile) .esli { font-size: 32px; }
+html.ef-md:not(.mobile) .ect, html.ef-md:not(.mobile) .eg3 .ect { font-size: 28px; } html.ef-md:not(.mobile) .ecs { font-size: 22px; } html.ef-md:not(.mobile) .eqt { font-size: 36px; } html.ef-md:not(.mobile) .eht { font-size: 54px; } html.ef-md:not(.mobile) .est { font-size: 30px; }
 /* điện thoại */
 .mobile .etabs { gap: 8px; margin-bottom: 12px; } .mobile .etab { font-size: 15px; padding: 7px 14px; }
 .mobile .etag { font-size: 11px; padding: 2px 8px; left: 8px; top: 8px; }
-.mobile .esgrid { grid-template-columns: 1fr; gap: 10px; }
+.mobile .esgrid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .mobile .estile { height: 72px; padding: 0 14px; gap: 12px; border-radius: 16px; }
 .mobile .esic { font-size: 28px; width: 34px; } .mobile .est { font-size: 18px; } .mobile .esd { font-size: 12px; } .mobile .esv { font-size: 15px; padding: 6px 14px; }
 .mobile .esfull { font-size: 14px; padding: 14px; border-radius: 16px; }
@@ -2236,7 +2236,7 @@ html.ef-md .ect, html.ef-md .eg3 .ect { font-size: 28px; } html.ef-md .ecs { fon
 .mobile .emsrow { padding: 12px 14px; gap: 10px; border-radius: 14px; } .mobile .emsrow .n { font-size: 18px; width: 22px; } .mobile .emsrow .t { font-size: 15px; } .mobile .emsrow .c { font-size: 13px; width: 52px; }
 .mobile .ebtns .eb:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .emenu { gap: 6px; } .emi { height: 76px; } .emic { font-size: 38px; } .emt { font-size: 28px; } .ems { font-size: 19px; }
-html.ef-xl .emt { font-size: 30px; }
+html.ef-xl:not(.mobile) .emt { font-size: 30px; }
 .eldset .estile { height: 92px; } .eldset .esgrid { gap: 12px 30px; }
 .ecard.pvcard { aspect-ratio: auto; background: none; border-radius: 24px; }
 /* 2.45.2: TV ông bà: Remote + Sáng/Tối cùng kiểu ô, viền bằng nhau */
@@ -2258,3 +2258,46 @@ html.light .kpbtn { background: #fff; color: #1A1D26; box-shadow: 0 2px 10px rgb
 .mobile .kprow { flex-direction: column; gap: 12px; margin-top: 14px; } .mobile .kpbtn { padding: 18px; border-radius: 18px; }
 .mobile .kpi { font-size: 44px; } .mobile .kpt { font-size: 22px; margin-top: 6px; } .mobile .kps { font-size: 13px; }
 .mobile .wkind { font-size: 11px; }
+/* ===== 2.45.5: điện thoại ông bà: ảnh rộng + mục lục icon ===== */
+.eldm .emtop2 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.eldm .emtop2 .ewho { margin: 0; }
+.emchip { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #3A4258; background: #151922; color: #F4F1EC; font-size: 15px; font-weight: 700; }
+.emhero { position: relative; margin: 0 -16px; aspect-ratio: 16 / 9; overflow: hidden; background: #1D2230; cursor: pointer; }
+.emhl { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .9s; } .emhl.on { opacity: 1; }
+.emhshade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: linear-gradient(transparent 35%, rgba(6,7,10,.92)); }
+.emhtx { position: absolute; left: 16px; right: 70px; bottom: 26px; }
+.emhlb { font-size: 12px; font-weight: 800; color: #F5D58E; letter-spacing: .8px; }
+.emhtt { font-size: 22px; font-weight: 800; color: #fff; line-height: 1.2; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.emhsb { font-size: 13px; color: #E6E8EE; margin-top: 3px; }
+.emhplay { position: absolute; right: 16px; bottom: 28px; width: 50px; height: 50px; border-radius: 50%; background: #E8B04B; color: #1a1206; display: flex; align-items: center; justify-content: center; font-size: 20px; padding-left: 3px; box-sizing: border-box; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.emhdots { position: absolute; left: 0; right: 0; bottom: 9px; display: flex; justify-content: center; gap: 5px; }
+.emhdots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.45); } .emhdots i.on { width: 16px; background: #E8B04B; }
+.emgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 6px; margin-top: 18px; }
+.emg { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; color: #F4F1EC; }
+.emgi { width: 52px; height: 52px; border-radius: 16px; background: rgba(232,176,75,.14); color: var(--acc, #E8B04B); display: flex; align-items: center; justify-content: center; }
+.emgt { font-size: 12.5px; font-weight: 700; text-align: center; line-height: 1.2; }
+html.light .emchip { background: #fff; border-color: #D9D2C3; color: #1A1D26; }
+html.light .emg { color: #1A1D26; } html.light .emgi { background: #FBEBD0; color: #B07A1A; }
+/* điện thoại xoay ngang: ảnh bên trái, mục lục bên phải, không bị cắt */
+@media (orientation: landscape) {
+  html.mobile .eldm { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 18px; align-content: start; padding-left: calc(16px + env(safe-area-inset-left)) !important; padding-right: calc(16px + env(safe-area-inset-right)) !important; }
+  html.mobile .eldm .emtop2 { grid-column: 1 / -1; }
+  html.mobile .eldm .emhero { margin: 0; border-radius: 16px; max-height: calc(100vh - 140px); }
+  html.mobile .eldm .emgrid { margin-top: 0; align-content: start; gap: 12px 4px; }
+  html.mobile .eldm .emgi { width: 46px; height: 46px; border-radius: 14px; }
+}
+
+html.mobile.ef-xl .est { font-size: 20px; } html.mobile.ef-xl .emgt { font-size: 14px; } html.mobile.ef-xl .emhtt { font-size: 25px; } html.mobile.ef-xl .ect { font-size: 19px; }
+html.mobile.ef-md .est { font-size: 16px; } html.mobile.ef-md .emgt { font-size: 11.5px; } html.mobile.ef-md .ect { font-size: 15px; }
+.mobile .eldset .estile { height: 70px; } .mobile .eldset .esgrid { gap: 10px; } .mobile .elderv:not(.eldhome) { padding-bottom: 100px !important; }
+/* 2.45.6: mục lục điện thoại ông bà: ô icon màu, nhỏ gọn */
+.emgrid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+.emg2 { height: 62px; border-radius: 16px; background: #1D2230; color: #F4F1EC; display: flex; align-items: center; gap: 10px; padding: 0 14px; cursor: pointer; }
+.emg2i { font-size: 26px; line-height: 1; width: 30px; text-align: center; flex: none; }
+.emg2 .emgt { font-size: 16.5px; font-weight: 800; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.light .emg2 { background: #E9E4DA; color: #1A1D26; }
+html.mobile.ef-xl .emg2 .emgt { font-size: 18.5px; } html.mobile.ef-md .emg2 .emgt { font-size: 15px; }
+@media (orientation: landscape) {
+  html.mobile .eldm .emgrid2 { margin-top: 0; align-content: start; gap: 8px; }
+  html.mobile .eldm .emg2 { height: 46px; border-radius: 12px; } html.mobile .eldm .emgrid2 { gap: 6px; } html.mobile .eldm .emg2i { font-size: 22px; } html.mobile .eldm .emg2 .emgt { font-size: 15px; }
+}

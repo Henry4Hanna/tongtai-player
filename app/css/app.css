@@ -2348,3 +2348,22 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 .mswipe { display: none; position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 10050; flex-direction: column; align-items: center; gap: 4px; padding: 14px 26px; border-radius: 18px; background: rgba(0,0,0,.8); color: #fff; pointer-events: none; }
 .mswipe b { font-size: 24px; color: #F6CF7A; white-space: nowrap; } .mswipe span { font-size: 15px; font-weight: 700; white-space: nowrap; }
 .mvbar, .embar { touch-action: none; }
+/* 2.47.1: TV Tóm tắt phim: 4 nút nằm gọn trong khung (Để sau không lòi ra ngoài) */
+html:not(.mobile) .sumim { width: 420px; height: 262px; margin-right: 34px; }
+html:not(.mobile) .sumtx .btns { gap: 14px; flex-wrap: wrap; }
+html:not(.mobile) .sumtx .btn { padding: 0 26px; }
+/* 2.47.1: ông bà: ô Thể loại có ảnh phim; mục lục bên trái không tô mục đang mở (chỉ khung vàng khi chọn) */
+.ecat.ephoto .ecic { width: 72px; height: 72px; opacity: .85; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+.mobile .ecat.ephoto .ecic { width: 40px; height: 40px; }
+.emi.cur, html.light .emi.cur { background: #1D2230; box-shadow: none; }
+html.light .emi.cur { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+/* 2.47.1: TV: thanh thời gian nhạc chọn được để tua */
+.seekbar.focus { outline: 4px solid #F6CF7A; outline-offset: 10px; border-radius: 8px; transform: none !important; }
+.mvbar.seekbar, .embar.seekbar { position: relative; }
+html:not(.mobile) .mswipe { padding: 22px 44px; border-radius: 26px; } html:not(.mobile) .mswipe b { font-size: 46px; } html:not(.mobile) .mswipe span { font-size: 26px; }
+/* 2.47.2: ông bà TV: mục lục trái hẹp lại; khung vàng của ô trong phần phải không bị cắt */
+.eldtv { gap: 30px; }
+.emenu { width: 384px; } .emi { padding: 0 14px; gap: 12px; } .emic { font-size: 38px; width: 46px; }
+.emt { font-size: 27px; } .ems { font-size: 18px; }
+.epane { padding: 14px 18px 40px 18px; }
+.epane .f.focus { outline-width: 6px; outline-offset: 3px; transform: none; }

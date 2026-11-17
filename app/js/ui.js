@@ -134,7 +134,6 @@
       // 2.41.3: thời lượng + nhãn ★ AI / 3D chung một hàng góc trái
       var bd = t.querySelector('.badge.dur'), bt = t.querySelector('.badge.tag');
       if (bd && bt) { var tl = el('div', 'ctl'); t.insertBefore(tl, bd); tl.appendChild(bd); tl.appendChild(bt); }
-      if (bt) { t.appendChild(el('div', 'aib', '★ ' + item.tag)); c.classList.add('hasai'); }   // 2.46: nhãn AI góc dưới phải ảnh
     }
     if (item.id && String(item.id).indexOf('demo') !== 0)
       c._hold = function () {

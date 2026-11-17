@@ -124,6 +124,26 @@
     set('-webkit-transform', 'scale(' + (1 / f) + ')');
   }
 
+  /* 2.46.2: iPhone xoay máy: khung phim đúng bằng vùng thấy được (không lệch, không bị cắt), nút Đóng bấm được */
+  function fitBox() {
+    var p = $('player');
+    if (!p || !mob()) return;
+    try { if (w.scrollX || w.scrollY) w.scrollTo(0, 0); d.documentElement.scrollLeft = d.body.scrollLeft = 0; } catch (x) { /* bỏ qua */ }
+    if (!isOpen || mini) { p.style.width = p.style.height = ''; return; }
+    var vv = w.visualViewport, W = Math.round((vv && vv.width) || w.innerWidth), H = Math.round((vv && vv.height) || w.innerHeight);
+    if (W && H) { p.style.width = W + 'px'; p.style.height = H + 'px'; }
+    sizeForQuality();
+    var bk = d.getElementById('webback');   // vẽ lại nút để iPhone nhận cú chạm đúng chỗ mới
+    if (bk) { var dsp = bk.style.display; bk.style.display = 'none'; void bk.offsetWidth; bk.style.display = dsp; }
+  }
+  (function () {
+    var t = [];
+    function later() { t.forEach(clearTimeout); t = [60, 350, 900].map(function (ms) { return setTimeout(fitBox, ms); }); fitBox(); }
+    w.addEventListener('resize', later);
+    w.addEventListener('orientationchange', later);
+    if (w.visualViewport) w.visualViewport.addEventListener('resize', later);
+  })();
+
   function applyQuality(tell) {
     var qp = qPref();
     sizeForQuality();
@@ -950,7 +970,7 @@
     if (mode === 'menu') closeMenu(); hideUp(); hideSend();
     p.classList.toggle('mini', mini); d.documentElement.classList.toggle('plmini', mini);
     if (mini) { placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
-    setTimeout(sizeForQuality, 60);
+    setTimeout(fitBox, 60);
     try {
       if (mini && !w.localStorage.getItem('tt.miniTip')) { w.localStorage.setItem('tt.miniTip', '1'); w.UI.toast('Phim vẫn chạy khi bạn lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt', 5000); }
     } catch (x) { /* bỏ qua */ }
@@ -1015,6 +1035,7 @@
     sleepHold = false; clearTimeout(sleepCloseT); volBack(); var sbg = $('pl-sleepbadge'); if (sbg) sbg.className = 'hidden';
     saveNow();
     isOpen = false;
+    fitBox();
     demoHint = false;
     playing = false;
     clearInterval(tickT); clearTimeout(hideT); clearTimeout(errT); stillClear();
@@ -1327,6 +1348,7 @@
     stopPreview();
     hideUp();
     isOpen = true;
+    setTimeout(fitBox, 50);
     if (mob()) ensureMiniUI();
     qManual = false;
     try { if (w.DataSaver && w.DataSaver.on()) setTimeout(function () { if (isOpen) w.UI.toast('📶 ' + w.DataSaver.why().replace(/^t/, 'T') + ': phát ' + (w.DataSaver.q() === 'medium' ? '360p' : '480p') + '. Bấm Chất lượng để chọn cao hơn cho phim này', 4500); }, 1800); } catch (x) { /* bỏ qua */ }

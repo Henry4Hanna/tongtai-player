@@ -2327,12 +2327,11 @@ html.elder.mobile.ef-xl #pl-ui #pl-title { font-size: 23px; } html.elder.mobile.
 .mobile .thumb.hasinfo .badge.multi { display: none; }
 .mobile .ctl { flex-wrap: wrap; row-gap: 4px; }
 .mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: 62px; }
-/* 2.46: điện thoại: nhãn ★ AI ở góc dưới phải ảnh (Đang hot vẫn để cạnh thời lượng) */
-.aib { display: none; }
-.mobile .aib { display: block; position: absolute; right: 6px; bottom: 8px; z-index: 4; background: linear-gradient(135deg, #F6CF7A, #E8B04B); color: #1a1206; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 8px; line-height: 1.4; }
-.mobile .thumb.hasinfo .ctl .badge.tag { display: none; }
-.mobile .row-hot .thumb.hasinfo .ctl .badge.tag { display: block; } .mobile .row-hot .aib { display: none; }
-.mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: 38px; }
-.mobile .row-hot .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { top: auto; }
-.mobile .card.hasai .csub { padding-right: 52px; box-sizing: border-box; }
-.mobile .row-hot .card.hasai .csub { padding-right: 0; }
+/* 2.46.2: iPhone xoay máy khi xem phim: không tràn ngang, nút Đóng luôn nhận chạm */
+html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
+.mobile #app { overflow: hidden; }
+.mobile #webback.inplayer, .mobile #pl-min { -webkit-transform: translateZ(0); transform: translateZ(0); }
+@media (orientation: landscape) {
+  .mobile #webback.inplayer { right: calc(10px + env(safe-area-inset-right)); }
+  .mobile #pl-min { right: calc(94px + env(safe-area-inset-right)); }
+}

@@ -324,6 +324,18 @@ Lỗi Google “Access blocked … has not completed the Google verification pro
 - **Bản 2.38.1:** điện thoại có **phim thu nhỏ**: đang xem bấm nút **⌄** (cạnh ✕ Đóng) hoặc vuốt xuống. Phim thu vào góc, vẫn chạy khi lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt.
 - **Bản 2.38.3:** trang Nhạc kiểu karaoke: câu đang hát ở giữa màn hình giờ **màu vàng** như logo (trước là chữ trắng).
 - **Bản 2.38.4:** màn hình chờ nét hơn (ảnh bìa lớn nhất), sửa chiếc lá trên logo có lúc hiện to, bỏ báo lỗi webapis.js. Bản Samsung đổi mã gói thành **TongTaiTV2** (`config.xml`).
+- **Bản 2.45.4:** Tạo hồ sơ chọn **Kiểu thường / Kiểu ông bà**; giữ OK trên hồ sơ (màn hình Ai đang xem) để đổi kiểu.
+- **Bản 2.45.3:** Ông bà thích có thêm **👯 Sinh đôi** và **🌾 Làng quê**.
+- **Bản 2.45.2:** TV chế độ ông bà: nút **Remote** cạnh nút Sáng/Tối, các ô trên cùng viền bằng nhau.
+- **Bản 2.45.1:** Cài đặt ông bà có ô **Giao diện thường** (về Trang chủ bình thường, cần mã PIN) và ô **Giữ lâu xem thử phim** (Bật / Tắt).
+- **Bản 2.45.0:** Chế độ ông bà: mục **💛 Ông bà thích** (Trẻ em · Hài · Ông bà · Gia đình), nút **⚙ Cài đặt** đơn giản cạnh Tìm kiếm (cỡ chữ, phụ đề, giờ đi ngủ…), **Thống kê xem** và **Thống kê nghe nhạc**. Cài đặt đầy đủ cần mã PIN.
+- **Bản 2.44.0:** Trang chính ông bà trên TV kiểu mới: mục lục bên trái, nội dung mục hiện bên phải, **Hẹn giờ tắt** cho phim và nhạc, câu nói tổng tài, ô **Tìm kiếm** cạnh tên người xem, trang trí theo mùa, giao diện sáng / tối. Rời mục Nghe nhạc là nhạc tắt.
+- **Bản 2.43.0:** **👵 Chế độ ông bà** (Cài đặt → Hồ sơ người xem → Chế độ ông bà): chữ to, nút lớn, Xem tiếp + 8 nút (Phim mới, Phim hot, Top 10, Thể loại, Phim lẻ, Hoạt hình, Nghe nhạc, Lịch sử). **Mở app vào thẳng hồ sơ** (riêng từng máy). Thoát: giữ OK trên hình hồ sơ (điện thoại: chạm giữ tên 2 giây), nhập mã PIN người lớn.
+- **Bản 2.42.0:** **Thống kê xem** có 7 · 30 · 90 · 180 ngày (90/180 ngày: biểu đồ theo tuần), giữ dữ liệu 180 ngày. Nút **Xuất PDF** (điện thoại, máy tính): báo cáo 1 trang A4.
+- **Bản 2.41.4:** Hiệu ứng rơi chia đều khắp màn hình, không còn dồn bên trái.
+- **Bản 2.41.3:** Điện thoại: ⓘ góc trên phải ảnh phim, ★ AI cạnh thời lượng. Thanh trên cùng: hình người đang xem (bấm để đổi), Remote có viền, 🎲 cùng cỡ.
+- **Bản 2.41.2:** Điện thoại: nhãn ★ AI và nhãn thể loại không còn bị nút ⓘ đè; Xem chung không còn hiện 2 hình thú to ở đầu trang.
+- **Bản 2.41.1:** Hình trang trí mùa / ngày lễ gắn ngay góc logo (bỏ chiếc lá lơ lửng bên trái trên điện thoại). Điện thoại có nút **Remote TV** cạnh xí ngầu 🎲. **Thi đua tuần** mặc định Tắt.
 - **Bản 2.41.0:** **Màu riêng cho từng hồ sơ** (chọn ở màn hình Ai đang xem → giữ OK trên hồ sơ → 🎨 Màu riêng) · **↗ Chia sẻ** trong Tóm tắt: gửi link YouTube gốc + câu giới thiệu (TV hiện mã QR).
 - **Bản 2.40.0:** **Chế độ xe hơi** (tự bật trên xe Tesla: nút to, 🎧 Chỉ nghe tiếng) · **Phim tương tự** trong Tóm tắt (không tốn đơn vị YouTube) · **Tải / Mở file sao lưu** (Cài đặt, điện thoại & máy tính) · Remote **nhớ nhiều TV**, đổi 1 chạm · **🔔 Theo dõi tập mới** ở trang phim bộ (cần bật thông báo trên điện thoại). Cần deploy lại máy chủ quản trị.
 - **Bản 2.39.7:** màn hình cảm ứng lớn (xe Tesla, máy tính bảng xoay ngang): vuốt ở danh sách nào thì cuộn danh sách đó, vuốt dài đi nhiều phim.

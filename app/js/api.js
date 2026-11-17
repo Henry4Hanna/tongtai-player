@@ -2,6 +2,21 @@
 (function (w) {
   'use strict';
   var C = w.APP_CONFIG;
+  /* 2.46.9: thể loại Hành động cho Phim lẻ hay (thêm bằng code, không cần sửa config.js) */
+  var ACTION_KW = /hành động|hanh dong|võ thuật|vo thuat|kung ?fu|công phu|xã hội đen|giang hồ|đặc nhiệm|đặc công|cảnh sát|sát thủ|đấu súng|bắn súng|đấu võ|quyền anh|võ sĩ|lính đánh thuê|chiến binh|chiến tranh|bom tấn|truy sát|truy kích|săn tiền thưởng|phá án|diệp vấn|ngô kinh|chân tử đan|lý liên kiệt|thành long|hồng kim bảo|triệu văn trác|thái cực|\baction\b/i;
+  var MOVIE_GENRES = [
+    { name: 'Hành động', kw: ACTION_KW },
+    { name: 'Kinh dị', kw: /kinh dị|ma quái|cương thi|zombie|xác sống|quỷ|kinh di/i },
+    { name: 'Hài', kw: /hài hước|phim hài|siêu hài|vui nhộn|hai huoc/i },
+    { name: 'Tình cảm', kw: /tình cảm|tình yêu|lãng mạn|tinh cam/i },
+    { name: 'Cổ trang', kw: /cổ trang|cổ đại|cung đình|hoàng đế|co trang/i }
+  ];
+  try {
+    if (C.CATEGORIES && !C.CATEGORIES.some(function (c) { return c.id === 'hanhdong'; })) {
+      var pi = -1; C.CATEGORIES.forEach(function (c, i) { if (c.id === 'phimle') pi = i; });
+      C.CATEGORIES.splice(pi >= 0 ? pi + 1 : C.CATEGORIES.length, 0, { id: 'hanhdong', name: 'Hành động', kind: 'movie', mkw: ACTION_KW });
+    }
+  } catch (e) { /* bỏ qua */ }
   var Store = w.Store;
   var BASE = 'https://www.googleapis.com/youtube/v3/';
 
@@ -52,6 +67,10 @@
     if (it.kind === 'channel') return [];
     if (it.anime) return ['Hoạt hình'];
     var text = (it.title || '') + ' ' + (it.desc || '');
+    if (it.movie) {   // Phim lẻ: thể loại phim điện ảnh, không gắn Tổng tài
+      var g = MOVIE_GENRES.filter(function (x) { return x.kw.test(text); }).map(function (x) { return x.name; });
+      return g.length ? g.slice(0, 3) : ['Phim lẻ'];
+    }
     var ids = [];
     C.CATEGORIES.forEach(function (c) { if (c.kw && c.kw.test(text)) ids.push(c.id); });
     if (it.src && ids.indexOf(it.src) < 0) ids.push(it.src);      // phim lấy từ danh mục nào thì luôn có nhãn đó

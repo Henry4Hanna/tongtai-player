@@ -2339,7 +2339,12 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 .mobile .thumb.hasinfo .badge.cat, .mobile .thumb.hasinfo:has(.ctl .badge.tag) .badge.cat { right: 6px; top: 34px; }
 .mobile .thumb.hasinfo .badge.new { top: 34px; }
 .mobile .row-hot .thumb.hasinfo .badge.cat { top: auto; bottom: 6px; }
-/* 2.46.4: iPhone xoay ngang: khung YouTube nằm trong vùng an toàn (không chạm tai thỏ) -> phim nằm giữa, không bị đẩy lệch/cắt */
+/* 2.46.10: iPhone xoay ngang: trang YouTube bên trong tự dịch nội dung sang phải đúng bằng vùng tai thỏ bên trái
+   (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
-  html.mobile #player:not(.mini) #yt-host { left: env(safe-area-inset-left) !important; right: auto !important; width: calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right)) !important; }
+  html.mobile #player:not(.mini) #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }
 }
+/* 2.47.0: vuốt để tua bài hát */
+.mswipe { display: none; position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 10050; flex-direction: column; align-items: center; gap: 4px; padding: 14px 26px; border-radius: 18px; background: rgba(0,0,0,.8); color: #fff; pointer-events: none; }
+.mswipe b { font-size: 24px; color: #F6CF7A; white-space: nowrap; } .mswipe span { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.mvbar, .embar { touch-action: none; }

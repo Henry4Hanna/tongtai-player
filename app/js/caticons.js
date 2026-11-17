@@ -44,6 +44,9 @@
       '<path d="M10 98q20-8 40 0t40 0 30 0M80 86v-14M88 86v-18M96 86v-12" ' + S + '/>',
     // Phim lẻ hay: cuộn phim + vé
     phimle: '<circle cx="50" cy="56" r="34" ' + S + '/><circle cx="50" cy="56" r="8" fill="' + G + '"/><circle cx="50" cy="34" r="7" ' + S + '/><circle cx="50" cy="78" r="7" ' + S + '/><circle cx="28" cy="56" r="7" ' + S + '/><circle cx="72" cy="56" r="7" ' + S + '/><path d="M84 90l20-8v18l-20 8z" fill="' + G + '"/>',
+    // Hành động: tia sét + vụ nổ
+    hanhdong: '<path d="M60 14l10 22 24-8-12 22 24 10-24 8 10 24-22-12-10 24-8-24-24 10 12-22-22-12 24-6-8-24 22 12z" ' + S + '/>' +
+      '<path d="M64 34L48 62h14l-6 26 18-32H60z" fill="' + G + '"/>',
     // Hài: mặt cười
     hai: '<circle cx="60" cy="60" r="42" fill="' + G + '"/><path d="M40 50q6-8 12 0M68 50q6-8 12 0" fill="none" stroke="#7a5418" stroke-width="5" stroke-linecap="round"/><path d="M36 66h48q-4 22-24 22T36 66z" fill="#7a5418"/>'
   };

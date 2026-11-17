@@ -287,7 +287,7 @@
     segB.onclick = function () { pick('anime'); };
     seg.appendChild(segA); seg.appendChild(segM); seg.appendChild(segB);
     var pills = el('div', 'mpills monly');
-    C.CATEGORIES.filter(function (c) { return c.kind === 'film'; }).forEach(function (c) {
+    C.CATEGORIES.filter(function (c) { return c.mkw; }).concat(C.CATEGORIES.filter(function (c) { return c.kind === 'film'; })).forEach(function (c) {
       var b = el('div', 'mpill', c.name);
       b.onclick = function () { push(CatList(c)); };
       pills.appendChild(b);
@@ -740,7 +740,7 @@
       e._cat = c;
       var t = el('div', 'cattext');
       t.appendChild(el('div', 'catname', c.name));
-      t.appendChild(el('div', 'catsub', c.kind === 'anime' ? 'AI · 2D · 3D' : c.kind === 'movie' ? 'Phim điện ảnh' : 'Phim lẻ 1 tập'));
+      t.appendChild(el('div', 'catsub', c.kind === 'anime' ? 'AI · 2D · 3D' : c.kind === 'movie' ? (c.mkw ? 'Phim lẻ đánh đấm, võ thuật' : 'Phim điện ảnh') : 'Phim lẻ 1 tập'));
       e.appendChild(t);
       e._ok = function () { push(CatList(c)); };
       g.appendChild(e);
@@ -768,7 +768,7 @@
         var c = card._cat;
         if (!c) return;
         if (c.kind === 'anime') { setPhoto(card, anime.filter(function (f) { return !used[f.id]; })[0] || anime[0]); return; }
-        if (c.kind === 'movie') { setPhoto(card, movies.filter(function (f) { return !used[f.id]; })[0]); return; }
+        if (c.kind === 'movie') { setPhoto(card, movies.filter(function (f) { return !used[f.id] && (!c.mkw || Api.catsOf(f).indexOf(c.name) >= 0); })[0] || movies.filter(function (f) { return !used[f.id]; })[0]); return; }
         // ưu tiên phim có đúng nhãn danh mục này đứng đầu
         var pick = films.filter(function (f) { return !used[f.id] && Api.catsOf(f)[0] === c.name; })[0] ||
           films.filter(function (f) { return !used[f.id] && Api.catsOf(f).indexOf(c.name) >= 0; })[0] ||
@@ -789,12 +789,12 @@
   function CatList(cat) {
     var v = UI.view();
     var h = el('div', 'pagehead', cat.name);
-    h.appendChild(el('span', 'rh', cat.kind === 'anime' ? 'Hoạt hình AI, 2D, 3D · từ các kênh bạn chọn, mới nhất trước' : cat.kind === 'movie' ? 'Phim lẻ hay · xem nhiều nhất' : 'Phim lẻ 1 tập'));
+    h.appendChild(el('span', 'rh', cat.kind === 'anime' ? 'Hoạt hình AI, 2D, 3D · từ các kênh bạn chọn, mới nhất trước' : cat.kind === 'movie' ? (cat.mkw ? 'Phim lẻ hành động · xem nhiều nhất' : 'Phim lẻ hay · xem nhiều nhất') : 'Phim lẻ 1 tập'));
     v.appendChild(h);
     var holder = el('div', 'gridwrap');
     holder.appendChild(el('div', 'rowmsg', 'Đang tải…'));
     v.appendChild(holder);
-    var p = cat.kind === 'anime' ? Api.animeAll() : cat.kind === 'movie' ? Api.movieFilms() : Api.catFilms(cat);
+    var p = cat.kind === 'anime' ? Api.animeAll() : cat.kind === 'movie' ? Api.movieFilms().then(function (l) { return cat.mkw ? l.filter(function (f) { return Api.catsOf(f).indexOf(cat.name) >= 0; }) : l; }) : Api.catFilms(cat);
     p.then(function (list) {
       holder.innerHTML = '';
       if (!list.length) { holder.appendChild(el('div', 'rowmsg', 'Chưa có phim phù hợp.')); return; }

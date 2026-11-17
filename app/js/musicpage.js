@@ -10,6 +10,51 @@
 
   function M() { return w.Music && w.Music.S; }
   function fmt(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+
+  /* 2.47.0: vuốt ngang để tua bài hát (cả trang Nhạc), kéo trên thanh thời gian để tua tới đúng chỗ */
+  function swipeSeek(root, bars) {
+    var S = M(); if (!root || !S) return;
+    var ov = null, st = null;
+    function show(txt, sub) {
+      if (!ov) { ov = d.createElement('div'); ov.className = 'mswipe'; d.body.appendChild(ov); }
+      ov.innerHTML = '<b>' + txt + '</b><span>' + sub + '</span>'; ov.style.display = 'flex';
+    }
+    function hide() { if (ov) ov.style.display = 'none'; }
+    function onBar(t) { for (var i = 0; i < (bars || []).length; i++) if (bars[i] && bars[i].contains(t)) return bars[i]; return null; }
+    root.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { st = null; return; }
+      var t = e.touches[0], tg = e.target;
+      if (tg.closest && tg.closest('input, textarea, .track, .mpills, .emp-next')) { st = null; return; }
+      var dur = S.duration ? S.duration() : 0;
+      if (!dur || !isFinite(dur)) { st = null; return; }
+      st = { x: t.clientX, y: t.clientY, t0: S.time ? S.time() : 0, dur: dur, bar: onBar(tg), on: false, to: 0 };
+    }, { passive: true });
+    root.addEventListener('touchmove', function (e) {
+      if (!st) return;
+      var t = e.touches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if (!st.on) {
+        if (st.bar) st.on = Math.abs(dx) > 4 || Math.abs(dy) < 30;
+        else if (Math.abs(dx) > 18 && Math.abs(dx) > Math.abs(dy) * 1.4) st.on = true;
+        else if (Math.abs(dy) > 18) { st = null; return; }
+        if (!st.on) return;
+      }
+      if (e.cancelable) e.preventDefault();
+      if (st.bar) { var r = st.bar.getBoundingClientRect(); st.to = Math.max(0, Math.min(1, (t.clientX - r.left) / r.width)) * st.dur; }
+      else st.to = st.t0 + dx / (w.innerWidth || 400) * 60;   // vuốt hết bề ngang màn hình = 1 phút
+      st.to = Math.max(0, Math.min(st.dur - 1, st.to));
+      var df = Math.round(st.to - st.t0);
+      show((df >= 0 ? '+' : '−') + fmt(Math.abs(df)), 'tới ' + fmt(st.to) + ' / ' + fmt(st.dur));
+    }, { passive: false });
+    function end() {
+      if (st && st.on) { S.seek(st.to); root._swipedAt = Date.now(); }
+      st = null; setTimeout(hide, 250);
+    }
+    root.addEventListener('touchend', end); root.addEventListener('touchcancel', end);
+    (bars || []).forEach(function (b) {   // chạm vào thanh thời gian: nhảy tới chỗ đó
+      if (!b || b.onclick) return;
+      b.onclick = function (e) { var r = b.getBoundingClientRect(), du = S.duration(); if (du) S.seek((e.clientX - r.left) / r.width * du); };
+    });
+  }
   function svg(path, size, fill) {
     return '<svg viewBox="0 0 24 24" width="' + (size || 30) + '" height="' + (size || 30) + '" fill="' + (fill ? 'currentColor' : 'none') + '" stroke="' + (fill ? 'none' : 'currentColor') + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
   }
@@ -168,6 +213,7 @@
     tl.appendChild(tNow); tl.appendChild(tTot); prog.appendChild(tl);
     left.appendChild(prog);
     bar.onclick = function (e) { var r = bar.getBoundingClientRect(); S.seek((e.clientX - r.left) / r.width * S.duration()); };
+    swipeSeek(v, [bar]);
 
     function cbtn(cls, icon, label, fn) {
       var b = el('div', 'mvbtn f ' + cls);
@@ -471,6 +517,7 @@
     var prog = el('div', 'emprog'), tNow = el('span', '', '0:00'), bar = el('div', 'embar'), fill = el('i'), tTot = el('span', '', '0:00');
     bar.appendChild(fill); prog.appendChild(tNow); prog.appendChild(bar); prog.appendChild(tTot);
     [kick, ttl, l0, l1, l2, prog].forEach(function (x) { info.appendChild(x); });
+    swipeSeek(v, [bar]);
     top.appendChild(info);
     v.appendChild(top);
     function btn(cls, html, fn) { var b = el('div', 'emb f ' + cls); b.innerHTML = html; b._ok = fn; return b; }
@@ -582,6 +629,7 @@
     bot.appendChild(l0); bot.appendChild(l1); bot.appendChild(l2);
     var prog = el('div', 'emprog'), tNow = el('span', '', '0:00'), bar = el('div', 'embar'), fill = el('i'), tTot = el('span', '', '0:00');
     bar.appendChild(fill); prog.appendChild(tNow); prog.appendChild(bar); prog.appendChild(tTot); bot.appendChild(prog);
+    swipeSeek(host, [bar]);
     var ctl = el('div', 'emp-ctl');
     function btn(cls, html, fn) { var b = el('div', 'empb f ' + cls); b.innerHTML = html; b._ok = fn; return b; }
     var bPlay = btn('on', '⏸ Dừng', function () { S.toggle(); setTimeout(paint, 80); });

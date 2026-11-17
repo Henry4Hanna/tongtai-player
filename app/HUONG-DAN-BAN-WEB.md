@@ -324,6 +324,9 @@ Lỗi Google “Access blocked … has not completed the Google verification pro
 - **Bản 2.38.1:** điện thoại có **phim thu nhỏ**: đang xem bấm nút **⌄** (cạnh ✕ Đóng) hoặc vuốt xuống. Phim thu vào góc, vẫn chạy khi lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt.
 - **Bản 2.38.3:** trang Nhạc kiểu karaoke: câu đang hát ở giữa màn hình giờ **màu vàng** như logo (trước là chữ trắng).
 - **Bản 2.38.4:** màn hình chờ nét hơn (ảnh bìa lớn nhất), sửa chiếc lá trên logo có lúc hiện to, bỏ báo lỗi webapis.js. Bản Samsung đổi mã gói thành **TongTaiTV2** (`config.xml`).
+- **Bản 2.47.0:** Nghe nhạc: vuốt ngang hoặc kéo thanh thời gian để tua bài.
+- **Bản 2.46.10:** iPhone xoay ngang: phim không còn lệch / mất khúc.
+- **Bản 2.46.9:** Thể loại **Hành động** cho phim lẻ; phim lẻ không còn gắn nhãn Tổng tài.
 - **Bản 2.46.8:** Giao diện mặc định **Tối** cho cả TV và điện thoại.
 - **Bản 2.46.7:** iPhone xoay ngang: phim nằm giữa, không bị lệch phải.
 - **Bản 2.46.6:** Bản web tự lấy giao diện mới ngay khi đổi BUILD (cần chép `index.html` một lần).

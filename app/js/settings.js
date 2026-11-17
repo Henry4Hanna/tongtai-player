@@ -22,7 +22,8 @@
     HOME_ORDER: ['cont', 'favch', 'fresh', 'hot', 'rec', 'top', 'movie', 'anime'], SHOW_FRESH: true, SHOW_HOT: true, SHOW_MOVIE: true, SHOW_REC: true, SHOW_TOP10: true, SHOW_ANIME: true,
     CAT_SEARCH_MORE: true, MIN_FILM_MINUTES: C.MIN_FILM_MINUTES, MIN_ANIME_MINUTES: C.MIN_ANIME_MINUTES,
     HIDE_VERTICAL: C.HIDE_VERTICAL, OK2_HOME: C.OK2_HOME !== false,
-    THEME: IS_TV && (!C.THEME || C.THEME === 'dark') ? 'time' : (C.THEME || 'dark'), THEME_HOURS: C.THEME_HOURS || '6-18',
+    THEME: C.THEME || 'dark',   // 2.46.8: mặc định Tối cho cả TV và điện thoại
+    THEME_HOURS: C.THEME_HOURS || '6-18',
     CLOCK_12: C.CLOCK_12 !== false, BOOT_SECS: C.BOOT_SECS == null ? 3 : C.BOOT_SECS, SCREENSAVER: C.SCREENSAVER == null ? 10 : C.SCREENSAVER, SAVER_QUOTE: C.SAVER_QUOTE !== false, SAVER_MUSIC: C.SAVER_MUSIC !== false, SLEEP_AT: C.SLEEP_AT || '', SLEEP_WHO: C.SLEEP_WHO || 'all', PRELOAD: C.PRELOAD !== false, SHOW_NEWEPS: C.SHOW_NEWEPS !== false, SHOW_QUIZ: C.SHOW_QUIZ !== false,
     MUSIC: C.MUSIC && C.MUSIC !== 'songs' ? C.MUSIC : 'songsx', MUSIC_URL: C.MUSIC_URL || '', STATS_URL: C.STATS_URL || '', MUSIC_VIEW: C.MUSIC_VIEW || 'split', MUSIC_VOL: C.MUSIC_VOL || 'low', MUSIC_LEVEL: C.MUSIC_LEVEL !== false, QUOTA_SAVER: C.QUOTA_SAVER !== false,
     SEASON: C.SEASON || 'auto', SEASON_FX: C.SEASON_FX === false ? false : (C.SEASON_FX === 'mid' || C.SEASON_FX === 'high' ? C.SEASON_FX : 'low'),
@@ -117,6 +118,14 @@
     if ((s.chSet || 0) !== (C.CHANNEL_SET || 0)) {
       delete s.CH_EXTRA; delete s.CH_TYPE; s.chSet = C.CHANNEL_SET || 0;
       w.Store.setPref(KEY, s);
+    }
+    // 2.46.8: đưa mọi hồ sơ về giao diện Tối (1 lần), sau đó ai muốn Sáng / Theo giờ thì tự đổi trong Cài đặt
+    if (s.themeReset !== 1) {
+      delete s.THEME; s.themeReset = 1; w.Store.setPref(KEY, s);
+      var pa = w.Store.pref('psettings', {}) || {}, pid;
+      for (pid in pa) if (pa[pid] && pa[pid].THEME !== undefined) delete pa[pid].THEME;
+      w.Store.setPref('psettings', pa);
+      try { w.localStorage.removeItem('tt.themeOvr'); w.localStorage.setItem('tt.themeFast', 'dark'); } catch (e) { /* bỏ qua */ }
     }
     // Quên mã PIN: PIN_FORCE trong config.js đặt lại mã (chỉ áp dụng một lần cho mỗi giá trị)
     if (C.PIN_FORCE && s.pinForced !== pinHash(C.PIN_FORCE)) {

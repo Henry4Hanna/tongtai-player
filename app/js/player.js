@@ -109,15 +109,18 @@
     if (!fr) return;
     var qp = qPref(), H = Q_H[qp];
     var set = function (k, v) { fr.style.setProperty(k, v, 'important'); };
+    var iosFix = mob();   // 2.46.7: iPhone tự nới khung YouTube theo nội dung (phim lệch phải, mất mép) -> width 1px + min-width
     if (!H || w.AndroidApp) {                        // Tự động (hoặc TV Android: video phần cứng không chịu phóng/thu -> bị cắt, nên không dùng mẹo này)
-      ['width', 'height', 'transform', '-webkit-transform', 'transform-origin'].forEach(function (k) { fr.style.removeProperty(k); });
+      ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
+      if (iosFix) { set('width', '1px'); set('min-width', '100%'); set('max-width', '100%'); }
       return;
     }
     var hw = host.offsetWidth, hh = host.offsetHeight, r = host.getBoundingClientRect();
     var devH = r.height * (w.devicePixelRatio || 1);   // chiều cao thật của khung, tính bằng điểm ảnh màn hình
     if (!hw || !hh || !devH) return;
     var f = Math.max(0.15, Math.min(3, H / devH));
-    set('width', Math.round(hw * f) + 'px');
+    if (iosFix) { set('width', '1px'); set('min-width', Math.round(hw * f) + 'px'); set('max-width', Math.round(hw * f) + 'px'); }
+    else set('width', Math.round(hw * f) + 'px');
     set('height', Math.round(hh * f) + 'px');
     set('transform-origin', '0 0');
     set('transform', 'scale(' + (1 / f) + ')');

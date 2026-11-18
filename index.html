@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><title>Trang phát video</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#p{position:absolute;left:0;top:0;width:100%;height:100%}</style>
+</head><body><div id="p"></div>
+<script>
+/* Trang phát video trung gian cho Samsung TV (và Android nếu cần).
+   Đặt trên GitHub Pages (https) để YouTube chấp nhận. Không chứa API key.
+   App TV nhúng trang này trong iframe và điều khiển bằng postMessage. */
+(function () {
+  var player = null, pending = null, par = window.parent;
+  function send(m) { try { par.postMessage(JSON.stringify(m), '*'); } catch (e) {} }
+  function tracks() {
+    try { return player.getOption('captions', 'tracklist') || []; } catch (e) { return []; }
+  }
+  function snap() {
+    if (!player || !player.getCurrentTime) return;
+    var q = ''; try { q = player.getPlaybackQuality(); } catch (e) {}
+    send({ type: 'snap', t: player.getCurrentTime(), d: player.getDuration(), s: player.getPlayerState(), q: q, tracks: tracks() });
+  }
+  function create(m) {
+    pending = m;
+    if (!window.YT || !YT.Player) return;      // sẽ tạo khi API sẵn sàng
+    var vars = m.vars || {};
+    vars.origin = location.origin;
+    player = new YT.Player('p', {
+      width: '100%', height: '100%', videoId: m.videoId, playerVars: vars,
+      events: {
+        onReady: function () { send({ type: 'ready' }); },
+        onStateChange: function (e) { send({ type: 'state', data: e.data }); },
+        onError: function (e) { send({ type: 'error', data: e.data }); }
+      }
+    });
+    setInterval(snap, 500);
+  }
+  window.onYouTubeIframeAPIReady = function () { if (pending && !player) create(pending); };
+  window.addEventListener('message', function (e) {
+    var m; try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+    if (!m) return;
+    if (m.cmd === 'create') create(m);
+    else if (m.cmd === 'call' && player && typeof player[m.fn] === 'function') {
+      try { player[m.fn].apply(player, m.args || []); } catch (x) {}
+    }
+  });
+  var s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+  send({ type: 'hello' });
+})();
+</script></body></html>

@@ -2342,7 +2342,7 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 /* 2.46.10: iPhone xoay ngang: trang YouTube bên trong tự dịch nội dung sang phải đúng bằng vùng tai thỏ bên trái
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
-  html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.5: cả khung phim nhỏ */
+  html.mobile #player:not(.mini) #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.7: khung nhỏ đã lùi khỏi tai thỏ nên YouTube không dịch, không cần bù */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2377,4 +2377,4 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 169; }
+:root { --tt-build: 170; }

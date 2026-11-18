@@ -5,7 +5,7 @@ window.APP_CONFIG = {
 
   // Samsung TV: địa chỉ trang phát video trên GitHub Pages (xem README mục PLAYER_HOST).
   // Android không cần. CHỈ có một dòng PLAYER_HOST trong file này.
-  PLAYER_HOST: 'https://henry4hanna.github.io/tongtai-player/app/',
+  PLAYER_HOST: 'https://henry4hanna.github.io/tongtai-player/',
 
   REGION: 'VN',
   LANG: 'vi',
@@ -28,8 +28,8 @@ window.APP_CONFIG = {
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.47.5',
-  BUILD: 168,
+  VERSION: '2.47.6',
+  BUILD: 169,
   UPDATED: '11/11/2026',
   CONTACT: '',
   // Kiểm tra bản mới: địa chỉ file version.json. Để trống = tự dùng PLAYER_HOST + 'app/version.json' (TV)

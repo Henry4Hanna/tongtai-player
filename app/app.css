@@ -2342,7 +2342,7 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 /* 2.46.10: iPhone xoay ngang: trang YouTube bên trong tự dịch nội dung sang phải đúng bằng vùng tai thỏ bên trái
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
-  html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.5: cả khung phim nhỏ */
+  html.mobile #player:not(.mini) #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.7: khung nhỏ đã lùi khỏi tai thỏ nên YouTube không dịch, không cần bù */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2376,3 +2376,34 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 /* 2.47.4: vòng tròn vàng không đụng chữ thời gian hai bên */
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
+/* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
+:root { --tt-build: 173; }
+/* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
+.mobile .mcarbtn { right: 48px !important; }
+.carbtn svg { width: 60%; height: 60%; }
+.carbtn { color: var(--acc, #E8B04B); }
+.carbtn + .thbtn { margin-left: 0; }
+#topbar .carbtn { width: 52px; min-width: 0; padding: 0; border-radius: 50%; flex: none !important; }
+/* 2.48.0: Chế độ xe: thêm Phim mới, Top 10; nút Thoát lên góc trên; bản điện thoại gọn */
+.carexit { margin-left: auto; font-size: 26px; font-weight: 700; color: #C9CDD6; background: #1D2230; border-radius: 30px; padding: 14px 28px; cursor: pointer; }
+.cartile { flex-direction: column; gap: 10px; font-size: 36px; }
+.cartile i { font-style: normal; font-size: 52px; line-height: 1; }
+.mobile .carv { padding: 0 14px 90px; }
+.mobile .carhd { height: auto; padding: 12px 0; gap: 10px; flex-wrap: wrap; }
+.mobile .carpill { font-size: 14px; padding: 4px 12px; border-width: 1.5px; }
+.mobile .carhint { display: none; }
+.mobile .carexit { font-size: 14px; padding: 9px 14px; border-radius: 20px; }
+.mobile .cartop { flex-direction: column; height: auto; gap: 12px; }
+.mobile .carcard { flex: none; height: 210px; border-radius: 20px; }
+.mobile .carcl { padding: 20px 18px 16px; }
+.mobile .carck { font-size: 12px; letter-spacing: 2px; }
+.mobile .carct { font-size: 20px; max-height: 52px; }
+.mobile .carbar { height: 6px; margin-top: 10px; }
+.mobile .carside { flex-direction: row; gap: 12px; }
+.mobile .carbtn { height: 64px; flex: 1; border-radius: 18px; font-size: 20px; }
+.mobile .carrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: auto; margin-top: 12px; }
+.mobile .cartile { height: 92px; border-radius: 18px; font-size: 18px; gap: 6px; padding: 0 8px; }
+.mobile .cartile i { font-size: 28px; }
+.mobile .cartile:last-child { grid-column: 1 / -1; height: 70px; flex-direction: row; }
+.mobile .carv .f.focus { box-shadow: none; }
+.carlist .ehint { display: none; }   /* xe: màn hình chạm, không cần chỉ phím remote */

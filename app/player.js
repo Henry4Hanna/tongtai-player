@@ -132,13 +132,30 @@
     var p = $('player');
     if (!p || !mob()) return;
     try { if (w.scrollX || w.scrollY) w.scrollTo(0, 0); d.documentElement.scrollLeft = d.body.scrollLeft = 0; } catch (x) { /* bỏ qua */ }
-    if (!isOpen || mini) { p.style.width = p.style.height = ''; return; }
+    if (!isOpen || mini) { p.style.width = p.style.height = ''; setTimeout(alignFrame, 200); return; }
     var vv = w.visualViewport, W = Math.round((vv && vv.width) || w.innerWidth), H = Math.round((vv && vv.height) || w.innerHeight);
     if (W && H) { p.style.width = W + 'px'; p.style.height = H + 'px'; }
-    sizeForQuality();
+    sizeForQuality(); setTimeout(alignFrame, 200);
     var bk = d.getElementById('webback');   // vẽ lại nút để iPhone nhận cú chạm đúng chỗ mới
     if (bk) { var dsp = bk.style.display; bk.style.display = 'none'; void bk.offsetWidth; bk.style.display = dsp; }
   }
+  /* 2.47.8: iPhone hay tự nới khung YouTube rộng hơn khung của app (phim lệch, mất mép, nhất là khung nhỏ khi xoay ngang).
+     Đo khung thật: rộng hơn bao nhiêu thì dời sang trái một nửa để phim nằm giữa; ghi vào Nhật ký để dò lỗi */
+  var alignLast = '';
+  function alignFrame() {
+    try {
+      if (!isOpen || !mob()) return;
+      var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
+      if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
+      var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
+      var extra = Math.round(r.width - hr.width);
+      if (extra > 2) fr.style.setProperty('left', -Math.round(extra / 2 / ((r.width / (fr.offsetWidth || r.width)) || 1)) + 'px', 'important');
+      else fr.style.removeProperty('left');
+      var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
+      if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }
+    } catch (e) { /* bỏ qua */ }
+  }
+  setInterval(alignFrame, 1500);
   (function () {
     var t = [];
     function later() { t.forEach(clearTimeout); t = [60, 350, 900].map(function (ms) { return setTimeout(fitBox, ms); }); fitBox(); }

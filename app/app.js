@@ -434,6 +434,21 @@
 
   // Khởi động ngay khi trang sẵn sàng (không chờ font/ảnh: TV mạng chậm vẫn mở nhanh)
   var started = false;
+  /* 2.47.6: iPhone (mở từ màn hình chính) có thể giữ file giao diện cũ dù app đã lên bản mới:
+     app.css ghi số BUILD; khác số BUILD của app thì tải lại file giao diện mới ngay */
+  function cssFresh() {
+    try {
+      if (!/^https?:/.test(w.location.protocol)) return;
+      var want = String(w.APP_CONFIG.BUILD || ''), have = (w.getComputedStyle(d.documentElement).getPropertyValue('--tt-build') || '').trim();
+      if (!want || have === want) return;
+      [].forEach.call(d.querySelectorAll('link[rel="stylesheet"]'), function (l) {
+        var h = l.getAttribute('href') || '';
+        if (!/^css\//.test(h)) return;
+        l.setAttribute('href', h.split('?')[0] + '?v=' + want + '&r=' + Date.now());
+      });
+      if (w.Log) w.Log.info('Tải lại giao diện: có ' + (have || '?') + ', cần ' + want);
+    } catch (e) { /* bỏ qua */ }
+  }
   function start() {
     if (started) return;
     started = true;
@@ -450,6 +465,7 @@
     if (!IS_TV) setupPointer();
     if (w.Log) w.Log.info('Mở app ' + w.APP_CONFIG.VERSION + ' · hồ sơ ' + w.Store.profileName());
     if (w.Season) w.Season.apply(true);
+    cssFresh();
     bootWatch();
     w.Screens.init();
     if (w.Sync) w.Sync.init();

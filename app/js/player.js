@@ -156,7 +156,7 @@
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
       var want = hr.width + (mini && w.innerWidth > w.innerHeight ? envL() : 0);   // bề rộng app đặt cho khung
       var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
-      if (extra > 2) fr.style.setProperty('left', 'calc(0px - env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
+      if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '1.5 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
       else fr.style.removeProperty('left');
       var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
       if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }

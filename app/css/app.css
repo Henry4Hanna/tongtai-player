@@ -2344,7 +2344,7 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
   html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }
-  html.mobile #player.mini #yt-host iframe { left: calc(0px - 1.5 * env(safe-area-inset-left)) !important; }   /* 2.48.4: khung nhỏ còn lệch phải ~nửa tai thỏ (đo trên ảnh), dời thêm */   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
+  html.mobile #player.mini #yt-host iframe { left: calc(0px - 1.75 * env(safe-area-inset-left)) !important; }   /* 2.48.4: khung nhỏ còn lệch phải ~nửa tai thỏ (đo trên ảnh), dời thêm */   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2379,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 179; }
+:root { --tt-build: 180; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }

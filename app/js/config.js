@@ -28,8 +28,8 @@ window.APP_CONFIG = {
   THEME: 'dark',   // giao diện: 'dark' (tối), 'light' (sáng), 'auto' (theo máy). Đổi trong Cài đặt cũng được.
 
   AUTHOR: 'Ryan Nguyen',
-  VERSION: '2.48.0',
-  BUILD: 173,
+  VERSION: '2.48.1',
+  BUILD: 175,
   UPDATED: '11/11/2026',
   CONTACT: '',
   // Kiểm tra bản mới: địa chỉ file version.json. Để trống = tự dùng PLAYER_HOST + 'app/version.json' (TV)

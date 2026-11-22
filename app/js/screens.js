@@ -5345,6 +5345,11 @@
   function playResume(it) {
     var item = { id: it.id, kind: 'film', title: it.t || 'Phim', ch: it.ch || '', chId: it.cid || '', thumb: 'https://i.ytimg.com/vi/' + it.id + '/mqdefault.jpg', hero: 'https://i.ytimg.com/vi/' + it.id + '/hqdefault.jpg' };
     try { if (it.pos > 5 && it.dur > 0) Store.setProgress(it.id, it.pos, it.dur); } catch (e) { /* bỏ qua */ }
+    // 2.48.2: bấm "Xem tiếp" ngay ở "Ai đang xem?": vào luôn Trang chủ của hồ sơ đang chọn (nếu không có mã PIN),
+    // để xem xong bấm Đóng là về Trang chủ, không kẹt ở màn hình chọn người
+    try {
+      if (whoLocked()) { var pp = profileOf(Store.profile()); if (!(pp && pp.pinH)) { Settings.apply(); paintWho(); goTab('home'); } }
+    } catch (e) { /* bỏ qua */ }
     playFilm(item);
   }
   function showResume(v, hero, it) {

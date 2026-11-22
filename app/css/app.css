@@ -732,7 +732,8 @@ html.wholock #topbar, html.wholock #mhead, html.wholock #webback, html.wholock #
 html.wholock #tabs, html.wholock #whobtn, html.wholock #mhead { opacity: .28; filter: grayscale(.6); }
 /* Ai đang xem trên điện thoại: ẩn hẳn thanh tab (mờ nhìn như bị lỗi), chỉ giữ logo */
 html.mobile.wholock #tabs, html.mobile.wholock #mhead, html.mobile.wholock #mdrawer { display: none !important; }
-html.wholock #webback { display: none !important; }
+html.wholock #webback:not(.inplayer) { display: none !important; }
+html.wholock #webback.inplayer { pointer-events: auto !important; }   /* 2.48.2: đang xem phim thì luôn có nút Đóng */
 .pmenu { text-align: center; min-width: 560px; }
 .pmhead { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
 .wav.pm { width: 130px; height: 130px; border-radius: 50%; font-size: 60px; margin-bottom: 14px; }
@@ -2342,7 +2343,7 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 /* 2.46.10: iPhone xoay ngang: trang YouTube bên trong tự dịch nội dung sang phải đúng bằng vùng tai thỏ bên trái
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
-  html.mobile #player:not(.mini) #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.7: khung nhỏ đã lùi khỏi tai thỏ nên YouTube không dịch, không cần bù */
+  html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2377,7 +2378,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 175; }
+:root { --tt-build: 176; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }

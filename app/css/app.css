@@ -2379,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 182; }
+:root { --tt-build: 184; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }
@@ -2420,3 +2420,8 @@ html.webmode:not(.mobile) #webback.inplayer.oncar { font-size: 36px; padding: 22
 .pla-bar i { display: block; height: 100%; width: 0; background: var(--acc, #E8B04B); border-radius: inherit; pointer-events: none; }
 .mobile .pla-tm { width: auto; align-self: stretch; margin: 26px 20px 0; gap: 12px; font-size: 15px; }
 .mobile .pla-bar { height: 10px; }
+/* 2.48.9: chữ vàng (lời đang hát) không mất dấu trên: nới vùng tô màu lên trên */
+.mvl.cur, .lsl.c { padding-top: .24em; padding-bottom: .1em; margin-top: -.24em; margin-bottom: calc(20px - .1em); overflow: visible; }
+.lsl.c { margin-bottom: -.1em; }
+/* 2.49.0: bản web: chừa góc dưới bên phải cho nút "Bỏ qua quảng cáo" của YouTube (khi thanh điều khiển đang ẩn) */
+.webmode #player:not(.mini) #pl-ui:not(.show) { clip-path: polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, 70% 66%, 100% 66%, 100% 95%, 70% 95%, 70% 66%); }

@@ -565,8 +565,10 @@
     btn.disabled = true; var k = 0;
     (function step() {
       if (k >= parts.length) {
+        var gn = Object.keys(res).filter(function (k) { return res[k] && res[k].gone; }).length, tot = Object.keys(res).length;
+        if (tot >= 5 && gn > tot / 2) { msgEl.textContent = 'YouTube đang báo lỗi cho ' + gn + ' / ' + tot + ' kênh (thường do YouTube trục trặc tạm thời). Không lưu gì. Thử lại sau ít phút.'; btn.disabled = false; return; }   // 2.48.7
         var now = new Date().toISOString(), n = 0;
-        L.forEach(function (c) { var r = c.id && res[c.id]; if (!r || r.err) return; n++; c.chk = now; if (r.gone) c.gone = true; else { delete c.gone; if (r.last) c.last = r.last; } });
+        L.forEach(function (c) { var r = c.id && res[c.id]; if (!r || r.err) return; n++; c.chk = now; if (r.gone) { c.miss = (c.miss || 0) + 1; if (c.miss >= 2) c.gone = true; } else { delete c.miss; delete c.gone; if (r.last) c.last = r.last; } });
         msgEl.textContent = 'Đã kiểm tra ' + n + ' kênh. Đang lưu…';
         saveChannels('Kiểm tra ' + n + ' kênh (ngủ đông)').then(function () { go('channels'); }, function () { btn.disabled = false; });
         return;

@@ -2379,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 178; }
+:root { --tt-build: 179; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }

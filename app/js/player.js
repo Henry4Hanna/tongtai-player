@@ -113,7 +113,7 @@
     if (!H || w.AndroidApp) {                        // Tự động (hoặc TV Android: video phần cứng không chịu phóng/thu -> bị cắt, nên không dùng mẹo này)
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
       // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
-      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + env(safe-area-inset-left))' : '100%';
+      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 1.5 * env(safe-area-inset-left))' : '100%';   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
       if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
     }
@@ -154,7 +154,7 @@
       var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
-      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? envL() : 0);   // bề rộng app đặt cho khung
+      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 1.5 * envL() : 0);   // bề rộng app đặt cho khung
       var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
       if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '1.5 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
       else fr.style.removeProperty('left');

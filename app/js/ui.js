@@ -369,7 +369,12 @@
         if (sc2 && !best.closest('.scroller') && sc2.scrollTop > 8) { anim(sc2, 'scrollTop', 0); return; }   // lên đầu trang trước, bấm lần nữa mới lên menu
       }
       if (best && dir === 'left' && best.closest('.emenu') && !cur.closest('.emenu')) { var mc = d.querySelector('.emenu .emi.cur'); if (mc) best = mc; }   // 2.44: ông bà: ◀ về đúng mục đang mở
-      if (best) Nav.focus(best);
+      if (best) { Nav.focus(best); return; }
+      // 2.48.1: không còn ô nào phía dưới/trên mà trang còn chữ chưa thấy (ví dụ "Ai đang xem?" trên máy tính): cuộn trang
+      if (!horiz && !isMobile()) {
+        var sc3 = cur.closest('.scroller');
+        if (sc3) { var to = sc3.scrollTop + (dir === 'down' ? 320 : -320); to = Math.max(0, Math.min(sc3.scrollHeight - sc3.clientHeight, to)); if (to !== sc3.scrollTop) anim(sc3, 'scrollTop', to); }
+      }
     },
 
     ok: function () {

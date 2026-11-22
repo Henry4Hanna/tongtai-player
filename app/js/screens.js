@@ -6276,6 +6276,14 @@
     // Nút Sáng/Tối (TV: tròn, ngay trước ô hồ sơ; điện thoại: góc trên bên phải, ngang logo)
     var tb = el('div', 'thbtn f'); tb.id = 'thbtn';
     tb._ok = function () { toggleTheme(); };
+    // 2.47.9: nút 🚗 kế bên Sáng/Tối: mở giao diện xe Tesla (chỉ bản web; TV không có chế độ xe)
+    var carIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5v-3l2.2-5.2A2 2 0 0 1 7 6h10a2 2 0 0 1 1.8 1.3l2.2 5.2v3a1 1 0 0 1-1 1h-1"/><path d="M5 16.5H4a1 1 0 0 1-1-1"/><path d="M3.5 12.5h17"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/><path d="M9.3 16.5h5.4"/></svg>';
+    function openCar() { try { sessionStorage.removeItem('carExit'); } catch (e) { /* bỏ qua */ } var c = current(); if (c && c.name === 'car') return; push(Car()); }
+    if (!w.tizen && !w.AndroidApp && Settings.get('CAR_MODE') !== 'off') {
+      var cb = el('div', 'thbtn carbtn f'); cb.id = 'carbtn'; cb.innerHTML = carIco; cb.title = 'Chế độ xe Tesla';
+      cb._ok = openCar;
+      clk.parentNode.insertBefore(cb, clk);
+    }
     clk.parentNode.insertBefore(tb, clk);
     clk.parentNode.insertBefore(wb, clk);
     paintTheme();
@@ -6284,6 +6292,11 @@
       var mb = el('div', 'mthbtn'); mb.id = 'mthbtn';
       mb.onclick = function (e) { e.stopPropagation(); toggleTheme(); };
       lg.parentNode.insertBefore(mb, lg.nextSibling); paintTheme();
+      if (!w.tizen && !w.AndroidApp && Settings.get('CAR_MODE') !== 'off') {
+        var mc = el('div', 'mthbtn mcarbtn'); mc.id = 'mcarbtn'; mc.innerHTML = carIco; mc.title = 'Chế độ xe Tesla';
+        mc.onclick = function (e) { e.stopPropagation(); openCar(); };
+        lg.parentNode.insertBefore(mc, mb);
+      }
     }, 0);
     paintWho();
     Nav.roots = function () {
@@ -6348,7 +6361,10 @@
     v.classList.add('carv');
     var hd = el('div', 'carhd');
     hd.appendChild(el('span', 'carpill', '🚗 Chế độ xe'));
-    hd.appendChild(el('span', 'carhint', 'Nút to cho màn hình xe · Thoát ở ô cuối'));
+    hd.appendChild(el('span', 'carhint', 'Nút to cho màn hình xe'));
+    function carExit() { try { sessionStorage.setItem('carExit', '1'); } catch (e) { /* bỏ qua */ } back(); UI.toast('Đã thoát chế độ xe (mở lại app sẽ vào lại). Tắt hẳn: Cài đặt → Chế độ xe hơi'); }
+    var bx = el('div', 'carexit f', '✕ Thoát chế độ xe'); bx._ok = carExit; bx.onclick = carExit;   // 2.48.0: nút thoát lên góc trên
+    hd.appendChild(bx);
     v.appendChild(hd);
     var rec = Store.recent().filter(function (r) { return !Settings.hides(r.item) && canResume(progressOf(r.vid)); })[0];
     var top = el('div', 'cartop');
@@ -6371,10 +6387,16 @@
     side.appendChild(b1); side.appendChild(b2);
     top.appendChild(card); top.appendChild(side); v.appendChild(top);
     var row = el('div', 'carrow');
-    [['🎵 Nhạc', function () { goTab('music'); }], ['🎲 Bốc thăm', function () { Dice(); }], ['📋 Lịch sử & Danh sách', function () { goTab('history'); }],
-     ['⚙ Thoát chế độ xe', function () { try { sessionStorage.setItem('carExit', '1'); } catch (e) { /* bỏ qua */ } back(); UI.toast('Đã thoát chế độ xe (mở lại app sẽ vào lại). Tắt hẳn: Cài đặt → Chế độ xe hơi'); }]]
-      .forEach(function (x, i) { var b = el('div', 'cartile f' + (i === 3 ? ' dim' : ''), x[0]); b._ok = x[1]; b.onclick = x[1]; row.appendChild(b); });
+    // 2.48.0: thêm Phim mới và Top 10 (danh sách nút to, giống chế độ ông bà)
+    function carList(k, t, sub) { var lv = ElderList(t, sub, elderSrc(k), false); lv.el.classList.add('carlist'); push(lv); }
+    [['🆕', 'Phim mới', function () { carList('new', '🆕 Phim mới', 'Mới ra mấy ngày nay'); }],
+     ['🏆', 'Top 10', function () { carList('top', '🏆 Top 10', 'Hay nhất tuần'); }],
+     ['🎵', 'Nhạc', function () { goTab('music'); }],
+     ['🎲', 'Bốc thăm', function () { Dice(); }],
+     ['📋', 'Lịch sử', function () { goTab('history'); }]]
+      .forEach(function (x) { var b = el('div', 'cartile f'); b.innerHTML = '<i>' + x[0] + '</i><b>' + x[1] + '</b>'; b._ok = x[2]; b.onclick = x[2]; row.appendChild(b); });
     v.appendChild(row);
+    setTimeout(function () { if (d.body.contains(b1) && !(Nav.cur && Nav.cur.closest && Nav.cur.closest('.carrow, .carside, .carcard'))) Nav.focus(b1); }, 60);
     return { name: 'car', el: v, focus: b1 };
   }
   function carMaybe() {

@@ -132,13 +132,30 @@
     var p = $('player');
     if (!p || !mob()) return;
     try { if (w.scrollX || w.scrollY) w.scrollTo(0, 0); d.documentElement.scrollLeft = d.body.scrollLeft = 0; } catch (x) { /* bỏ qua */ }
-    if (!isOpen || mini) { p.style.width = p.style.height = ''; return; }
+    if (!isOpen || mini) { p.style.width = p.style.height = ''; setTimeout(alignFrame, 200); return; }
     var vv = w.visualViewport, W = Math.round((vv && vv.width) || w.innerWidth), H = Math.round((vv && vv.height) || w.innerHeight);
     if (W && H) { p.style.width = W + 'px'; p.style.height = H + 'px'; }
-    sizeForQuality();
+    sizeForQuality(); setTimeout(alignFrame, 200);
     var bk = d.getElementById('webback');   // vẽ lại nút để iPhone nhận cú chạm đúng chỗ mới
     if (bk) { var dsp = bk.style.display; bk.style.display = 'none'; void bk.offsetWidth; bk.style.display = dsp; }
   }
+  /* 2.47.8: iPhone hay tự nới khung YouTube rộng hơn khung của app (phim lệch, mất mép, nhất là khung nhỏ khi xoay ngang).
+     Đo khung thật: rộng hơn bao nhiêu thì dời sang trái một nửa để phim nằm giữa; ghi vào Nhật ký để dò lỗi */
+  var alignLast = '';
+  function alignFrame() {
+    try {
+      if (!isOpen || !mob()) return;
+      var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
+      if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
+      var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
+      var extra = Math.round(r.width - hr.width);
+      if (extra > 2) fr.style.setProperty('left', -Math.round(extra / 2 / ((r.width / (fr.offsetWidth || r.width)) || 1)) + 'px', 'important');
+      else fr.style.removeProperty('left');
+      var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
+      if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }
+    } catch (e) { /* bỏ qua */ }
+  }
+  setInterval(alignFrame, 1500);
   (function () {
     var t = [];
     function later() { t.forEach(clearTimeout); t = [60, 350, 900].map(function (ms) { return setTimeout(fitBox, ms); }); fitBox(); }
@@ -605,6 +622,7 @@
     if (!b) { b = d.createElement('div'); b.id = 'pl-aud'; $('player').appendChild(b); }
     var it = cur() || {};
     b.innerHTML = '<div class="pla-k">🎧 CHỈ NGHE TIẾNG</div><div class="pla-t"></div><div class="pla-s"></div>' +
+      '<div class="pla-tm"><span class="pla-a">0:00</span><div class="pla-bar" data-a="bar"><i></i></div><span class="pla-r"></span></div>' +
       '<div class="pla-b"><div class="pla-x" data-a="rw">⏪ 10</div><div class="pla-x big" data-a="pp">⏯</div><div class="pla-x" data-a="ff">10 ⏩</div></div>' +
       '<div class="pla-row"><div class="pla-y" data-a="show">Hiện hình</div><div class="pla-y" data-a="close">✕ Đóng</div></div>';
     b.querySelector('.pla-t').textContent = (q && q.heading) || it.title || '';
@@ -616,8 +634,22 @@
       else if (a === 'rw' || a === 'ff') { try { yt.seekTo(Math.max(0, curT() + (a === 'ff' ? 10 : -10)), true); } catch (x) { /* bỏ qua */ } }
       else if (a === 'show') audioOnly(false);
       else if (a === 'close') close();
+      else if (a === 'bar') { try { var r = e.target.getBoundingClientRect(), du = yt.getDuration() || 0; if (du) yt.seekTo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * du, true); } catch (x) { /* bỏ qua */ } audPaint(); }
     };
+    audPaint();
   }
+  // 2.48.1: Chỉ nghe tiếng: cho biết đã nghe bao lâu, còn bao lâu nữa hết
+  function audFmt(t) { t = Math.max(0, Math.floor(t || 0)); var h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), sx = t % 60; return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (sx < 10 ? '0' : '') + sx; }
+  function audLong(t) { t = Math.max(0, Math.round((t || 0) / 60)); var h = Math.floor(t / 60), m = t % 60; return h ? h + ' giờ ' + m + ' phút' : m + ' phút'; }
+  function audPaint() {
+    var b = $('pl-aud'); if (!audOn || !b) return;
+    var t = curT(), du = 0; try { du = yt.getDuration() || 0; } catch (x) { /* bỏ qua */ }
+    var a = b.querySelector('.pla-a'), r = b.querySelector('.pla-r'), f = b.querySelector('.pla-bar i');
+    if (a) a.textContent = audFmt(t) + (du ? ' / ' + audFmt(du) : '');
+    if (r) r.textContent = du ? 'Còn ' + audLong(du - t) : '';
+    if (f) f.style.width = (du ? Math.min(100, t / du * 100) : 0) + '%';
+  }
+  setInterval(audPaint, 1000);
   function curT() { try { return yt.getCurrentTime() || 0; } catch (x) { return 0; } }
   function tempCC(origin) {
     if (ccOn() || !yt || !yt.loadModule) { w.UI.toast('⟲ Xem lại 10 giây'); return; }

@@ -2377,4 +2377,44 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 170; }
+:root { --tt-build: 175; }
+/* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
+.mobile .mcarbtn { right: 48px !important; }
+.carbtn svg { width: 60%; height: 60%; }
+.carbtn { color: var(--acc, #E8B04B); }
+.carbtn + .thbtn { margin-left: 0; }
+#topbar .carbtn { width: 52px; min-width: 0; padding: 0; border-radius: 50%; flex: none !important; }
+/* 2.48.0: Chế độ xe: thêm Phim mới, Top 10; nút Thoát lên góc trên; bản điện thoại gọn */
+.carexit { margin-left: auto; font-size: 26px; font-weight: 700; color: #C9CDD6; background: #1D2230; border-radius: 30px; padding: 14px 28px; cursor: pointer; }
+.cartile { flex-direction: column; gap: 10px; font-size: 36px; }
+.cartile i { font-style: normal; font-size: 52px; line-height: 1; }
+.mobile .carv { padding: 0 14px 90px; }
+.mobile .carhd { height: auto; padding: 12px 0; gap: 10px; flex-wrap: wrap; }
+.mobile .carpill { font-size: 14px; padding: 4px 12px; border-width: 1.5px; }
+.mobile .carhint { display: none; }
+.mobile .carexit { font-size: 14px; padding: 9px 14px; border-radius: 20px; }
+.mobile .cartop { flex-direction: column; height: auto; gap: 12px; }
+.mobile .carcard { flex: none; height: 210px; border-radius: 20px; }
+.mobile .carcl { padding: 20px 18px 16px; }
+.mobile .carck { font-size: 12px; letter-spacing: 2px; }
+.mobile .carct { font-size: 20px; max-height: 52px; }
+.mobile .carbar { height: 6px; margin-top: 10px; }
+.mobile .carside { flex-direction: row; gap: 12px; }
+.mobile .carbtn { height: 64px; flex: 1; border-radius: 18px; font-size: 20px; }
+.mobile .carrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: auto; margin-top: 12px; }
+.mobile .cartile { height: 92px; border-radius: 18px; font-size: 18px; gap: 6px; padding: 0 8px; }
+.mobile .cartile i { font-size: 28px; }
+.mobile .cartile:last-child { grid-column: 1 / -1; height: 70px; flex-direction: row; }
+.mobile .carv .f.focus { box-shadow: none; }
+.carlist .ehint { display: none; }   /* xe: màn hình chạm, không cần chỉ phím remote */
+/* 2.48.1: máy tính / Tesla: nút Đóng phim to ở góc trên bên phải */
+html.webmode:not(.mobile) #webback.inplayer { top: 28px; right: 28px; left: auto; bottom: auto; font-size: 30px; padding: 18px 34px; z-index: 10000; }
+html.webmode:not(.mobile) #webback.inplayer.oncar { font-size: 36px; padding: 22px 40px; background: var(--acc, #E8B04B); color: #1a1206; }
+/* 2.48.1: Chỉ nghe tiếng: thời gian đã nghe / còn lại */
+.pla-tm { display: flex; align-items: center; gap: 28px; width: 1300px; margin-top: 46px; font-size: 32px; font-weight: 800; }
+.pla-a { white-space: nowrap; color: #F4F1EC; }
+.pla-r { white-space: nowrap; color: var(--acc, #E8B04B); }
+.pla-bar { flex: 1; height: 16px; border-radius: 10px; background: #2A3040; overflow: hidden; cursor: pointer; padding: 0; }
+.pla-bar i { display: block; height: 100%; width: 0; background: var(--acc, #E8B04B); border-radius: inherit; pointer-events: none; }
+.mobile .pla-tm { width: auto; align-self: stretch; margin: 26px 20px 0; gap: 12px; font-size: 15px; }
+.mobile .pla-bar { height: 10px; }

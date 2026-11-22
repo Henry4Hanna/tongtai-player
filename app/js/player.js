@@ -112,7 +112,9 @@
     var iosFix = mob();   // 2.46.7: iPhone tự nới khung YouTube theo nội dung (phim lệch phải, mất mép) -> width 1px + min-width
     if (!H || w.AndroidApp) {                        // Tự động (hoặc TV Android: video phần cứng không chịu phóng/thu -> bị cắt, nên không dùng mẹo này)
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
-      if (iosFix) { set('width', '1px'); set('min-width', '100%'); set('max-width', '100%'); }
+      // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
+      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + env(safe-area-inset-left))' : '100%';
+      if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
     }
     var hw = host.offsetWidth, hh = host.offsetHeight, r = host.getBoundingClientRect();
@@ -132,7 +134,7 @@
     var p = $('player');
     if (!p || !mob()) return;
     try { if (w.scrollX || w.scrollY) w.scrollTo(0, 0); d.documentElement.scrollLeft = d.body.scrollLeft = 0; } catch (x) { /* bỏ qua */ }
-    if (!isOpen || mini) { p.style.width = p.style.height = ''; setTimeout(alignFrame, 200); return; }
+    if (!isOpen || mini) { p.style.width = p.style.height = ''; if (isOpen) sizeForQuality(); setTimeout(alignFrame, 200); return; }
     var vv = w.visualViewport, W = Math.round((vv && vv.width) || w.innerWidth), H = Math.round((vv && vv.height) || w.innerHeight);
     if (W && H) { p.style.width = W + 'px'; p.style.height = H + 'px'; }
     sizeForQuality(); setTimeout(alignFrame, 200);
@@ -141,15 +143,20 @@
   }
   /* 2.47.8: iPhone hay tự nới khung YouTube rộng hơn khung của app (phim lệch, mất mép, nhất là khung nhỏ khi xoay ngang).
      Đo khung thật: rộng hơn bao nhiêu thì dời sang trái một nửa để phim nằm giữa; ghi vào Nhật ký để dò lỗi */
-  var alignLast = '';
+  var alignLast = '', envP = null;
+  function envL() {   // bề rộng tai thỏ bên trái (0 khi không có)
+    if (!envP) { envP = d.createElement('div'); envP.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-left:env(safe-area-inset-left)'; d.body.appendChild(envP); }
+    return envP.offsetWidth || 0;
+  }
   function alignFrame() {
     try {
       if (!isOpen || !mob()) return;
       var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
-      var extra = Math.round(r.width - hr.width);
-      if (extra > 2) fr.style.setProperty('left', -Math.round(extra / 2 / ((r.width / (fr.offsetWidth || r.width)) || 1)) + 'px', 'important');
+      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? envL() : 0);   // bề rộng app đặt cho khung
+      var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
+      if (extra > 2) fr.style.setProperty('left', 'calc(0px - env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
       else fr.style.removeProperty('left');
       var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
       if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }

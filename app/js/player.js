@@ -70,7 +70,7 @@
       }
       yt.loadModule('captions');
       try { yt.setOption('captions', 'reload', true); } catch (x) { /* bỏ qua */ }
-      if (d.documentElement.classList.contains('elder')) { try { yt.setOption('captions', 'fontSize', ({ s: 1, m: 2, l: 3 })[w.Store.pref('ccsize', 'l')] || 3); } catch (x) { /* bỏ qua */ } }   // 2.49.8: ông bà chọn cỡ phụ đề Nhỏ · Vừa · To
+      ccSize();   // 2.49.8: ông bà chọn cỡ phụ đề Nhỏ · Vừa · To
       var pick = pickTrack(yt.getOption('captions', 'tracklist'));
       if (pick && !pick.translate) {
         yt.setOption('captions', 'track', { languageCode: pick.track.languageCode });
@@ -99,6 +99,13 @@
     } catch (x) { if (tell) w.UI.toast('Không bật được phụ đề cho video này'); }
   }
 
+  function ccSize() {   // 2.50.0: cỡ phụ đề: khung nhỏ = nhỏ nhất; ông bà theo Cài đặt; còn lại mặc định
+    try {
+      if (!yt || !yt.setOption || (!ccOn() && !tmpCC)) return;
+      var z = mini ? -1 : d.documentElement.classList.contains('elder') ? (({ s: 1, m: 2, l: 3 })[w.Store.pref('ccsize', 'l')] || 3) : 0;
+      yt.setOption('captions', 'fontSize', z);
+    } catch (x) { /* bỏ qua */ }
+  }
   function renderLabel() { if (isOpen && mode !== 'menu') renderBtns(); }
 
   /* Chất lượng: YouTube đã bỏ khả năng ép chất lượng từ ứng dụng nhúng (setPlaybackQuality bị bỏ qua),
@@ -133,7 +140,6 @@
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
       // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
       var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 2 * env(safe-area-inset-left))' : '100%';   // 2.49.7: đo trên ảnh iPhone: YouTube dời hình sang phải đúng 1 tai thỏ   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
-      if (miniVert()) fw = Math.round(host.offsetHeight * 16 / 9) + 'px';   // 2.49.3: khung nhỏ dọc: phóng phim ngang cho đầy khung (mất 2 bên)
       if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
     }
@@ -141,7 +147,6 @@
     var devH = r.height * (w.devicePixelRatio || 1);   // chiều cao thật của khung, tính bằng điểm ảnh màn hình
     if (!hw || !hh || !devH) return;
     var f = Math.max(0.15, Math.min(3, H / devH));
-    if (miniVert()) hw = Math.round(hh * 16 / 9);   // 2.49.3: khung nhỏ dọc: phim rộng 16:9 theo chiều cao khung
     if (iosFix) { set('width', '1px'); set('min-width', Math.round(hw * f) + 'px'); set('max-width', Math.round(hw * f) + 'px'); }
     else set('width', Math.round(hw * f) + 'px');
     set('height', Math.round(hh * f) + 'px');
@@ -175,13 +180,6 @@
       var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
-      if (miniVert()) {   // 2.49.3: khung nhỏ dọc: phim to hơn khung, dời sang trái một nửa phần dư cho nằm giữa
-        var ex = Math.round(r.width - hr.width), sh = w.innerWidth > w.innerHeight ? envL() : 0;   // 2.49.7: xoay ngang: YouTube dời hình sang phải 1 tai thỏ -> dời ngược lại
-        fr.style.setProperty('left', (-Math.round(ex / 2) - sh) + 'px', 'important');
-        var inf = 'nhỏ dọc · khung ' + Math.round(hr.width) + 'x' + Math.round(hr.height) + ' · YouTube ' + Math.round(r.width);
-        if (inf !== alignLast) { alignLast = inf; if (w.Log) w.Log.info('Khung phim: ' + inf); }
-        return;
-      }
       var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 2 * envL() : 0);   // bề rộng app đặt cho khung
       var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
       if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '2 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
@@ -1040,6 +1038,7 @@
     if (mode === 'menu') closeMenu(); hideUp(); hideSend();
     p.classList.toggle('mini', mini); d.documentElement.classList.toggle('plmini', mini);
     if (mini) { paintVert(); learnVert(); placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
+    ccSize();   // 2.50.0: phụ đề nhỏ lại trong khung nhỏ để nằm gọn trong khung
     setTimeout(fitBox, 60);
     try {
       if (mini && !w.localStorage.getItem('tt.miniTip')) { w.localStorage.setItem('tt.miniTip', '1'); w.UI.toast('Phim vẫn chạy khi bạn lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt', 5000); }

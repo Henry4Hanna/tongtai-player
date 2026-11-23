@@ -70,7 +70,7 @@
       }
       yt.loadModule('captions');
       try { yt.setOption('captions', 'reload', true); } catch (x) { /* bỏ qua */ }
-      if (d.documentElement.classList.contains('elder')) { try { yt.setOption('captions', 'fontSize', 3); } catch (x) { /* bỏ qua */ } }   // 2.43: chữ phụ đề to nhất
+      if (d.documentElement.classList.contains('elder')) { try { yt.setOption('captions', 'fontSize', ({ s: 1, m: 2, l: 3 })[w.Store.pref('ccsize', 'l')] || 3); } catch (x) { /* bỏ qua */ } }   // 2.49.8: ông bà chọn cỡ phụ đề Nhỏ · Vừa · To
       var pick = pickTrack(yt.getOption('captions', 'tracklist'));
       if (pick && !pick.translate) {
         yt.setOption('captions', 'track', { languageCode: pick.track.languageCode });
@@ -132,7 +132,7 @@
     if (!H || w.AndroidApp) {                        // Tự động (hoặc TV Android: video phần cứng không chịu phóng/thu -> bị cắt, nên không dùng mẹo này)
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
       // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
-      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 1.5 * env(safe-area-inset-left))' : '100%';   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
+      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 2 * env(safe-area-inset-left))' : '100%';   // 2.49.7: đo trên ảnh iPhone: YouTube dời hình sang phải đúng 1 tai thỏ   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
       if (miniVert()) fw = Math.round(host.offsetHeight * 16 / 9) + 'px';   // 2.49.3: khung nhỏ dọc: phóng phim ngang cho đầy khung (mất 2 bên)
       if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
@@ -176,14 +176,15 @@
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
       if (miniVert()) {   // 2.49.3: khung nhỏ dọc: phim to hơn khung, dời sang trái một nửa phần dư cho nằm giữa
-        var ex = Math.round(r.width - hr.width); fr.style.setProperty('left', (-Math.round(ex / 2)) + 'px', 'important');
+        var ex = Math.round(r.width - hr.width), sh = w.innerWidth > w.innerHeight ? envL() : 0;   // 2.49.7: xoay ngang: YouTube dời hình sang phải 1 tai thỏ -> dời ngược lại
+        fr.style.setProperty('left', (-Math.round(ex / 2) - sh) + 'px', 'important');
         var inf = 'nhỏ dọc · khung ' + Math.round(hr.width) + 'x' + Math.round(hr.height) + ' · YouTube ' + Math.round(r.width);
         if (inf !== alignLast) { alignLast = inf; if (w.Log) w.Log.info('Khung phim: ' + inf); }
         return;
       }
-      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 1.5 * envL() : 0);   // bề rộng app đặt cho khung
+      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 2 * envL() : 0);   // bề rộng app đặt cho khung
       var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
-      if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '1.75 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
+      if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '2 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
       else fr.style.removeProperty('left');
       var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
       if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }

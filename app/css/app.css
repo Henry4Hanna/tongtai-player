@@ -2344,7 +2344,7 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
   html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }
-  html.mobile #player.mini #yt-host iframe { left: calc(0px - 1.75 * env(safe-area-inset-left)) !important; }   /* 2.48.4: khung nhỏ còn lệch phải ~nửa tai thỏ (đo trên ảnh), dời thêm */   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
+  html.mobile #player.mini #yt-host iframe { left: calc(0px - 2 * env(safe-area-inset-left)) !important; }   /* 2.49.7: -2 tai thỏ, rộng thêm 2 tai thỏ */   /* 2.48.4: khung nhỏ còn lệch phải ~nửa tai thỏ (đo trên ảnh), dời thêm */   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2379,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 190; }
+:root { --tt-build: 193; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }
@@ -2466,3 +2466,23 @@ html:not(.mobile) #saver .svsong { display: none; }
   .mobile #saver.withq .svbrand { margin-bottom: 6px; }
   .mobile #saver .svtime { font-size: 2.8em; }
 }
+/* 2.49.8: ông bà TV: mục lục chữ to, bỏ dòng chữ nhỏ, mục đang mở tô vàng, cuộn khi không đủ chỗ */
+html:not(.mobile) .emenu { width: 470px; gap: 10px; overflow-y: auto; overflow-x: hidden; min-height: 0; max-height: 836px; scrollbar-width: none; padding: 2px 4px 6px 2px; box-sizing: border-box; }
+html:not(.mobile) .emenu::-webkit-scrollbar { display: none; }
+html:not(.mobile) .emi { height: 78px; min-height: 78px; padding: 0 18px; gap: 16px; border-radius: 20px; flex: none; }
+html:not(.mobile) .emic { font-size: 50px; width: 58px; }
+html:not(.mobile) .emt { font-size: 40px; font-weight: 800; }
+html.ef-xl:not(.mobile) .emt { font-size: 46px; }
+html:not(.mobile) .ems { display: none; }
+html:not(.mobile) .emi.cur, html.light:not(.mobile) .emi.cur { background: #E8B04B; box-shadow: none; }
+html:not(.mobile) .emi.cur .emt { color: #1a1206; }
+html:not(.mobile) .elderv .emi.focus, html:not(.mobile) .emi.focus { outline: 5px solid #fff; outline-offset: -5px; }
+/* 2.49.9: ông bà điện thoại: câu nói tổng tài dưới mục lục (10 giây đổi); danh sách phim ngang 3 phim một hàng */
+.emquote { margin: 18px 16px 30px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid rgba(232,176,75,.45); background: linear-gradient(135deg, rgba(232,176,75,.12), rgba(232,176,75,.03)); }
+.emqk { font-size: 13px; font-weight: 800; letter-spacing: .14em; color: #E8B04B; }
+.emqt { margin-top: 6px; font-size: 19px; font-weight: 800; font-style: italic; line-height: 1.35; color: #FFF3D6; min-height: 2.7em; }
+.emqt.in { animation: emqin .8s ease; }
+@keyframes emqin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+html.light .emqt { color: #3A2A10; } html.light .emqk { color: #B07A1A; }
+html.ef-xl.mobile .emqt { font-size: 23px; }
+@media (orientation: landscape) { html.mobile .egrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; } }

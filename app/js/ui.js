@@ -287,6 +287,12 @@
 
   function reveal(e) {
     if (isMobile()) return;   // điện thoại: tự cuộn bằng tay
+    var em = e.closest && e.closest('.emenu');   // 2.49.8: mục lục ông bà: cuộn theo mục đang chọn
+    if (em && em.scrollHeight > em.clientHeight + 2) {
+      var t0 = e.offsetTop - em.offsetTop, b0 = t0 + e.offsetHeight;
+      if (t0 - 10 < em.scrollTop) em.scrollTop = Math.max(0, t0 - 10); else if (b0 + 10 > em.scrollTop + em.clientHeight) em.scrollTop = b0 + 10 - em.clientHeight;
+      return;
+    }
     var tr = e.closest('.track');
     if (tr) {
       var L = e.offsetLeft, R = L + e.offsetWidth;

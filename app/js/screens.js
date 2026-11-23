@@ -926,6 +926,14 @@
       g.appendChild(c);
     });
     v.appendChild(g);
+    // 2.49.9: câu nói tổng tài dưới mục lục, 10 giây đổi một câu
+    if (w.Quotes && w.Quotes.count) {
+      var qb = el('div', 'emquote'); qb.appendChild(el('div', 'emqk', '👑 CÂU NÓI CỦA TỔNG TÀI')); var qt = el('div', 'emqt'); qb.appendChild(qt); v.appendChild(qb);
+      var qn = Math.floor(Math.random() * w.Quotes.count);
+      var qPaint = function () { try { qt.classList.remove('in'); void qt.offsetWidth; qt.textContent = '“' + w.Quotes.get(qn % w.Quotes.count).text + '”'; qt.classList.add('in'); qn++; } catch (e) { /* bỏ qua */ } };
+      qPaint();
+      var qTimer = setInterval(function () { if (!v.isConnected) { clearInterval(qTimer); return; } if (!d.hidden) qPaint(); }, 10000);
+    }
     return { name: 'home', el: v, refresh: function () { setTimeout(function () { if (S.stack.length === 1 && current() && current().el === v && elderOn()) goTab('home'); }, 0); } };
   }
   function ElderHome() {
@@ -1257,7 +1265,13 @@
     tile('☀️', 'Màn hình', 'Sáng · Tối · Theo giờ', x[0], x[1]);
     x = cyc('ELDER_FONT', [{ v: 'md', t: 'Vừa' }, { v: 'lg', t: 'To' }, { v: 'xl', t: 'Rất to' }], function () { elderMark(); });
     tile('🔠', 'Cỡ chữ', 'Chữ trong app', x[0], x[1]);
-    tile('💬', 'Phụ đề khi xem', 'Chữ tiếng Việt dưới phim', function () { var on = !!Store.pref('cc', true); return { t: on ? 'Bật' : 'Tắt', on: on }; }, function (p) { Store.setPref('cc', !Store.pref('cc', true)); p(); });
+    // 2.49.8: phụ đề: Tắt → Nhỏ → Vừa → To (mặc định To)
+    var CCN = { s: 'Nhỏ', m: 'Vừa', l: 'To' };
+    tile('💬', 'Phụ đề khi xem', 'Tắt · Nhỏ · Vừa · To', function () { var on = !!Store.pref('cc', true), z = Store.pref('ccsize', 'l'); return { t: on ? (CCN[z] || 'To') : 'Tắt', on: on }; }, function (p) {
+      var on = !!Store.pref('cc', true), z = Store.pref('ccsize', 'l');
+      if (!on) { Store.setPref('cc', true); Store.setPref('ccsize', 's'); } else if (z === 's') Store.setPref('ccsize', 'm'); else if (z === 'm') Store.setPref('ccsize', 'l'); else Store.setPref('cc', false);
+      p();
+    });
     x = cyc('AUTO_NEXT', [{ v: true, t: 'Bật' }, { v: false, t: 'Tắt', on: false }]);
     tile('⏭', 'Tự phát phim tiếp', 'Hết phim tự sang phim kế', x[0], x[1]);
     x = cyc('MUSIC_VOL', [{ v: 'low', t: 'Nhỏ' }, { v: 'mid', t: 'Vừa' }, { v: 'high', t: 'To' }]);

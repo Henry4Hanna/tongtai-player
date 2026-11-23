@@ -86,11 +86,14 @@
         var src = LANG_VI[pick.track.languageCode] || LANG_VI[String(pick.track.languageCode).split('-')[0]] || pick.track.displayName || 'phụ đề gốc';
         if (tell) w.UI.toast('Phụ đề tiếng Việt (YouTube dịch tự động từ ' + src + ')');
       } else if (!retry) {
+        // 2.49.4: khung nhúng YouTube giấu phụ đề tự tạo khỏi danh sách -> xin thẳng phụ đề tiếng Việt (phim nói tiếng Việt có phụ đề tự tạo)
+        try { yt.setOption('captions', 'track', { languageCode: 'vi' }); } catch (x) { /* bỏ qua */ }
         setTimeout(function () { if (isOpen) applyCaptions(tell, true); }, 1800);   // danh sách phụ đề tải chậm
         return;
       } else {
-        ccInfo = '';
-        if (tell) w.UI.toast('Video này không có phụ đề để chuyển sang tiếng Việt (nhiều phim đã in sẵn chữ trên hình)');
+        try { yt.setOption('captions', 'track', { languageCode: 'vi' }); } catch (x) { /* bỏ qua */ }
+        ccInfo = 'auto';
+        if (tell) w.UI.toast('Phụ đề tiếng Việt tự tạo của YouTube: Bật (chỉ hiện nếu phim nói tiếng Việt; phim in sẵn chữ thì không có)');
       }
       renderLabel();
     } catch (x) { if (tell) w.UI.toast('Không bật được phụ đề cho video này'); }
@@ -104,6 +107,7 @@
      rồi phóng / thu lại cho vừa màn hình bằng transform. */
   var Q_H = { hd2160: 2160, hd1080: 1080, hd720: 720, large: 480, medium: 360 };
 
+  function miniVert() { return mini && w.innerHeight > w.innerWidth; }   // 2.49.3: khung nhỏ khi cầm điện thoại dọc
   function sizeForQuality() {
     var host = $('yt-host'), fr = host && host.querySelector('iframe');
     if (!fr) return;
@@ -114,6 +118,7 @@
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
       // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
       var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 1.5 * env(safe-area-inset-left))' : '100%';   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
+      if (miniVert()) fw = Math.round(host.offsetHeight * 16 / 9) + 'px';   // 2.49.3: khung nhỏ dọc: phóng phim ngang cho đầy khung (mất 2 bên)
       if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
     }
@@ -121,6 +126,7 @@
     var devH = r.height * (w.devicePixelRatio || 1);   // chiều cao thật của khung, tính bằng điểm ảnh màn hình
     if (!hw || !hh || !devH) return;
     var f = Math.max(0.15, Math.min(3, H / devH));
+    if (miniVert()) hw = Math.round(hh * 16 / 9);   // 2.49.3: khung nhỏ dọc: phim rộng 16:9 theo chiều cao khung
     if (iosFix) { set('width', '1px'); set('min-width', Math.round(hw * f) + 'px'); set('max-width', Math.round(hw * f) + 'px'); }
     else set('width', Math.round(hw * f) + 'px');
     set('height', Math.round(hh * f) + 'px');
@@ -154,6 +160,12 @@
       var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
+      if (miniVert()) {   // 2.49.3: khung nhỏ dọc: phim to hơn khung, dời sang trái một nửa phần dư cho nằm giữa
+        var ex = Math.round(r.width - hr.width); fr.style.setProperty('left', (-Math.round(ex / 2)) + 'px', 'important');
+        var inf = 'nhỏ dọc · khung ' + Math.round(hr.width) + 'x' + Math.round(hr.height) + ' · YouTube ' + Math.round(r.width);
+        if (inf !== alignLast) { alignLast = inf; if (w.Log) w.Log.info('Khung phim: ' + inf); }
+        return;
+      }
       var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 1.5 * envL() : 0);   // bề rộng app đặt cho khung
       var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
       if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '1.75 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
@@ -509,7 +521,7 @@
     if (e.data === S.PLAYING) {
       playing = true; msg('');
       var vid = cur().id;
-      if (applied !== vid) { applied = vid; applyCaptions(false); applyQuality(false); }
+      if (applied !== vid) { applied = vid; applyCaptions(false); applyQuality(false); setTimeout(function () { if (isOpen && applied === vid && (ccOn() || tmpCC)) applyCaptions(false, true); }, 9000); }   // 2.49.4: bật lại sau quảng cáo
       if (mode !== 'menu') renderBtns();
       showUi();
     } else if (e.data === S.PAUSED) {

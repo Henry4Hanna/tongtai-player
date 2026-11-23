@@ -2379,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 184; }
+:root { --tt-build: 188; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }
@@ -2423,5 +2423,18 @@ html.webmode:not(.mobile) #webback.inplayer.oncar { font-size: 36px; padding: 22
 /* 2.48.9: chữ vàng (lời đang hát) không mất dấu trên: nới vùng tô màu lên trên */
 .mvl.cur, .lsl.c { padding-top: .24em; padding-bottom: .1em; margin-top: -.24em; margin-bottom: calc(20px - .1em); overflow: visible; }
 .lsl.c { margin-bottom: -.1em; }
+/* 2.49.2: trang Nhạc toàn màn hình: chừa khoảng trên khung lời để dấu dòng đầu không bị cắt */
+.mv-kara .mvlines { padding-top: 34px; }
+.mv-kara .mvl.cur { margin-top: 0; }
 /* 2.49.0: bản web: chừa góc dưới bên phải cho nút "Bỏ qua quảng cáo" của YouTube (khi thanh điều khiển đang ẩn) */
-.webmode #player:not(.mini) #pl-ui:not(.show) { clip-path: polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, 70% 66%, 100% 66%, 100% 95%, 70% 95%, 70% 66%); }
+.webmode #player:not(.mini) #pl-ui:not(.show) { clip-path: polygon(0 0, 100% 0, 100% 62%, 68% 62%, 68% 100%, 0 100%); }
+/* 2.49.3: khung phim nhỏ theo chiều điện thoại: dọc = khung dọc to (phim phóng đầy khung), ngang = khung ngang to hơn */
+@media (orientation: portrait) {
+  html.mobile #player.mini { width: 50vw; }
+  html.mobile #player.mini #yt-host { width: 50vw !important; height: calc(50vw * 16 / 9) !important; overflow: hidden; }
+  html.plmini.mobile #toast { bottom: calc(50vw * 16 / 9 + 70px + env(safe-area-inset-bottom)); }
+}
+@media (orientation: landscape) {
+  html.mobile #player.mini { width: 36vw; }
+  html.mobile #player.mini #yt-host { width: 36vw !important; height: calc(36vw * 9 / 16) !important; }
+}

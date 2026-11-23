@@ -53,6 +53,9 @@
     clk.appendChild(el('div', 'svdate', ''));
     clk.appendChild(el('div', 'svsong', ''));   // bài đang phát
     box.appendChild(clk);
+    // 2.49.6: TV/máy tính: ô "Đang phát" (ảnh bài, tên bài, câu đang hát, thanh tiến độ)
+    var mus = el('div', 'svmus'); mus.innerHTML = '<img alt=""><div class="mx"><div class="mk">♪ ĐANG PHÁT · NHẠC CỦA TÔI</div><div class="mt"></div><div class="ml"></div><div class="mb"><i></i></div></div>';
+    box.appendChild(mus);
     box.appendChild(el('div', 'svhint', 'Bấm phím bất kỳ để quay lại'));
     (d.getElementById('app') || d.body).appendChild(box);
   }
@@ -115,16 +118,36 @@
   function startSong() {
     var S = w.Music && w.Music.S, C = w.APP_CONFIG || {};
     paintSong();
-    clearInterval(songTimer); songTimer = setInterval(paintSong, 2000);
+    clearInterval(songTimer); songTimer = setInterval(paintSong, 1000);
     if (!S || C.SAVER_MUSIC === false || C.MUSIC === 'off' || !S.all().length) return;
     var n = S.all().length, cur = S.index(), i;
     do { i = Math.floor(Math.random() * n); } while (n > 1 && i === cur);
     setTimeout(function () { if (on) S.play(i); }, 800);
   }
+  var musIdx = -1;
   function paintSong() {
     var S = w.Music && w.Music.S, e = box && box.querySelector('.svsong'); if (!e) return;
     var sg = S && S.isPlaying() ? S.song(S.index()) : null;
     e.textContent = sg ? '♪ ' + sg.title : '';
+    var m = box.querySelector('.svmus'); if (!m) return;
+    m.classList.toggle('on', !!sg);
+    if (!sg) return;
+    try {
+      var i = S.index(), MP = w.MusicPage;
+      if (i !== musIdx) {
+        musIdx = i; m.querySelector('.mt').textContent = sg.title;
+        var src = MP && MP.songImage ? MP.songImage(i) : '', im = m.querySelector('img');
+        if (src) { im.src = src; im.style.display = ''; } else im.style.display = 'none';
+      }
+      var t = S.time(), du = S.duration() || 0, line = '';
+      if (sg.lyrics && sg.lyrics.length && MP && MP.times) {
+        var tt = MP.times(sg), k = -1;
+        for (var j = 0; j < tt.length; j++) if (tt[j] <= t + 0.3) k = j;
+        if (k >= 0) line = sg.lyrics[k].t || '';
+      }
+      m.querySelector('.ml').textContent = line || '♪';
+      m.querySelector('.mb i').style.width = (du ? Math.min(100, t / du * 100) : 0) + '%';
+    } catch (x) { /* bỏ qua */ }
   }
 
   function show() {

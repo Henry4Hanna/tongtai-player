@@ -107,7 +107,22 @@
      rồi phóng / thu lại cho vừa màn hình bằng transform. */
   var Q_H = { hd2160: 2160, hd1080: 1080, hd720: 720, large: 480, medium: 360 };
 
-  function miniVert() { return mini && w.innerHeight > w.innerWidth; }   // 2.49.3: khung nhỏ khi cầm điện thoại dọc
+  // 2.49.5: khung nhỏ theo chiều của PHIM: phim dọc -> khung dọc, phim ngang -> khung ngang (cả khi cầm điện thoại dọc hay ngang)
+  function vidVert() { var c = q && q.items && q.items[q.index]; return !!(c && c.vert === true); }
+  function miniVert() { return mini && vidVert(); }
+  var vertAsked = {};
+  function learnVert() {   // phim lưu từ trước chưa biết dọc/ngang: hỏi YouTube (1 đơn vị hạn mức)
+    var c = q && q.items && q.items[q.index];
+    if (!c || c.vert != null || vertAsked[c.id] || !w.Api || !w.Api.details || /^demo-/.test(c.id)) return;
+    vertAsked[c.id] = 1;
+    w.Api.details([c.id]).then(function (vs) {
+      var v = vs && vs[0], p = v && v.player || {}, ew = +p.embedWidth || 0, eh = +p.embedHeight || 0;
+      if (!ew) return;
+      c.vert = eh > ew * 0.9;
+      paintVert(); if (mini) setTimeout(fitBox, 60);
+    }).catch(function () { /* bỏ qua */ });
+  }
+  function paintVert() { var p = $('player'); if (p) p.classList.toggle('mv', vidVert()); }
   function sizeForQuality() {
     var host = $('yt-host'), fr = host && host.querySelector('iframe');
     if (!fr) return;
@@ -372,7 +387,7 @@
 
   function slim(it) {
     var o = {};
-    ['id', 'kind', 'title', 'thumb', 'hero', 'tag', 'ch', 'dur', 'eps', 'views', 'pub', 'src', 'cc', 'anime', 'chId'].forEach(function (k) { if (it[k] != null) o[k] = it[k]; });
+    ['id', 'kind', 'title', 'thumb', 'hero', 'tag', 'ch', 'dur', 'eps', 'views', 'pub', 'src', 'cc', 'anime', 'chId', 'vert'].forEach(function (k) { if (it[k] != null) o[k] = it[k]; });
     o.desc = (it.desc || '').slice(0, 200);
     return o;
   }
@@ -521,7 +536,7 @@
     if (e.data === S.PLAYING) {
       playing = true; msg('');
       var vid = cur().id;
-      if (applied !== vid) { applied = vid; applyCaptions(false); applyQuality(false); setTimeout(function () { if (isOpen && applied === vid && (ccOn() || tmpCC)) applyCaptions(false, true); }, 9000); }   // 2.49.4: bật lại sau quảng cáo
+      if (applied !== vid) { applied = vid; if (mini) { paintVert(); learnVert(); setTimeout(fitBox, 60); } applyCaptions(false); applyQuality(false); setTimeout(function () { if (isOpen && applied === vid && (ccOn() || tmpCC)) applyCaptions(false, true); }, 9000); }   // 2.49.4: bật lại sau quảng cáo
       if (mode !== 'menu') renderBtns();
       showUi();
     } else if (e.data === S.PAUSED) {
@@ -1023,7 +1038,7 @@
     var p = $('player'); ensureMiniUI();
     if (mode === 'menu') closeMenu(); hideUp(); hideSend();
     p.classList.toggle('mini', mini); d.documentElement.classList.toggle('plmini', mini);
-    if (mini) { placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
+    if (mini) { paintVert(); learnVert(); placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
     setTimeout(fitBox, 60);
     try {
       if (mini && !w.localStorage.getItem('tt.miniTip')) { w.localStorage.setItem('tt.miniTip', '1'); w.UI.toast('Phim vẫn chạy khi bạn lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt', 5000); }

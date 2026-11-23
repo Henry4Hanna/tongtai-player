@@ -320,7 +320,10 @@
       var need = full || (w.Screens.depth && w.Screens.depth() > 1) || !w.UI.isMobile();
       bk.style.display = need ? '' : 'none';
       bk.classList.toggle('inplayer', full);
-      var tx = full && w.UI.isMobile() ? '✕ Đóng' : '‹ Quay lại';
+      // 2.48.1: máy tính / xe Tesla: đang xem phim có nút ✕ to ở góc trên (trước chỉ có nút nhỏ ở góc dưới, dễ bị che)
+      var onCar = false; try { var cv = w.Screens.current && w.Screens.current(); onCar = !!(cv && cv.name === 'car'); } catch (e) { /* bỏ qua */ }
+      bk.classList.toggle('oncar', full && onCar);
+      var tx = full ? (onCar && !w.UI.isMobile() ? '✕ Về trang xe' : '✕ Đóng') : '‹ Quay lại';
       if (bk.textContent !== tx) bk.textContent = tx;   // không viết lại liên tục (iPhone bỏ lỡ cú chạm)
     }, 300);
   }

@@ -1,0 +1,210 @@
+/* Màn hình chờ: để yên một lúc (mặc định 10 phút) thì hiện ảnh bìa phim mới chạy chậm kèm đồng hồ.
+   Bấm phím bất kỳ / chạm / bấm chuột để quay lại đúng chỗ cũ (phím đó không làm gì khác). */
+(function (w, d) {
+  'use strict';
+  var last = Date.now(), on = false, box = null, layers = [], cur = 0, items = [], idx = 0;
+  var slideTimer = null, clockTimer = null, mx = -1, my = -1, shownAt = 0;
+  var SLIDE_MS = 12000;
+  var DAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+  var MOVES = ['kb1', 'kb2', 'kb3', 'kb4'];
+
+  function C() { return w.APP_CONFIG || {}; }
+  function minutes() { var m = Number(C().SCREENSAVER); return isFinite(m) && m > 0 ? m : 0; }
+  function busy() {
+    if (d.getElementById('boot')) return true;
+    if (w.Player && w.Player.isPlaying && w.Player.isPlaying()) return true;
+    if (w.Music && w.Music.onPage && w.Music.onPage()) return true;   // trang Nhạc: không hiện màn hình chờ   // đang chiếu phim thì không hiện
+    return d.hidden;
+  }
+
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // Phim mới nhất (đã qua bộ lọc lứa tuổi), có ảnh bìa
+  function pickItems() {
+    var pool = [];
+    try { pool = (w.Api && w.Api.pool && w.Api.pool()) || []; } catch (e) { pool = []; }
+    var seen = {};
+    pool = pool.filter(function (it) {
+      if (!it || !(it.hero || it.thumb) || seen[it.id]) return false;
+      seen[it.id] = 1;
+      return !(w.Settings && w.Settings.hides && w.Settings.hides(it));
+    });
+    pool.sort(function (a, b) { return String(b.pub || '') > String(a.pub || '') ? 1 : -1; });
+    return shuffle(pool.slice(0, 30));
+  }
+
+  function el(tag, cls, txt) { var e = d.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+  function build() {
+    box = el('div'); box.id = 'saver';
+    for (var i = 0; i < 2; i++) { var l = el('div', 'svimg'); box.appendChild(l); layers.push(l); }
+    box.appendChild(el('div', 'svshade'));
+    var info = el('div', 'svinfo');
+    info.appendChild(el('div', 'svbrand', 'Tổng Tài TV'));
+    var q = el('div', 'svquote');   // câu thoại tổng tài hôm nay
+    q.appendChild(el('div', 'svqk', 'CÂU THOẠI TỔNG TÀI'));
+    q.appendChild(el('div', 'svqt', ''));
+    info.appendChild(q);
+    info.appendChild(el('div', 'svtag', 'Phim mới'));
+    info.appendChild(el('div', 'svtitle', ''));
+    info.appendChild(el('div', 'svch', ''));
+    box.appendChild(info);
+    var clk = el('div', 'svclock');
+    clk.appendChild(el('div', 'svtime', ''));
+    clk.appendChild(el('div', 'svdate', ''));
+    clk.appendChild(el('div', 'svsong', ''));   // bài đang phát
+    box.appendChild(clk);
+    // 2.49.6: TV/máy tính: ô "Đang phát" (ảnh bài, tên bài, câu đang hát, thanh tiến độ)
+    var mus = el('div', 'svmus'); mus.innerHTML = '<img alt=""><div class="mx"><div class="mk">♪ ĐANG PHÁT · NHẠC CỦA TÔI</div><div class="mt"></div><div class="ml"></div><div class="mb"><i></i></div></div>';
+    box.appendChild(mus);
+    box.appendChild(el('div', 'svhint', 'Bấm phím bất kỳ để quay lại'));
+    (d.getElementById('app') || d.body).appendChild(box);
+  }
+
+  function paintClock() {
+    if (!box) return;
+    var n = new Date();
+    box.querySelector('.svtime').textContent = w.UI && w.UI.hhmm ? w.UI.hhmm(n.getTime()) : n.toTimeString().slice(0, 5);
+    box.querySelector('.svdate').textContent = DAYS[n.getDay()] + ', ' + n.getDate() + ' tháng ' + (n.getMonth() + 1);
+  }
+
+  function nextSlide() {
+    if (!on) return;
+    if (!items.length) { box.classList.add('noimg'); return; }
+    var it = items[idx % items.length]; idx++;
+    var src = it.hero || it.thumb;
+    // 2.38.4: ảnh YouTube nhỏ (hq/mq/sd) → thử ảnh lớn nhất cho nét trên TV, không có thì lùi dần
+    var ym = /^(https?:\/\/i\d?\.ytimg\.com\/vi\/[^\/]+\/)(?:hq|mq|sd)?default\.jpg/.exec(src || '');
+    var tries = ym ? [ym[1] + 'maxresdefault.jpg', ym[1] + 'sddefault.jpg', src] : [src];
+    var img = new Image();
+    img.onerror = function () { if (tries.length > 1) { tries.shift(); img.src = src = tries[0]; } else show(); };
+    img.onload = function () {
+      if (img.naturalWidth && img.naturalWidth <= 120 && tries.length > 1) { tries.shift(); img.src = src = tries[0]; return; }   // YouTube trả ảnh xám 120×90 khi không có bản lớn
+      show();
+    };
+    function show() {
+      if (!on) return;
+      var nl = layers[1 - cur], ol = layers[cur];
+      nl.style.backgroundImage = 'url("' + src.replace(/"/g, '%22') + '")';
+      MOVES.forEach(function (m) { nl.classList.remove(m); });
+      void nl.offsetWidth;   // chạy lại hiệu ứng trượt
+      nl.classList.add(MOVES[Math.floor(Math.random() * MOVES.length)]);
+      nl.classList.add('show'); ol.classList.remove('show');
+      cur = 1 - cur;
+      var info = box.querySelector('.svinfo');
+      info.classList.remove('in'); void info.offsetWidth;
+      if (box.classList.contains('withq')) setQuote();   // mỗi ảnh một câu thoại ngẫu nhiên
+      box.querySelector('.svtitle').textContent = it.title || '';
+      box.querySelector('.svch').textContent = (it.ch || '') + (it.eps > 1 ? ' · ' + it.eps + ' tập' : '');
+      info.classList.add('in');
+      box.classList.toggle('alt', idx % 2 === 0);   // đổi góc đồng hồ, tránh in hình lên màn TV
+    }
+    img.src = src = tries[0];
+  }
+
+  // câu thoại ngẫu nhiên, không lặp lại câu vừa hiện
+  var lastQ = -1;
+  function setQuote() {
+    var Q = w.Quotes, qq = null;
+    if (Q.count && Q.quiz) {
+      var n = 0, i;
+      do { i = Math.floor(Math.random() * Q.count); n++; } while (i === lastQ && n < 5);
+      lastQ = i; qq = Q.get ? Q.get(i) : null; if (!qq) { var z = Q.quiz(i); qq = { text: z.text, cat: z.cat, n: z.n }; }
+    } else qq = Q.next ? Q.next() : { text: Q.today(), cat: '' };
+    box.querySelector('.svqk').textContent = 'CÂU THOẠI TỔNG TÀI' + (qq.cat ? ' · ' + qq.cat.toUpperCase() : '') + (qq.n ? ' · #' + qq.n : '');
+    box.querySelector('.svqt').textContent = '“' + qq.text + '”';
+  }
+  // nhạc: chọn ngẫu nhiên một bài trong Nhạc của tôi
+  var songTimer = 0;
+  function startSong() {
+    var S = w.Music && w.Music.S, C = w.APP_CONFIG || {};
+    paintSong();
+    clearInterval(songTimer); songTimer = setInterval(paintSong, 1000);
+    if (!S || C.SAVER_MUSIC === false || C.MUSIC === 'off' || !S.all().length) return;
+    var n = S.all().length, cur = S.index(), i;
+    do { i = Math.floor(Math.random() * n); } while (n > 1 && i === cur);
+    setTimeout(function () { if (on) S.play(i); }, 800);
+  }
+  var musIdx = -1;
+  function paintSong() {
+    var S = w.Music && w.Music.S, e = box && box.querySelector('.svsong'); if (!e) return;
+    var sg = S && S.isPlaying() ? S.song(S.index()) : null;
+    e.textContent = sg ? '♪ ' + sg.title : '';
+    var m = box.querySelector('.svmus'); if (!m) return;
+    m.classList.toggle('on', !!sg);
+    if (!sg) return;
+    try {
+      var i = S.index(), MP = w.MusicPage;
+      if (i !== musIdx) {
+        musIdx = i; m.querySelector('.mt').textContent = sg.title;
+        var src = MP && MP.songImage ? MP.songImage(i) : '', im = m.querySelector('img');
+        if (src) { im.src = src; im.style.display = ''; } else im.style.display = 'none';
+      }
+      var t = S.time(), du = S.duration() || 0, line = '';
+      if (sg.lyrics && sg.lyrics.length && MP && MP.times) {
+        var tt = MP.times(sg), k = -1;
+        for (var j = 0; j < tt.length; j++) if (tt[j] <= t + 0.3) k = j;
+        if (k >= 0) line = sg.lyrics[k].t || '';
+      }
+      m.querySelector('.ml').textContent = line || '♪';
+      m.querySelector('.mb i').style.width = (du ? Math.min(100, t / du * 100) : 0) + '%';
+    } catch (x) { /* bỏ qua */ }
+  }
+
+  function show() {
+    if (on) return;
+    if (!box) build();
+    on = true; shownAt = Date.now(); mx = my = -1;
+    items = pickItems(); idx = 0;
+    box.classList.toggle('noimg', !items.length);
+    var useQ = !!(w.Quotes && (!w.Settings || w.Settings.get('SAVER_QUOTE') !== false));
+    box.classList.toggle('withq', useQ);
+    if (useQ) setQuote();
+    startSong();
+    paintClock();
+    d.documentElement.classList.add('ssaver');
+    box.classList.add('on');
+    nextSlide();
+    slideTimer = setInterval(nextSlide, SLIDE_MS);
+    clockTimer = setInterval(paintClock, 10000);
+    if (w.Log) w.Log.info('Bật màn hình chờ');
+  }
+
+  function hide() {
+    if (!on) return;
+    on = false; last = Date.now();
+    clearInterval(slideTimer); clearInterval(clockTimer); clearInterval(songTimer);
+    d.documentElement.classList.remove('ssaver');
+    box.classList.remove('on');
+    layers.forEach(function (l) { l.classList.remove('show'); });
+  }
+
+  // Phím / chạm / chuột: đang hiện màn hình chờ thì chỉ tắt nó, không làm gì khác
+  function activity(e) {
+    last = Date.now();
+    if (!on) return;
+    if (e.type === 'mousemove') {
+      if (Date.now() - shownAt < 800) return;
+      if (mx < 0) { mx = e.clientX; my = e.clientY; return; }
+      if (Math.abs(e.clientX - mx) + Math.abs(e.clientY - my) < 24) return;
+    }
+    if (e.type === 'keyup') { e.stopPropagation(); return; }
+    e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
+    if (e.cancelable && e.type !== 'mousemove') e.preventDefault();
+    hide();
+    if (e.type === 'pointerdown' || e.type === 'touchstart' || e.type === 'mousedown') swallowClick = Date.now();
+  }
+  var swallowClick = 0;
+  ['keydown', 'keyup', 'pointerdown', 'mousedown', 'touchstart', 'wheel', 'mousemove'].forEach(function (ev) {
+    w.addEventListener(ev, activity, { capture: true, passive: false });
+  });
+  w.addEventListener('click', function (e) { if (Date.now() - swallowClick < 700) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+  setInterval(function () {
+    var m = minutes();
+    if (on || !m) return;
+    if (busy()) { last = Date.now(); return; }   // đang chiếu phim: tính lại từ lúc dừng
+    if (Date.now() - last >= m * 60000) show();
+  }, 5000);
+
+  w.Saver = { show: show, hide: hide, isOn: function () { return on; } };
+})(window, document);

@@ -291,7 +291,7 @@
       dur: parseDur(v.contentDetails.duration),
       views: +((v.statistics || {}).viewCount || 0),
       pub: sn.publishedAt, desc: (sn.description || '').slice(0, 280),
-      tag: isAiVideo(v) ? 'AI' : '', src: src || '', cc: (v.contentDetails || {}).caption === 'true'
+      tag: isAiVideo(v) ? 'AI' : '', src: src || '', cc: (v.contentDetails || {}).caption === 'true', vert: isVertical(v)
     };
   }
 
@@ -405,7 +405,7 @@
           id: v.id, kind: 'ep', title: sn.title, ep: out.length + 1,
           thumb: pick(sn.thumbnails, CARD),
           hero: pick(sn.thumbnails, HERO),
-          dur: parseDur(v.contentDetails.duration), desc: (sn.description || '').slice(0, 200), tag: pl.tag
+          dur: parseDur(v.contentDetails.duration), desc: (sn.description || '').slice(0, 200), tag: pl.tag, vert: isVertical(v)
         });
       });
       Store.cacheSet(ck, out);
@@ -793,7 +793,7 @@
       var first = g.items[0].f, latest = g.items.reduce(function (m, x) { return String(x.f.pub) > String(m) ? x.f.pub : m; }, '');
       var eps = g.items.map(function (x) {
         var f = x.f;
-        return { id: f.id, kind: 'ep', title: f.title, ep: x.n, thumb: f.thumb, hero: f.hero, dur: f.dur, desc: f.desc, tag: f.tag || '', pub: f.pub, ch: f.ch };
+        return { id: f.id, kind: 'ep', title: f.title, ep: x.n, vert: f.vert, thumb: f.thumb, hero: f.hero, dur: f.dur, desc: f.desc, tag: f.tag || '', pub: f.pub, ch: f.ch };
       });
       var item = {
         id: 'grp:' + g.key, kind: 'anime', title: g.name, thumb: first.thumb, hero: first.hero || first.thumb,
@@ -894,7 +894,7 @@
         g.total = list.length || 1;
         if (g.key.indexOf('v:') === 0 || list.length < 2) { g.item = f0; g.total = 1; return; }
         var gid = 'grp:' + g.key;
-        groups[gid] = list.map(function (x) { var f = x.f; return { id: f.id, kind: 'ep', title: f.title, ep: x.n, thumb: f.thumb, hero: f.hero, dur: f.dur, desc: f.desc, tag: f.tag || '', pub: f.pub, ch: f.ch }; });
+        groups[gid] = list.map(function (x) { var f = x.f; return { id: f.id, kind: 'ep', title: f.title, ep: x.n, vert: f.vert, thumb: f.thumb, hero: f.hero, dur: f.dur, desc: f.desc, tag: f.tag || '', pub: f.pub, ch: f.ch }; });
         g.item = { id: gid, kind: 'anime', title: g.name, thumb: list[0].f.thumb, hero: list[0].f.hero || list[0].f.thumb, ch: f0.ch, chId: f0.chId, eps: g.total, desc: list[0].f.desc, tag: f0.tag || '', grouped: true };
       });
       order.sort(function (a, b) { return b.hits.length - a.hits.length || b.score - a.score; });

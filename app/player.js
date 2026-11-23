@@ -86,11 +86,14 @@
         var src = LANG_VI[pick.track.languageCode] || LANG_VI[String(pick.track.languageCode).split('-')[0]] || pick.track.displayName || 'phụ đề gốc';
         if (tell) w.UI.toast('Phụ đề tiếng Việt (YouTube dịch tự động từ ' + src + ')');
       } else if (!retry) {
+        // 2.49.4: khung nhúng YouTube giấu phụ đề tự tạo khỏi danh sách -> xin thẳng phụ đề tiếng Việt (phim nói tiếng Việt có phụ đề tự tạo)
+        try { yt.setOption('captions', 'track', { languageCode: 'vi' }); } catch (x) { /* bỏ qua */ }
         setTimeout(function () { if (isOpen) applyCaptions(tell, true); }, 1800);   // danh sách phụ đề tải chậm
         return;
       } else {
-        ccInfo = '';
-        if (tell) w.UI.toast('Video này không có phụ đề để chuyển sang tiếng Việt (nhiều phim đã in sẵn chữ trên hình)');
+        try { yt.setOption('captions', 'track', { languageCode: 'vi' }); } catch (x) { /* bỏ qua */ }
+        ccInfo = 'auto';
+        if (tell) w.UI.toast('Phụ đề tiếng Việt tự tạo của YouTube: Bật (chỉ hiện nếu phim nói tiếng Việt; phim in sẵn chữ thì không có)');
       }
       renderLabel();
     } catch (x) { if (tell) w.UI.toast('Không bật được phụ đề cho video này'); }
@@ -104,6 +107,22 @@
      rồi phóng / thu lại cho vừa màn hình bằng transform. */
   var Q_H = { hd2160: 2160, hd1080: 1080, hd720: 720, large: 480, medium: 360 };
 
+  // 2.49.5: khung nhỏ theo chiều của PHIM: phim dọc -> khung dọc, phim ngang -> khung ngang (cả khi cầm điện thoại dọc hay ngang)
+  function vidVert() { var c = q && q.items && q.items[q.index]; return !!(c && c.vert === true); }
+  function miniVert() { return mini && vidVert(); }
+  var vertAsked = {};
+  function learnVert() {   // phim lưu từ trước chưa biết dọc/ngang: hỏi YouTube (1 đơn vị hạn mức)
+    var c = q && q.items && q.items[q.index];
+    if (!c || c.vert != null || vertAsked[c.id] || !w.Api || !w.Api.details || /^demo-/.test(c.id)) return;
+    vertAsked[c.id] = 1;
+    w.Api.details([c.id]).then(function (vs) {
+      var v = vs && vs[0], p = v && v.player || {}, ew = +p.embedWidth || 0, eh = +p.embedHeight || 0;
+      if (!ew) return;
+      c.vert = eh > ew * 0.9;
+      paintVert(); if (mini) setTimeout(fitBox, 60);
+    }).catch(function () { /* bỏ qua */ });
+  }
+  function paintVert() { var p = $('player'); if (p) p.classList.toggle('mv', vidVert()); }
   function sizeForQuality() {
     var host = $('yt-host'), fr = host && host.querySelector('iframe');
     if (!fr) return;
@@ -112,13 +131,17 @@
     var iosFix = mob();   // 2.46.7: iPhone tự nới khung YouTube theo nội dung (phim lệch phải, mất mép) -> width 1px + min-width
     if (!H || w.AndroidApp) {                        // Tự động (hoặc TV Android: video phần cứng không chịu phóng/thu -> bị cắt, nên không dùng mẹo này)
       ['width', 'height', 'transform', '-webkit-transform', 'transform-origin', 'min-width', 'max-width'].forEach(function (k) { fr.style.removeProperty(k); });
-      if (iosFix) { set('width', '1px'); set('min-width', '100%'); set('max-width', '100%'); }
+      // 2.48.3: khung nhỏ khi xoay ngang: YouTube chừa trống bên trái bằng tai thỏ và thu phim ngang lại -> nới khung thêm đúng khoảng đó
+      var fw = mini && w.innerWidth > w.innerHeight ? 'calc(100% + 1.5 * env(safe-area-inset-left))' : '100%';   // 2.48.5: phim ngang còn dải đen bên phải -> nới thêm
+      if (miniVert()) fw = Math.round(host.offsetHeight * 16 / 9) + 'px';   // 2.49.3: khung nhỏ dọc: phóng phim ngang cho đầy khung (mất 2 bên)
+      if (iosFix) { set('width', '1px'); set('min-width', fw); set('max-width', fw); }
       return;
     }
     var hw = host.offsetWidth, hh = host.offsetHeight, r = host.getBoundingClientRect();
     var devH = r.height * (w.devicePixelRatio || 1);   // chiều cao thật của khung, tính bằng điểm ảnh màn hình
     if (!hw || !hh || !devH) return;
     var f = Math.max(0.15, Math.min(3, H / devH));
+    if (miniVert()) hw = Math.round(hh * 16 / 9);   // 2.49.3: khung nhỏ dọc: phim rộng 16:9 theo chiều cao khung
     if (iosFix) { set('width', '1px'); set('min-width', Math.round(hw * f) + 'px'); set('max-width', Math.round(hw * f) + 'px'); }
     else set('width', Math.round(hw * f) + 'px');
     set('height', Math.round(hh * f) + 'px');
@@ -132,7 +155,7 @@
     var p = $('player');
     if (!p || !mob()) return;
     try { if (w.scrollX || w.scrollY) w.scrollTo(0, 0); d.documentElement.scrollLeft = d.body.scrollLeft = 0; } catch (x) { /* bỏ qua */ }
-    if (!isOpen || mini) { p.style.width = p.style.height = ''; setTimeout(alignFrame, 200); return; }
+    if (!isOpen || mini) { p.style.width = p.style.height = ''; if (isOpen) sizeForQuality(); setTimeout(alignFrame, 200); return; }
     var vv = w.visualViewport, W = Math.round((vv && vv.width) || w.innerWidth), H = Math.round((vv && vv.height) || w.innerHeight);
     if (W && H) { p.style.width = W + 'px'; p.style.height = H + 'px'; }
     sizeForQuality(); setTimeout(alignFrame, 200);
@@ -141,15 +164,26 @@
   }
   /* 2.47.8: iPhone hay tự nới khung YouTube rộng hơn khung của app (phim lệch, mất mép, nhất là khung nhỏ khi xoay ngang).
      Đo khung thật: rộng hơn bao nhiêu thì dời sang trái một nửa để phim nằm giữa; ghi vào Nhật ký để dò lỗi */
-  var alignLast = '';
+  var alignLast = '', envP = null;
+  function envL() {   // bề rộng tai thỏ bên trái (0 khi không có)
+    if (!envP) { envP = d.createElement('div'); envP.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-left:env(safe-area-inset-left)'; d.body.appendChild(envP); }
+    return envP.offsetWidth || 0;
+  }
   function alignFrame() {
     try {
       if (!isOpen || !mob()) return;
       var host = $('yt-host'), fr = host && host.querySelector('iframe'); if (!fr) return;
       if (fr.getAttribute('scrolling') !== 'no') fr.setAttribute('scrolling', 'no');
       var hr = host.getBoundingClientRect(), r = fr.getBoundingClientRect();
-      var extra = Math.round(r.width - hr.width);
-      if (extra > 2) fr.style.setProperty('left', -Math.round(extra / 2 / ((r.width / (fr.offsetWidth || r.width)) || 1)) + 'px', 'important');
+      if (miniVert()) {   // 2.49.3: khung nhỏ dọc: phim to hơn khung, dời sang trái một nửa phần dư cho nằm giữa
+        var ex = Math.round(r.width - hr.width); fr.style.setProperty('left', (-Math.round(ex / 2)) + 'px', 'important');
+        var inf = 'nhỏ dọc · khung ' + Math.round(hr.width) + 'x' + Math.round(hr.height) + ' · YouTube ' + Math.round(r.width);
+        if (inf !== alignLast) { alignLast = inf; if (w.Log) w.Log.info('Khung phim: ' + inf); }
+        return;
+      }
+      var want = hr.width + (mini && w.innerWidth > w.innerHeight ? 1.5 * envL() : 0);   // bề rộng app đặt cho khung
+      var extra = Math.round((fr.offsetWidth || r.width) - want);            // iPhone nới thêm bao nhiêu
+      if (extra > 2) fr.style.setProperty('left', 'calc(0px - ' + (mini ? '1.75 * ' : '') + 'env(safe-area-inset-left) - ' + Math.round(extra / 2) + 'px)', 'important');
       else fr.style.removeProperty('left');
       var info = (mini ? 'nhỏ' : 'lớn') + ' ' + (w.innerWidth > w.innerHeight ? 'ngang' : 'dọc') + ' · khung ' + Math.round(hr.width) + ' · YouTube ' + Math.round(r.width) + ' · lệch ' + Math.round(r.left - hr.left) + (extra > 2 ? ' · đã bù ' + Math.round(extra / 2) : '');
       if (info !== alignLast) { alignLast = info; if (w.Log) w.Log.info('Khung phim: ' + info); }
@@ -353,7 +387,7 @@
 
   function slim(it) {
     var o = {};
-    ['id', 'kind', 'title', 'thumb', 'hero', 'tag', 'ch', 'dur', 'eps', 'views', 'pub', 'src', 'cc', 'anime', 'chId'].forEach(function (k) { if (it[k] != null) o[k] = it[k]; });
+    ['id', 'kind', 'title', 'thumb', 'hero', 'tag', 'ch', 'dur', 'eps', 'views', 'pub', 'src', 'cc', 'anime', 'chId', 'vert'].forEach(function (k) { if (it[k] != null) o[k] = it[k]; });
     o.desc = (it.desc || '').slice(0, 200);
     return o;
   }
@@ -502,7 +536,7 @@
     if (e.data === S.PLAYING) {
       playing = true; msg('');
       var vid = cur().id;
-      if (applied !== vid) { applied = vid; applyCaptions(false); applyQuality(false); }
+      if (applied !== vid) { applied = vid; if (mini) { paintVert(); learnVert(); setTimeout(fitBox, 60); } applyCaptions(false); applyQuality(false); setTimeout(function () { if (isOpen && applied === vid && (ccOn() || tmpCC)) applyCaptions(false, true); }, 9000); }   // 2.49.4: bật lại sau quảng cáo
       if (mode !== 'menu') renderBtns();
       showUi();
     } else if (e.data === S.PAUSED) {
@@ -622,6 +656,7 @@
     if (!b) { b = d.createElement('div'); b.id = 'pl-aud'; $('player').appendChild(b); }
     var it = cur() || {};
     b.innerHTML = '<div class="pla-k">🎧 CHỈ NGHE TIẾNG</div><div class="pla-t"></div><div class="pla-s"></div>' +
+      '<div class="pla-tm"><span class="pla-a">0:00</span><div class="pla-bar" data-a="bar"><i></i></div><span class="pla-r"></span></div>' +
       '<div class="pla-b"><div class="pla-x" data-a="rw">⏪ 10</div><div class="pla-x big" data-a="pp">⏯</div><div class="pla-x" data-a="ff">10 ⏩</div></div>' +
       '<div class="pla-row"><div class="pla-y" data-a="show">Hiện hình</div><div class="pla-y" data-a="close">✕ Đóng</div></div>';
     b.querySelector('.pla-t').textContent = (q && q.heading) || it.title || '';
@@ -633,8 +668,22 @@
       else if (a === 'rw' || a === 'ff') { try { yt.seekTo(Math.max(0, curT() + (a === 'ff' ? 10 : -10)), true); } catch (x) { /* bỏ qua */ } }
       else if (a === 'show') audioOnly(false);
       else if (a === 'close') close();
+      else if (a === 'bar') { try { var r = e.target.getBoundingClientRect(), du = yt.getDuration() || 0; if (du) yt.seekTo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * du, true); } catch (x) { /* bỏ qua */ } audPaint(); }
     };
+    audPaint();
   }
+  // 2.48.1: Chỉ nghe tiếng: cho biết đã nghe bao lâu, còn bao lâu nữa hết
+  function audFmt(t) { t = Math.max(0, Math.floor(t || 0)); var h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), sx = t % 60; return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (sx < 10 ? '0' : '') + sx; }
+  function audLong(t) { t = Math.max(0, Math.round((t || 0) / 60)); var h = Math.floor(t / 60), m = t % 60; return h ? h + ' giờ ' + m + ' phút' : m + ' phút'; }
+  function audPaint() {
+    var b = $('pl-aud'); if (!audOn || !b) return;
+    var t = curT(), du = 0; try { du = yt.getDuration() || 0; } catch (x) { /* bỏ qua */ }
+    var a = b.querySelector('.pla-a'), r = b.querySelector('.pla-r'), f = b.querySelector('.pla-bar i');
+    if (a) a.textContent = audFmt(t) + (du ? ' / ' + audFmt(du) : '');
+    if (r) r.textContent = du ? 'Còn ' + audLong(du - t) : '';
+    if (f) f.style.width = (du ? Math.min(100, t / du * 100) : 0) + '%';
+  }
+  setInterval(audPaint, 1000);
   function curT() { try { return yt.getCurrentTime() || 0; } catch (x) { return 0; } }
   function tempCC(origin) {
     if (ccOn() || !yt || !yt.loadModule) { w.UI.toast('⟲ Xem lại 10 giây'); return; }
@@ -989,7 +1038,7 @@
     var p = $('player'); ensureMiniUI();
     if (mode === 'menu') closeMenu(); hideUp(); hideSend();
     p.classList.toggle('mini', mini); d.documentElement.classList.toggle('plmini', mini);
-    if (mini) { placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
+    if (mini) { paintVert(); learnVert(); placeMini(); paintMini(); } else { p.style.left = p.style.right = p.style.top = p.style.bottom = ''; p.classList.remove('mleft', 'mtop'); showUi(); }
     setTimeout(fitBox, 60);
     try {
       if (mini && !w.localStorage.getItem('tt.miniTip')) { w.localStorage.setItem('tt.miniTip', '1'); w.UI.toast('Phim vẫn chạy khi bạn lướt app. Chạm để phóng to, kéo để dời góc, ✕ để tắt', 5000); }

@@ -732,7 +732,8 @@ html.wholock #topbar, html.wholock #mhead, html.wholock #webback, html.wholock #
 html.wholock #tabs, html.wholock #whobtn, html.wholock #mhead { opacity: .28; filter: grayscale(.6); }
 /* Ai đang xem trên điện thoại: ẩn hẳn thanh tab (mờ nhìn như bị lỗi), chỉ giữ logo */
 html.mobile.wholock #tabs, html.mobile.wholock #mhead, html.mobile.wholock #mdrawer { display: none !important; }
-html.wholock #webback { display: none !important; }
+html.wholock #webback:not(.inplayer) { display: none !important; }
+html.wholock #webback.inplayer { pointer-events: auto !important; }   /* 2.48.2: đang xem phim thì luôn có nút Đóng */
 .pmenu { text-align: center; min-width: 560px; }
 .pmhead { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
 .wav.pm { width: 130px; height: 130px; border-radius: 50%; font-size: 60px; margin-bottom: 14px; }
@@ -2342,7 +2343,8 @@ html.mobile, html.mobile body { overflow-x: hidden; max-width: 100%; }
 /* 2.46.10: iPhone xoay ngang: trang YouTube bên trong tự dịch nội dung sang phải đúng bằng vùng tai thỏ bên trái
    (phim lệch phải, mất một khúc) -> đặt khung YouTube lùi sang trái đúng khoảng đó để bù lại, phim nằm giữa và đủ hình */
 @media (orientation: landscape) {
-  html.mobile #player:not(.mini) #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }   /* 2.47.7: khung nhỏ đã lùi khỏi tai thỏ nên YouTube không dịch, không cần bù */
+  html.mobile #player #yt-host iframe { left: calc(0px - env(safe-area-inset-left)) !important; }
+  html.mobile #player.mini #yt-host iframe { left: calc(0px - 1.75 * env(safe-area-inset-left)) !important; }   /* 2.48.4: khung nhỏ còn lệch phải ~nửa tai thỏ (đo trên ảnh), dời thêm */   /* 2.48.2: YouTube dịch phim sang phải đúng bằng tai thỏ, cả khung nhỏ (đo lại trên ảnh) */
   html.mobile #player.mini { right: calc(10px + env(safe-area-inset-right)); }
   html.mobile #player.mini.mleft { right: auto; left: calc(10px + env(safe-area-inset-left)); }
 }
@@ -2377,7 +2379,7 @@ html.elder.mobile #pl-btns .plb.big.wide { min-width: 72px; padding: 0 12px; }
 html.elder #pl-ui .pl-track { margin: 0 26px; }
 html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 /* 2.47.6: số BUILD của file giao diện (app so với config.js; khác thì tự tải lại) — đổi mỗi bản */
-:root { --tt-build: 173; }
+:root { --tt-build: 190; }
 /* 2.47.9: nút xe 🚗 kế bên Sáng/Tối */
 .mobile .mcarbtn { right: 48px !important; }
 .carbtn svg { width: 60%; height: 60%; }
@@ -2407,3 +2409,60 @@ html.elder.mobile #pl-ui .pl-track { margin: 0 18px; }
 .mobile .cartile:last-child { grid-column: 1 / -1; height: 70px; flex-direction: row; }
 .mobile .carv .f.focus { box-shadow: none; }
 .carlist .ehint { display: none; }   /* xe: màn hình chạm, không cần chỉ phím remote */
+/* 2.48.1: máy tính / Tesla: nút Đóng phim to ở góc trên bên phải */
+html.webmode:not(.mobile) #webback.inplayer { top: 28px; right: 28px; left: auto; bottom: auto; font-size: 30px; padding: 18px 34px; z-index: 10000; }
+html.webmode:not(.mobile) #webback.inplayer.oncar { font-size: 36px; padding: 22px 40px; background: var(--acc, #E8B04B); color: #1a1206; }
+/* 2.48.1: Chỉ nghe tiếng: thời gian đã nghe / còn lại */
+.pla-tm { display: flex; align-items: center; gap: 28px; width: 1300px; margin-top: 46px; font-size: 32px; font-weight: 800; }
+.pla-a { white-space: nowrap; color: #F4F1EC; }
+.pla-r { white-space: nowrap; color: var(--acc, #E8B04B); }
+.pla-bar { flex: 1; height: 16px; border-radius: 10px; background: #2A3040; overflow: hidden; cursor: pointer; padding: 0; }
+.pla-bar i { display: block; height: 100%; width: 0; background: var(--acc, #E8B04B); border-radius: inherit; pointer-events: none; }
+.mobile .pla-tm { width: auto; align-self: stretch; margin: 26px 20px 0; gap: 12px; font-size: 15px; }
+.mobile .pla-bar { height: 10px; }
+/* 2.48.9: chữ vàng (lời đang hát) không mất dấu trên: nới vùng tô màu lên trên */
+.mvl.cur, .lsl.c { padding-top: .24em; padding-bottom: .1em; margin-top: -.24em; margin-bottom: calc(20px - .1em); overflow: visible; }
+.lsl.c { margin-bottom: -.1em; }
+/* 2.49.2: trang Nhạc toàn màn hình: chừa khoảng trên khung lời để dấu dòng đầu không bị cắt */
+.mv-kara .mvlines { padding-top: 34px; }
+.mv-kara .mvl.cur { margin-top: 0; }
+/* 2.49.0: bản web: chừa góc dưới bên phải cho nút "Bỏ qua quảng cáo" của YouTube (khi thanh điều khiển đang ẩn) */
+.webmode #player:not(.mini) #pl-ui:not(.show) { clip-path: polygon(0 0, 100% 0, 100% 62%, 68% 62%, 68% 100%, 0 100%); }
+/* 2.49.5: khung phim nhỏ theo chiều của phim: phim dọc (.mv) = khung dọc, phim ngang = khung ngang */
+@media (orientation: portrait) {
+  html.mobile #player.mini { width: 62vw; }
+  html.mobile #player.mini #yt-host { width: 62vw !important; height: calc(62vw * 9 / 16) !important; overflow: hidden; }
+  html.mobile #player.mini.mv { width: 46vw; }
+  html.mobile #player.mini.mv #yt-host { width: 46vw !important; height: calc(46vw * 16 / 9) !important; }
+  html.plmini.mobile #toast { bottom: calc(46vw * 16 / 9 + 70px + env(safe-area-inset-bottom)); }
+}
+@media (orientation: landscape) {
+  html.mobile #player.mini { width: 36vw; }
+  html.mobile #player.mini #yt-host { width: 36vw !important; height: calc(36vw * 9 / 16) !important; overflow: hidden; }
+  html.mobile #player.mini.mv { width: calc(62vh * 9 / 16); }
+  html.mobile #player.mini.mv #yt-host { width: calc(62vh * 9 / 16) !important; height: 62vh !important; }
+}
+
+/* 2.49.6: màn hình chờ: ô "Đang phát" trên TV/máy tính; điện thoại ngang: gọn lại, đồng hồ sang phải */
+#saver .svmus { display: none; position: absolute; right: 6vw; top: 8vh; width: 32vw; gap: 20px; align-items: center; padding: 18px 22px; border-radius: 20px; background: rgba(10,10,14,.6); box-shadow: 0 0 0 1.5px rgba(232,176,75,.4), 0 12px 40px rgba(0,0,0,.4); color: #fff; }
+#saver .svmus.on { display: flex; }
+#saver.alt .svmus { top: auto; bottom: 9vh; }
+#saver .svmus img { width: 110px; height: 110px; border-radius: 14px; object-fit: cover; flex: none; }
+#saver .svmus .mx { min-width: 0; flex: 1; }
+#saver .svmus .mk { font-size: 18px; font-weight: 800; letter-spacing: .2em; color: #E8B04B; }
+#saver .svmus .mt { font-size: 34px; font-weight: 800; margin: 4px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#saver .svmus .ml { font-size: 26px; font-weight: 700; color: #F5D58E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#saver .svmus .mb { height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); margin-top: 12px; }
+#saver .svmus .mb i { display: block; height: 100%; width: 0; border-radius: 3px; background: #E8B04B; transition: width 1s linear; }
+html:not(.mobile) #saver .svsong { display: none; }
+.mobile #saver .svmus { display: none !important; }
+@media (orientation: landscape) {
+  .mobile #saver .svinfo { bottom: 7vh; max-width: 60vw; }
+  .mobile #saver .svclock, .mobile #saver.alt .svclock { left: auto; right: 5vw; top: auto; bottom: 7vh; text-align: right; }
+  .mobile #saver.withq .svquote { margin: 2px 0 10px; max-width: 60vw; }
+  .mobile #saver .svqt { font-size: 1.45em; line-height: 1.25; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mobile #saver .svqk { font-size: .7em; }
+  .mobile #saver.withq .svtitle, .mobile #saver .svtitle { font-size: 1.3em; }
+  .mobile #saver.withq .svbrand { margin-bottom: 6px; }
+  .mobile #saver .svtime { font-size: 2.8em; }
+}

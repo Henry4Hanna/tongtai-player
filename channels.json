@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25T16:41:49.832Z",
+ "updated": "2026-11-25T16:50:48.844Z",
  "channels": [
   {
    "name": "@ghienphimtongtai-kks19",
@@ -460,6 +460,13 @@
    "title": "Coi TV",
    "type": "drama",
    "thumb": "https://yt3.ggpht.com/qtUu9TKzPF0HumCWpxARin37qYgyv4btSx11gCgG_Tou0kk3LP2O9JyMhpOGsxVyqvKiZbB4=s240-c-k-c0x00ffffff-no-rj"
+  },
+  {
+   "name": "@SoraDub28",
+   "id": "UCWw04AdPsuaf59SSjQHTTnw",
+   "title": "Sora Dub",
+   "type": "drama",
+   "thumb": "https://yt3.ggpht.com/iukKyfU7DrdhamwuBhAFBQ9lQ6nVLz1BCFF3lMiBo8PEmjes9Dapk0A_eTY1bXbC-lMrk_lS7Q=s240-c-k-c0x00ffffff-no-rj"
   }
  ],
  "v": 2,

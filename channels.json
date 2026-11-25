@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22T06:03:09.490Z",
+ "updated": "2026-11-25T16:28:21.984Z",
  "channels": [
   {
    "name": "@ghienphimtongtai-kks19",
@@ -460,5 +460,10 @@
    "thumb": "https://yt3.ggpht.com/6_0PUYAoXNa-UpRE1h9paI0Ug9n4sJFdbJTgWZx0IdRmRGy3k1UN5o_PnzvFEvyMyNfw7J9blA=s240-c-k-c0x00ffffff-no-rj"
   }
  ],
- "v": 2
+ "v": 2,
+ "policy": {
+  "hide": [
+   "QBZL3eVewRo"
+  ]
+ }
 }
